@@ -1,6 +1,6 @@
 # Changelog
 
-## Attempt 1 (from the last attempt with ChatGPT)
+## Attempt 1 (from [attempt 7](/sentence-constructor/chatgpt/changelog.md#attempt-7) with ChatGPT)
 
 ```
 ## Role
@@ -109,6 +109,8 @@ Student:
 ```
 
 ## Attempt 2
+
+Use the Andrew Brown's [prompt for Claude](https://github.com/omenking/free-genai-bootcamp-2025/tree/main/sentence-constructor/claude) to see if it helps avoiding the situation where the chatbot provides the complete translation.
 
 ```
 ## Role
@@ -221,6 +223,12 @@ Please read this file so you can see more examples to provide better output
 ### Attempt 3
 
 Ask Claude to reword the prompt of attempt 1 with an emphasis on avoiding revealing the final answer.
+
+Prompt:
+
+> I'm trying to build a chatbot with the goal of giving it the role of a Japanese Language Teacher that helps a student of Japanese-Language Proficiency Test level N5 with translating sentences in English into Japanese. I'm struggling to make the chatbot follow the instruction of never revealing the complete translation, even if the student is very close. What should the instructions say?
+
+Result:
 
 ```
 # Japanese Language Teaching Assistant Instructions

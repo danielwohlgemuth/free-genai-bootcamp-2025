@@ -10,6 +10,12 @@ DeepSeek V3 (Free)
 
 No official guide yet. This was the guide provided by DeepSeek itself.
 
+Prompt:
+
+> Is there a prompt engineering guide for deepseek?
+
+Result:
+
 1. Understand the Model's Capabilities
 Know the strengths and limitations of the model. For example, DeepSeek may excel in certain tasks like text generation, summarization, or coding assistance.
 Test the model with simple prompts to gauge its performance.
