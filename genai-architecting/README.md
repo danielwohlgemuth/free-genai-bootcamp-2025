@@ -1,10 +1,16 @@
 # Architectural Design
 
-Conceptual Architecture Diagram
+### Conceptual Architecture Diagram
 
-![conceptual-architecture-diagram](/genai-architecting/conceptual-architecture-diagram.drawio.png)
+![conceptual architecture diagram](/genai-architecting/conceptual-architecture-diagram.drawio.png)
 
 [Conceptual Architecture Diagram file](https://app.diagrams.net/?title=conceptual-architecture-diagram#Uhttps%3A%2F%2Fraw.githubusercontent.com%2Fdanielwohlgemuth%2Ffree-genai-bootcamp-2025%2Frefs%2Fheads%2Fmain%2Fgenai-architecting%2Fconceptual-architecture-diagram.drawio)
+
+### Sentence Constructor
+
+![sentence constructor](/genai-architecting/sentence-constructor.drawio.png)
+
+[Sentence Constructor file](https://app.diagrams.net/?title=sentence-constructor#Uhttps%3A%2F%2Fraw.githubusercontent.com%2Fdanielwohlgemuth%2Ffree-genai-bootcamp-2025%2Frefs%2Fheads%2Fmain%2Fgenai-architecting%2Fsentence-constructor.drawio)
 
 ## Requirements
 
