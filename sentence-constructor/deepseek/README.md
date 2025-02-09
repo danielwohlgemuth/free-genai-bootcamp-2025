@@ -4,7 +4,13 @@
 
 DeepSeek V3 (Free)
 
+## [Prompt](/sentence-constructor/deepseek/prompt.md)
+
+Final prompt.
+
 ## [Changelog](/sentence-constructor/deepseek/changelog.md)
+
+History of attempted prompts.
 
 ## Prompt engineering guide
 

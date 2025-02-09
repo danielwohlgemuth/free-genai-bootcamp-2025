@@ -4,12 +4,17 @@
 
 GPT-4 (Free, Temporary Chat)
 
+## [Prompt](/sentence-constructor/chatgpt/prompt.md)
+
+Final prompt.
+
 ## [Changelog](/sentence-constructor/chatgpt/changelog.md)
+
+History of attempted prompts.
 
 ## Prompt engineering guide
 
 https://platform.openai.com/docs/guides/prompt-engineering
-
 
 https://cloud.google.com/vertex-ai/generative-ai/docs/chat/chat-prompts
 
