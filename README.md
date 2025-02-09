@@ -1,3 +1,7 @@
-# free-genai-bootcamp-2025
+# Free GenAI Bootcamp 2025
 
-[GenAI Architecting](/genai-architecting/README.md)
+### Conceptual Architecture Diagram
+
+![conceptual architecture diagram](/genai-architecting/conceptual-architecture-diagram.drawio.png)
+
+## [GenAI Architecting](/genai-architecting/README.md)
