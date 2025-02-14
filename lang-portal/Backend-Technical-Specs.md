@@ -4,15 +4,15 @@
 
 A language learning school wants to build a prototype of learning portal which will act as three things:
 - Inventory of possible vocabulary that can be learned
-- Act as a  Learning record store (LRS), providing correct and wrong score on practice vocabulary
+- Act as a Learning record store (LRS), providing correct and wrong score on practice vocabulary
 - A unified launchpad to launch different learning apps
 
 ## Technical Requirements
 
-- The backend will be built using Go
+- The backend will be built using Python
 - The database will be SQLite3
-- The API will be built using Gin
--Mage is a task runner for Go.
+- The API will be built using FastAPI
+- doit is a task runner for Python.
 - The API will always return JSON
 - There will no authentication or authorization
 - Everything be treated as a single user
@@ -20,7 +20,7 @@ A language learning school wants to build a prototype of learning portal which w
 ## Directory Structure
 
 ```text
-backend_go/
+backend_python/
 ├── cmd/
 │   └── server/
 ├── internal/
@@ -30,19 +30,19 @@ backend_go/
 ├── db/
 │   ├── migrations/
 │   └── seeds/      # For initial data population
-├── magefile.go
-├── go.mod
+├── dodo.py
+├── requirements.txt
 └── words.db
 ```
 
 ## Database Schema
 
-Our database will be a single sqlite database called `words.db` that will be in the root of the project folder of `backend_go`
+Our database will be a single sqlite database called `words.db` that will be in the root of the project folder of `backend_python`
 
 We have the following tables:
 - words - stored vocabulary words
   - id integer
-  - japasese string
+  - japanese string
   - romaji string
   - english string
   - parts json
@@ -72,9 +72,11 @@ We have the following tables:
 ## API Endpoints
 
 ### GET /api/dashboard/last_study_session
+
 Returns information about the most recent study session.
 
 #### JSON Response
+
 ```json
 {
   "id": 123,
@@ -87,8 +89,9 @@ Returns information about the most recent study session.
 ```
 
 ### GET /api/dashboard/study_progress
+
 Returns study progress statistics.
-Please note that the frontend will determine progress bar basedon total words studied and total available words.
+Please note that the frontend will determine progressbar based on total words studied and total available words.
 
 #### JSON Response
 
@@ -104,6 +107,7 @@ Please note that the frontend will determine progress bar basedon total words st
 Returns quick overview statistics.
 
 #### JSON Response
+
 ```json
 {
   "success_rate": 80.0,
@@ -115,7 +119,10 @@ Returns quick overview statistics.
 
 ### GET /api/study_activities/:id
 
+Returns a specific study activity by ID.
+
 #### JSON Response
+
 ```json
 {
   "id": 1,
@@ -127,7 +134,11 @@ Returns quick overview statistics.
 
 ### GET /api/study_activities/:id/study_sessions
 
+Returns a list of study sessions for a specific study activity.
+
 - pagination with 100 items per page
+
+#### JSON Response
 
 ```json
 {
@@ -152,21 +163,30 @@ Returns quick overview statistics.
 
 ### POST /api/study_activities
 
+Creates a new study activity.
+
 #### Request Params
+
 - group_id integer
 - study_activity_id integer
 
 #### JSON Response
+
+```json
 {
   "id": 124,
   "group_id": 123
 }
+```
 
 ### GET /api/words
+
+Returns a list of words.
 
 - pagination with 100 items per page
 
 #### JSON Response
+
 ```json
 {
   "items": [
@@ -188,7 +208,10 @@ Returns quick overview statistics.
 ```
 
 ### GET /api/words/:id
+
+Returns a specific word by ID.
 #### JSON Response
+
 ```json
 {
   "japanese": "こんにちは",
@@ -208,8 +231,13 @@ Returns quick overview statistics.
 ```
 
 ### GET /api/groups
+
+Returns a list of groups.
+
 - pagination with 100 items per page
+
 #### JSON Response
+
 ```json
 {
   "items": [
@@ -229,7 +257,11 @@ Returns quick overview statistics.
 ```
 
 ### GET /api/groups/:id
+
+Returns a specific group by ID.
+
 #### JSON Response
+
 ```json
 {
   "id": 1,
@@ -241,7 +273,11 @@ Returns quick overview statistics.
 ```
 
 ### GET /api/groups/:id/words
+
+Returns a list of words for a specific group.
+
 #### JSON Response
+
 ```json
 {
   "items": [
@@ -263,7 +299,11 @@ Returns quick overview statistics.
 ```
 
 ### GET /api/groups/:id/study_sessions
+
+Returns a list of study sessions for a specific group.
+
 #### JSON Response
+
 ```json
 {
   "items": [
@@ -286,8 +326,13 @@ Returns quick overview statistics.
 ```
 
 ### GET /api/study_sessions
+
+Returns a list of study sessions.
+
 - pagination with 100 items per page
+
 #### JSON Response
+
 ```json
 {
   "items": [
@@ -310,7 +355,11 @@ Returns quick overview statistics.
 ```
 
 ### GET /api/study_sessions/:id
+
+Returns a specific study session by ID.
+
 #### JSON Response
+
 ```json
 {
   "id": 123,
@@ -323,8 +372,13 @@ Returns quick overview statistics.
 ```
 
 ### GET /api/study_sessions/:id/words
+
+Returns a list of words for a specific study session.
+
 - pagination with 100 items per page
+
 #### JSON Response
+
 ```json
 {
   "items": [
@@ -346,7 +400,11 @@ Returns quick overview statistics.
 ```
 
 ### POST /api/reset_history
+
+Resets the study history.
+
 #### JSON Response
+
 ```json
 {
   "success": true,
@@ -355,7 +413,11 @@ Returns quick overview statistics.
 ```
 
 ### POST /api/full_reset
+
+Resets the system.
+
 #### JSON Response
+
 ```json
 {
   "success": true,
@@ -364,12 +426,17 @@ Returns quick overview statistics.
 ```
 
 ### POST /api/study_sessions/:id/words/:word_id/review
+
+Records a review for a specific word in a specific study session.
+
 #### Request Params
+
 - id (study_session_id) integer
 - word_id integer
 - correct boolean
 
 #### Request Payload
+
 ```json
 {
   "correct": true
@@ -377,6 +444,7 @@ Returns quick overview statistics.
 ```
 
 #### JSON Response
+
 ```json
 {
   "success": true,
@@ -392,12 +460,14 @@ Returns quick overview statistics.
 Lets list out possible tasks we need for our lang portal.
 
 ### Initialize Database
-This task will initialize the sqlite database called `words.db
 
-### Migrate Database
+This task will initialize the sqlite database called `words.db`
+
+### Run Migrations
+
 This task will run a series of migrations sql files on the database
 
-Migrations live in the `migrations` folder.
+Migrations live in the `db/migrations` folder.
 The migration files will be run in order of their file name.
 The file names should looks like this:
 
@@ -407,11 +477,12 @@ The file names should looks like this:
 ```
 
 ### Seed Data
+
 This task will import json files and transform them into target data for our database.
 
-All seed files live in the `seeds` folder.
+All seed files live in the `db/seeds` folder.
 
-In our task we should have DSL to specific each seed file and its expected group word name.
+In our task we should have DSL to specify each seed file and its expected group word name.
 
 ```json
 [
