@@ -4,8 +4,13 @@ from sqlalchemy import func, select
 from datetime import datetime, timedelta, UTC
 from ..models.base import get_db
 from ..models.models import StudyActivity, StudySession, WordReviewItem, Group
+from pydantic import BaseModel
 
 router = APIRouter()
+
+class CreateStudySessionRequest(BaseModel):
+    group_id: int
+    study_activity_id: int
 
 @router.get("")
 async def get_study_activities(db: AsyncSession = Depends(get_db)):
@@ -93,10 +98,11 @@ async def get_activity_study_sessions(
 
 @router.post("")
 async def create_study_session(
-    group_id: int = Body(...),
-    study_activity_id: int = Body(...),
+    request: CreateStudySessionRequest = Body(...),
     db: AsyncSession = Depends(get_db)
 ):
+    group_id = request.group_id
+    study_activity_id = request.study_activity_id
     # Verify group and activity exist
     group = await db.execute(
         select(Group).where(Group.id == group_id)

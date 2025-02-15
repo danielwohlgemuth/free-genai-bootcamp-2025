@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
-class WordReviewCreate(BaseModel):
+class CreateWordReviewRequest(BaseModel):
     correct: bool
 
 @router.get("")
@@ -147,9 +147,10 @@ async def get_session_words(
 async def create_word_review(
     session_id: int,
     word_id: int,
-    review: WordReviewCreate,
+    request: CreateWordReviewRequest = Body(...),
     db: AsyncSession = Depends(get_db)
 ):
+    correct = request.correct
     # Verify session and word exist
     session = await db.execute(
         select(StudySession).where(StudySession.id == session_id)
@@ -169,7 +170,7 @@ async def create_word_review(
     review_item = WordReviewItem(
         word_id=word_id,
         study_session_id=session_id,
-        correct=review.correct,
+        correct=correct,
         created_at=datetime.now(UTC)
     )
     
@@ -180,7 +181,7 @@ async def create_word_review(
         "success": True,
         "word_id": word_id,
         "study_session_id": session_id,
-        "correct": review.correct,
+        "correct": correct,
         "created_at": review_item.created_at.isoformat()
     }
 
