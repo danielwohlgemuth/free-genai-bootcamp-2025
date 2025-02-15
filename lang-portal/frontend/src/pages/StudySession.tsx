@@ -16,11 +16,12 @@ export function StudySession() {
   const [words, setWords] = useState<Word[]>([])
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [userAnswer, setUserAnswer] = useState('')
 
   const fetchNextWords = async () => {
     try {
       const { data } = await api.get<{ items: Word[] }>(`/study_sessions/${sessionId}/next_words`)
-      setWords(prev => [...prev, ...data.items])
+      if (data) setWords(prev => [...prev, ...data.items])
     } catch (error) {
       console.error('Error fetching next words:', error)
     }
@@ -73,6 +74,14 @@ export function StudySession() {
     }
   }
 
+  const checkAnswer = () => {
+    // Compare user's answer with the correct English translation
+    // Using toLowerCase() for case-insensitive comparison
+    const isCorrect = userAnswer.toLowerCase().trim() === words[currentWordIndex].english.toLowerCase().trim()
+    handleAnswer(isCorrect)
+    setUserAnswer('') // Clear the input after submission
+  }
+
   if (loading) {
     return <div className="container mx-auto px-4 py-8">Loading...</div>
   }
@@ -110,18 +119,20 @@ export function StudySession() {
             <div className="text-xl text-muted-foreground mb-4">{currentWord.romaji}</div>
           </div>
 
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col gap-4 items-center">
+            <input
+              type="text"
+              value={userAnswer}
+              onChange={(e) => setUserAnswer(e.target.value)}
+              placeholder="Enter English translation"
+              className="px-4 py-2 rounded-md border w-full max-w-md"
+              onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
+            />
             <button
-              onClick={() => handleAnswer(false)}
-              className="px-6 py-3 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Incorrect
-            </button>
-            <button
-              onClick={() => handleAnswer(true)}
+              onClick={checkAnswer}
               className="px-6 py-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              Correct
+              Check
             </button>
           </div>
 
