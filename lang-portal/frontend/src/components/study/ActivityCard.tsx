@@ -24,23 +24,32 @@ export function ActivityCard({ id, name, thumbnailUrl, description, type, onStar
   const [selectedGroupId, setSelectedGroupId] = useState<number>(0)
 
   useEffect(() => {
+    let mounted = true
+
     // Fetch groups only for translation activities
     if (type === 'ja_to_en' || type === 'en_to_ja') {
       const fetchGroups = async () => {
         try {
           const response = await api.get<GroupsResponse>('/groups')
-          console.log('Groups response:', response.data)
-          // Ensure we're setting an array, even if empty
-          setGroups(response.data?.items || [])
-          if (response.data?.items && response.data.items.length > 0) {
-            setSelectedGroupId(response.data.items[0].id)
+          if (mounted) {  // Only update state if component is still mounted
+            setGroups(response.data?.items || [])
+            if (response.data?.items && response.data.items.length > 0) {
+              setSelectedGroupId(response.data.items[0].id)
+            }
           }
         } catch (error) {
-          console.error('Error fetching groups:', error)
-          setGroups([]) // Set empty array on error
+          if (mounted) {
+            console.error('Error fetching groups:', error)
+            setGroups([])
+          }
         }
       }
       fetchGroups()
+    }
+
+    // Cleanup function
+    return () => {
+      mounted = false
     }
   }, [type])
 

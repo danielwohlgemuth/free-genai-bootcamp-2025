@@ -17,7 +17,9 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchDashboardData() {
+    let mounted = true
+
+    const fetchDashboardData = async () => {
       try {
         const [statsRes, progressRes, sessionRes] = await Promise.all([
           api.get<DashboardStats>('/dashboard/quick-stats'),
@@ -25,21 +27,33 @@ export function Dashboard() {
           api.get<StudySession>('/dashboard/last_study_session'),
         ])
 
-        if (statsRes.data) setStats(statsRes.data)
-        if (progressRes.data) setProgress(progressRes.data)
-        if (sessionRes.data) setLastSession(sessionRes.data)
+        if (mounted) {
+          if (statsRes.data) setStats(statsRes.data)
+          if (progressRes.data) setProgress(progressRes.data)
+          if (sessionRes.data) setLastSession(sessionRes.data)
+          setLoading(false)
+        }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error)
-      } finally {
-        setLoading(false)
+        if (mounted) {
+          console.error('Error fetching dashboard data:', error)
+          setLoading(false)
+        }
       }
     }
 
     fetchDashboardData()
+
+    return () => {
+      mounted = false
+    }
   }, [])
 
   if (loading) {
     return <div className="container mx-auto px-4 py-8">Loading...</div>
+  }
+
+  if (!stats) {
+    return <div className="container mx-auto px-4 py-8">Error loading dashboard</div>
   }
 
   return (
@@ -47,19 +61,19 @@ export function Dashboard() {
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
       
       <div className="grid gap-4 md:grid-cols-4 mb-6">
-        <StatsCard
+        <StatsCard 
           title="Success Rate"
           value={`${stats?.success_rate ?? 0}%`}
         />
-        <StatsCard
+        <StatsCard 
           title="Study Sessions"
           value={stats?.total_study_sessions ?? 0}
         />
-        <StatsCard
+        <StatsCard 
           title="Active Groups"
           value={stats?.total_active_groups ?? 0}
         />
-        <StatsCard
+        <StatsCard 
           title="Study Streak"
           value={stats?.study_streak_days ?? 0}
           description="days"
@@ -68,10 +82,10 @@ export function Dashboard() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {progress && (
-          <StudyProgress
+        <StudyProgress 
             totalWordsStudied={progress.total_words_studied}
             totalAvailableWords={progress.total_available_words}
-          />
+        />
         )}
         <LastStudySession session={lastSession} />
       </div>
