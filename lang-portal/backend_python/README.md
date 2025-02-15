@@ -2,6 +2,8 @@
 
 A FastAPI-based backend service for the language learning portal.
 
+![Backend API Docs](assets/backend_api_docs.png)
+
 ## Setup
 
 ### Prerequisites
