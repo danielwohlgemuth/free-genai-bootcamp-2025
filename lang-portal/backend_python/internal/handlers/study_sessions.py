@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
 from datetime import datetime, timedelta
+from sqlalchemy.orm import joinedload
 from ..models.base import get_db
-from ..models.models import StudySession, Word, WordReviewItem
+from ..models.models import StudySession, Word, WordReviewItem, StudyActivity
 
 router = APIRouter()
 
@@ -56,28 +57,26 @@ async def get_study_sessions(
 
 @router.get("/{session_id}")
 async def get_study_session(session_id: int, db: AsyncSession = Depends(get_db)):
-    query = select(
-        StudySession,
-        func.count(WordReviewItem.id).label("review_items_count")
-    ).outerjoin(StudySession.review_items) \
-     .where(StudySession.id == session_id) \
-     .group_by(StudySession.id)
-    
+    query = (
+        select(StudySession)
+        .options(
+            joinedload(StudySession.activity),
+            joinedload(StudySession.group)
+        )
+        .where(StudySession.id == session_id)
+    )
     result = await db.execute(query)
-    session_data = result.first()
+    session = result.unique().scalar_one_or_none()
     
-    if not session_data:
-        return None
-    
-    session, review_count = session_data
+    if not session:
+        return {"error": "Session not found"}
     
     return {
         "id": session.id,
         "activity_name": session.activity.name,
         "group_name": session.group.name,
         "start_time": session.created_at.isoformat(),
-        "end_time": (session.created_at + timedelta(minutes=10)).isoformat(),  # Estimated
-        "review_items_count": review_count
+        "end_time": (session.created_at + timedelta(minutes=10)).isoformat()
     }
 
 @router.get("/{session_id}/words")
