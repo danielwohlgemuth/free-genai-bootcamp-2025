@@ -67,7 +67,10 @@ export function StudyActivities() {
             {activities.map((activity) => (
               <ActivityCard
                 key={activity.id}
-                {...activity}
+                id={activity.id}
+                name={activity.name}
+                thumbnailUrl={activity.thumbnail_url}
+                description={activity.description}
                 onStart={handleStartActivity}
               />
             ))}

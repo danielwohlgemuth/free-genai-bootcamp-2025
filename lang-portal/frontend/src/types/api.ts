@@ -20,6 +20,7 @@ export interface StudySession {
 }
 
 export interface Word {
+  id: string
   japanese: string
   romaji: string
   english: string
