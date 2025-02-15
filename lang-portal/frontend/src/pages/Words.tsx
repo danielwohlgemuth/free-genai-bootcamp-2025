@@ -31,7 +31,7 @@ export function Words() {
   }, [currentPage])
 
   if (loading) {
-    return <div>Loading...</div>
+    return <div className="container mx-auto px-4 py-8">Loading...</div>
   }
 
   return (
@@ -40,7 +40,7 @@ export function Words() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {words.map((word) => (
-          <WordCard key={word.japanese} word={word} />
+          <WordCard key={word.id} word={word} />
         ))}
       </div>
 
