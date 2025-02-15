@@ -45,7 +45,7 @@ export function GroupDetail() {
   }, [groupId])
 
   if (loading) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>
+    return <div className="py-8 text-center">Loading...</div>
   }
 
   return (

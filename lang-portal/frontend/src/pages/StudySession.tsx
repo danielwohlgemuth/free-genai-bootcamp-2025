@@ -6,7 +6,12 @@ import type { Word } from '@/types/api'
 interface StudySessionDetails {
   id: number
   activity_name: string
+  activity_type: string
   group_name: string
+}
+
+interface WordsResponse {
+  items: Word[]
 }
 
 export function StudySession() {
@@ -18,113 +23,123 @@ export function StudySession() {
   const [loading, setLoading] = useState(true)
   const [userAnswer, setUserAnswer] = useState('')
 
-  const fetchNextWords = async () => {
-    try {
-      const { data } = await api.get<{ items: Word[] }>(`/study_sessions/${sessionId}/next_words`)
-      if (data) setWords(prev => [...prev, ...data.items])
-    } catch (error) {
-      console.error('Error fetching next words:', error)
-    }
-  }
-
   useEffect(() => {
+    let mounted = true
+
     async function fetchSessionData() {
       try {
-        const [sessionRes, nextWordsRes] = await Promise.all([
+        const [sessionRes, wordsRes] = await Promise.all([
           api.get<StudySessionDetails>(`/study_sessions/${sessionId}`),
-          api.get<{ items: Word[] }>(`/study_sessions/${sessionId}/next_words`)
+          api.get<WordsResponse>(`/study_sessions/${sessionId}/next_words`),
         ])
 
-        if (sessionRes.data) setSession(sessionRes.data)
-        if (nextWordsRes.data) setWords(nextWordsRes.data.items)
+        console.log('sessionRes', sessionRes)
+        console.log('wordsRes', wordsRes)
+
+        if (mounted) {
+          setSession(sessionRes.data || null)
+          setWords(wordsRes.data?.items || [] )
+          setLoading(false)
+        }
       } catch (error) {
         console.error('Error fetching session data:', error)
-      } finally {   
-        setLoading(false)
+        if (mounted) {
+          setLoading(false)
+        }
       }
     }
 
-    if (sessionId) {
-      fetchSessionData()
-    }
+    fetchSessionData()
+    return () => { mounted = false }
   }, [sessionId])
 
-  const handleAnswer = async (correct: boolean) => {
-    if (!session || !words[currentWordIndex]) return
+  const checkAnswer = async () => {
+    if (!session) return
+
+    const currentWord = words[currentWordIndex]
+    const isCorrect = session.activity_type === 'ja_to_en' 
+      ? userAnswer.toLowerCase().trim() === currentWord.english.toLowerCase()
+      : userAnswer.toLowerCase().trim() === currentWord.japanese.toLowerCase()
 
     try {
-      await api.post(`/study_sessions/${session.id}/words/${words[currentWordIndex].id}/review`, {
-        correct
+      await api.post(`/study_sessions/${sessionId}/words/${currentWord.id}/review`, {
+        correct: isCorrect
       })
 
-      // If we're near the end of our word list, fetch more
-      if (currentWordIndex >= words.length - 3) {
-        await fetchNextWords()
-      }
-
-      // Move to next word if available
+      setUserAnswer('')
       if (currentWordIndex < words.length - 1) {
         setCurrentWordIndex(prev => prev + 1)
       } else {
-        // No more words available
-        navigate('/study/complete')
+        navigate('/study')
       }
     } catch (error) {
       console.error('Error submitting answer:', error)
     }
   }
 
-  const checkAnswer = () => {
-    // Compare user's answer with the correct English translation
-    // Using toLowerCase() for case-insensitive comparison
-    const isCorrect = userAnswer.toLowerCase().trim() === words[currentWordIndex].english.toLowerCase().trim()
-    handleAnswer(isCorrect)
-    setUserAnswer('') // Clear the input after submission
-  }
-
   if (loading) {
-    return <div className="container mx-auto px-4 py-8">Loading...</div>
+    return <div className="py-8 text-center">Loading...</div>
   }
 
-  if (words.length === 0) {
+  if (!session) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto text-center">
-          <h1 className="text-2xl font-bold mb-4">{session?.activity_name}</h1>
-          <p className="text-muted-foreground mb-8">No words available for this study session.</p>
-          <button
-            onClick={() => navigate('/study')}
-            className="px-6 py-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
-          >
-            Return to Study Activities
-          </button>
-        </div>
+      <div className="py-8 text-center">
+        <div>Session not found</div>
+        <button
+          onClick={() => navigate('/study')}
+          className="mt-4 px-6 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          Back to Study Activities
+        </button>
       </div>
     )
   }
 
+  if (!words.length) {
+    return (
+      <div className="py-8 text-center">
+        <div>All words have been studied</div>
+        <button
+          onClick={() => navigate('/study')}
+          className="mt-4 px-6 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          Back to Study Activities
+        </button>
+      </div>
+    )
+  }
+  
+  if (!['ja_to_en', 'en_to_ja'].includes(session.activity_type)) {
+    return <div className="py-8 text-center">Unsupported activity type: {session.activity_type}</div>
+  }
+
   const currentWord = words[currentWordIndex]
+  const isJapaneseToEnglish = session.activity_type === 'ja_to_en'
+  const questionText = isJapaneseToEnglish ? currentWord.japanese : currentWord.english
+  const placeholderText = isJapaneseToEnglish ? 'Enter English translation' : 'Enter Japanese word'
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-2xl font-bold">{session?.activity_name}</h1>
-          <p className="text-muted-foreground">{session?.group_name}</p>
-        </header>
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold mb-2">{session.activity_name}</h1>
+          <p className="text-muted-foreground">{session.group_name}</p>
+        </div>
 
-        <div className="text-center space-y-8">
-          <div className="p-8 rounded-lg border bg-card">
-            <div className="text-3xl mb-4">{currentWord.japanese}</div>
-            <div className="text-xl text-muted-foreground mb-4">{currentWord.romaji}</div>
+        <div className="rounded-lg border bg-card p-6 space-y-6">
+          <div className="text-center">
+            <p className="text-xl mb-2">{questionText}</p>
+            {isJapaneseToEnglish && (
+              <p className="text-sm text-muted-foreground">{currentWord.romaji}</p>
+            )}
           </div>
 
-          <div className="flex flex-col gap-4 items-center">
+          <div className="flex gap-4">
             <input
               type="text"
               value={userAnswer}
               onChange={(e) => setUserAnswer(e.target.value)}
-              placeholder="Enter English translation"
+              placeholder={placeholderText}
               className="px-4 py-2 rounded-md border w-full max-w-md"
               onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
             />

@@ -4,7 +4,7 @@ from sqlalchemy import func, select, and_
 from datetime import datetime, timedelta, UTC
 from sqlalchemy.orm import joinedload
 from ..models.base import get_db
-from ..models.models import StudySession, Word, WordReviewItem, StudyActivity, WordGroup
+from ..models.models import StudySession, Word, WordReviewItem, StudyActivity, Group
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -64,27 +64,32 @@ async def get_study_sessions(
     }
 
 @router.get("/{session_id}")
-async def get_study_session(session_id: int, db: AsyncSession = Depends(get_db)):
+async def get_study_session(
+    session_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get details of a specific study session"""
     query = (
-        select(StudySession)
-        .options(
-            joinedload(StudySession.activity),
-            joinedload(StudySession.group)
-        )
+        select(StudySession, StudyActivity.name, StudyActivity.type, Group.name)
+        .join(StudyActivity, StudySession.study_activity_id == StudyActivity.id)
+        .join(Group, StudySession.group_id == Group.id)
         .where(StudySession.id == session_id)
     )
-    result = await db.execute(query)
-    session = result.unique().scalar_one_or_none()
     
-    if not session:
-        return {"error": "Session not found"}
+    result = await db.execute(query)
+    row = result.first()
+    
+    if not row:
+        raise HTTPException(status_code=404, detail="Study session not found")
+    
+    session, activity_name, activity_type, group_name = row
     
     return {
         "id": session.id,
-        "activity_name": session.activity.name,
-        "group_name": session.group.name,
-        "start_time": session.created_at.isoformat(),
-        "end_time": (session.created_at + timedelta(minutes=10)).isoformat()
+        "activity_name": activity_name,
+        "activity_type": activity_type,
+        "group_name": group_name,
+        "start_time": session.created_at
     }
 
 @router.get("/{session_id}/words")
@@ -185,14 +190,10 @@ async def get_next_words(
     limit: int = 10,
     db: AsyncSession = Depends(get_db)
 ):
-    # Get the study session and its group
-    session_query = (
-        select(StudySession)
-        .options(joinedload(StudySession.group))
-        .where(StudySession.id == session_id)
-    )
+    # Get the study session
+    session_query = select(StudySession).where(StudySession.id == session_id)
     result = await db.execute(session_query)
-    session = result.unique().scalar_one_or_none()
+    session = result.scalar_one_or_none()
     
     if not session:
         raise HTTPException(status_code=404, detail="Study session not found")
@@ -200,8 +201,8 @@ async def get_next_words(
     # Get words from the group that haven't been reviewed in this session
     words_query = (
         select(Word)
-        .join(WordGroup)
-        .where(WordGroup.group_id == session.group_id)
+        .join(Word.groups)  # Use the relationship instead of direct join
+        .where(Group.id == session.group_id)
         .outerjoin(
             WordReviewItem,
             and_(
@@ -209,7 +210,7 @@ async def get_next_words(
                 WordReviewItem.study_session_id == session_id
             )
         )
-        .where(WordReviewItem.id == None)  # Only get words without reviews
+        .where(WordReviewItem.id == None)
         .limit(limit)
     )
     
