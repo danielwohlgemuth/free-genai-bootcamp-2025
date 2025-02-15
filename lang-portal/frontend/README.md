@@ -21,7 +21,7 @@ This is a web application that allows users to study Japanese vocabulary. It ser
 
 - Node.js (v18 or higher)
 - npm (v9 or higher)
-- Backend server running (see backend README)
+- Backend server running (see [backend README](../backend_python/README.md))
 
 ## Directory Structure
 
@@ -110,4 +110,4 @@ The application includes the following pages:
 
 The frontend communicates with the backend server through a REST API. The base URL for the API is configured through the `VITE_API_URL` environment variable.
 
-Make sure the backend server is running and accessible before starting the frontend application.
+Make sure the backend server is running and accessible before starting the frontend application. See [backend README](../backend_python/README.md) for more details.
