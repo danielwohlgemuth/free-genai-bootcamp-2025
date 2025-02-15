@@ -3,16 +3,26 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select, Integer
 from datetime import datetime
 from ..models.base import get_db
-from ..models.models import StudySession, Group, WordReviewItem, Word
+from ..models.models import StudySession, Group, WordReviewItem, Word, StudyActivity
 
 router = APIRouter()
 
 @router.get("/last_study_session")
 async def get_last_study_session(db: AsyncSession = Depends(get_db)):
-    query = select(StudySession, Group.name.label("group_name")) \
-        .join(Group) \
-        .order_by(StudySession.created_at.desc()) \
+    query = (
+        select(
+            StudySession,
+            Group.name.label("group_name"),
+            StudyActivity.name.label("activity_name"),
+            func.count(WordReviewItem.id).label("review_items_count")
+        )
+        .join(Group)
+        .join(StudyActivity)
+        .outerjoin(WordReviewItem)
+        .group_by(StudySession.id, Group.name, StudyActivity.name)
+        .order_by(StudySession.created_at.desc())
         .limit(1)
+    )
     
     result = await db.execute(query)
     session_data = result.first()
@@ -20,13 +30,13 @@ async def get_last_study_session(db: AsyncSession = Depends(get_db)):
     if not session_data:
         return None
     
-    session, group_name = session_data
+    session, group_name, activity_name, review_count = session_data
     return {
         "id": session.id,
-        "group_id": session.group_id,
-        "created_at": session.created_at.isoformat(),
-        "study_activity_id": session.study_activity_id,
-        "group_name": group_name
+        "group_name": group_name,
+        "activity_name": activity_name,
+        "start_time": session.created_at.isoformat(),
+        "review_items_count": review_count
     }
 
 @router.get("/study_progress")
