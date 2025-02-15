@@ -2,6 +2,9 @@ from doit.tools import run_once
 import json
 import sqlite3
 from pathlib import Path
+import asyncio
+from internal.models.base import get_db
+from internal.handlers.system import full_reset
 
 DOIT_CONFIG = {'default_tasks': ['init_db']}
 
@@ -36,18 +39,14 @@ def task_run_migrations():
 def task_seed_data():
     """Seed the database with initial data"""
     def seed_database():
-        conn = sqlite3.connect('words.db')
-        seeds_dir = Path('db/seeds')
+        async def run_reset():
+            async for db in get_db():
+                await full_reset(db)
+                break  # We only need to run once
         
-        for seed_file in seeds_dir.glob('*.json'):
-            with open(seed_file) as f:
-                data = json.load(f)
-                # Implementation depends on your seed file structure
-                # Add logic here to insert data into appropriate tables
-        
-        conn.close()
+        asyncio.run(run_reset())
     
     return {
         'actions': [seed_database],
         'task_dep': ['run_migrations']
-    } 
+    }
