@@ -140,7 +140,7 @@ export function StudySession() {
               value={userAnswer}
               onChange={(e) => setUserAnswer(e.target.value)}
               placeholder={placeholderText}
-              className="px-4 py-2 rounded-md border w-full max-w-md"
+              className="px-4 py-2 rounded-md border w-full max-w-md bg-background text-foreground"
               onKeyDown={(e) => e.key === 'Enter' && checkAnswer()}
             />
             <button

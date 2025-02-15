@@ -71,7 +71,7 @@ export function ActivityCard({ id, name, thumbnailUrl, description, type, onStar
             <select
               value={selectedGroupId}
               onChange={(e) => setSelectedGroupId(Number(e.target.value))}
-              className="w-full p-2 border rounded-md mb-2"
+              className="w-full p-2 border rounded-md mb-2 bg-background text-foreground"
             >
               <option value={0} disabled>Select a word group</option>
               {groups.map((group) => (
