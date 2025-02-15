@@ -90,15 +90,27 @@ async def get_quick_stats(db: AsyncSession = Depends(get_db)):
     
     streak_days = 0
     if sessions:
+        # Convert all session dates to date objects and get unique dates
+        session_dates = sorted(set(session.date() for session in sessions), reverse=True)
+        
         current_date = datetime.now().date()
-        streak_end = False
-        while not streak_end and sessions:
-            session_date = sessions.pop(0).date()
-            if (current_date - session_date).days <= 1:
-                streak_days += 1
-                current_date = session_date
-            else:
-                streak_end = True
+        # Check if there's a session today or yesterday to start the streak
+        if (current_date - session_dates[0]).days <= 1:
+            streak_days = 1
+            prev_date = session_dates[0]
+            
+            # Check consecutive days
+            for session_date in session_dates[1:]:
+                # If exactly one day difference, continue streak
+                if (prev_date - session_date).days == 1:
+                    streak_days += 1
+                    prev_date = session_date
+                # If same day, skip
+                elif (prev_date - session_date).days == 0:
+                    continue
+                # If gap in days, end streak
+                else:
+                    break
     
     return {
         "success_rate": round(success_rate, 1),
