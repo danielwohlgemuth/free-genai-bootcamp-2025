@@ -14,7 +14,7 @@ export default function Settings() {
         title: "Success",
         description: "Study history has been reset",
       });
-      window.location.href = "/dashboard";
+      window.location.href = "/";
     } catch (error) {
       toast({
         title: "Error",
@@ -27,11 +27,12 @@ export default function Settings() {
   const handleFullReset = async () => {
     try {
       await api.post("/full_reset");
+      setTheme("system");
       toast({
         title: "Success",
         description: "System has been fully reset",
       });
-      window.location.href = "/dashboard";
+      window.location.href = "/";
     } catch (error) {
       toast({
         title: "Error",
