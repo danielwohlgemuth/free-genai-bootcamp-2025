@@ -1,0 +1,54 @@
+{
+  "group_name": "Common Expressions",
+  "words": [
+    {
+      "japanese": "ありがとうございます",
+      "romaji": "arigatou gozaimasu",
+      "english": "thank you",
+      "parts": {
+        "type": "expression",
+        "formality": "formal"
+      }
+    },
+    {
+      "japanese": "すみません",
+      "romaji": "sumimasen",
+      "english": "excuse me",
+      "parts": {
+        "type": "expression",
+        "formality": "neutral",
+        "usage": "apology/attention"
+      }
+    },
+    {
+      "japanese": "お願いします",
+      "romaji": "onegai shimasu",
+      "english": "please",
+      "parts": {
+        "type": "expression",
+        "formality": "formal",
+        "usage": "request"
+      }
+    },
+    {
+      "japanese": "はい",
+      "romaji": "hai",
+      "english": "yes",
+      "parts": {
+        "type": "expression",
+        "formality": "neutral",
+        "usage": "agreement"
+      }
+    },
+    {
+      "japanese": "いいえ",
+      "romaji": "iie",
+      "english": "no",
+      "parts": {
+        "type": "expression",
+        "formality": "neutral",
+        "usage": "disagreement"
+      }
+    }
+  ]
+} 
