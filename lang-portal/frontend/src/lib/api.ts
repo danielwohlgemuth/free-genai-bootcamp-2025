@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 class ApiClient {
   private baseUrl: string
@@ -9,6 +9,9 @@ class ApiClient {
 
   async get<T>(path: string): Promise<{ data: T }> {
     const response = await fetch(`${this.baseUrl}${path}`)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
     const data = await response.json()
     return { data }
   }
@@ -21,6 +24,9 @@ class ApiClient {
       },
       body: body ? JSON.stringify(body) : undefined,
     })
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
     const data = await response.json()
     return { data }
   }

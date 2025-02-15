@@ -38,9 +38,10 @@ export function StudyActivities() {
     fetchData()
   }, [])
 
-  const handleStartActivity = async (activityId: number) => {
+  const handleStartActivity = async (activityId: number, groupId: number) => {
     try {
       const response = await api.post<{ id: number }>('/study_activities', {
+        group_id: groupId,
         study_activity_id: activityId
       })
 
@@ -71,7 +72,7 @@ export function StudyActivities() {
                 name={activity.name}
                 thumbnailUrl={activity.thumbnail_url}
                 description={activity.description}
-                onStart={handleStartActivity}
+                onStart={() => handleStartActivity(activity.id, 1)}
               />
             ))}
           </div>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
 from datetime import datetime, timedelta, UTC
@@ -91,8 +91,8 @@ async def get_activity_study_sessions(
 
 @router.post("")
 async def create_study_session(
-    group_id: int,
-    study_activity_id: int,
+    group_id: int = Body(...),
+    study_activity_id: int = Body(...),
     db: AsyncSession = Depends(get_db)
 ):
     # Verify group and activity exist
