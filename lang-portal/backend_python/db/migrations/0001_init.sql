@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS study_activities (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     thumbnail_url TEXT,
-    description TEXT
+    description TEXT,
+    type TEXT NOT NULL
 );
 
 -- Create study_sessions table
