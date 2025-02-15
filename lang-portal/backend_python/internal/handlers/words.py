@@ -37,6 +37,7 @@ async def get_words(
     return {
         "items": [
             {
+                "id": word.id,
                 "japanese": word.japanese,
                 "romaji": word.romaji,
                 "english": word.english,
