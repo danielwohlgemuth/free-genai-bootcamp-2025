@@ -18,7 +18,8 @@ async def get_study_activities(db: AsyncSession = Depends(get_db)):
             "id": activity.id,
             "name": activity.name,
             "thumbnail_url": activity.thumbnail_url,
-            "description": activity.description
+            "description": activity.description,
+            "type": activity.type
         }
         for activity in activities
     ]
@@ -36,7 +37,8 @@ async def get_study_activity(activity_id: int, db: AsyncSession = Depends(get_db
         "id": activity.id,
         "name": activity.name,
         "thumbnail_url": activity.thumbnail_url,
-        "description": activity.description
+        "description": activity.description,
+        "type": activity.type
     }
 
 @router.get("/{activity_id}/study_sessions")

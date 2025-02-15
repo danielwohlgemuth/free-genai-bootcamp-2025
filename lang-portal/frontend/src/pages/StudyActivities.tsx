@@ -10,6 +10,7 @@ interface StudyActivity {
   name: string
   thumbnail_url: string
   description: string
+  type: string
 }
 
 export function StudyActivities() {
@@ -72,7 +73,8 @@ export function StudyActivities() {
                 name={activity.name}
                 thumbnailUrl={activity.thumbnail_url}
                 description={activity.description}
-                onStart={() => handleStartActivity(activity.id, 1)}
+                type={activity.type}
+                onStart={handleStartActivity}
               />
             ))}
           </div>
