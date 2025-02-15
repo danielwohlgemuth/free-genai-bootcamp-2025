@@ -1,12 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select, and_
 from datetime import datetime, timedelta, UTC
 from sqlalchemy.orm import joinedload
 from ..models.base import get_db
 from ..models.models import StudySession, Word, WordReviewItem, StudyActivity, WordGroup
+from pydantic import BaseModel
 
 router = APIRouter()
+
+class WordReviewCreate(BaseModel):
+    correct: bool
 
 @router.get("")
 async def get_study_sessions(
@@ -23,17 +27,21 @@ async def get_study_sessions(
     total_count = total_count.scalar()
     
     # Get study sessions with review items count
-    query = select(
-        StudySession,
-        func.count(WordReviewItem.id).label("review_items_count")
-    ).outerjoin(StudySession.review_items) \
-     .group_by(StudySession.id) \
-     .order_by(StudySession.created_at.desc()) \
-     .offset(offset) \
-     .limit(per_page)
+    query = (
+        select(StudySession, func.count(WordReviewItem.id).label("review_items_count"))
+        .options(
+            joinedload(StudySession.activity),
+            joinedload(StudySession.group)
+        )
+        .outerjoin(StudySession.review_items)
+        .group_by(StudySession.id)
+        .order_by(StudySession.created_at.desc())
+        .offset(offset)
+        .limit(per_page)
+    )
     
     result = await db.execute(query)
-    sessions = result.all()
+    sessions = result.unique().all()
     
     return {
         "items": [
@@ -42,7 +50,7 @@ async def get_study_sessions(
                 "activity_name": session.activity.name,
                 "group_name": session.group.name,
                 "start_time": session.created_at.isoformat(),
-                "end_time": (session.created_at + timedelta(minutes=10)).isoformat(),  # Estimated
+                "end_time": (session.created_at + timedelta(minutes=10)).isoformat(),
                 "review_items_count": review_count
             }
             for session, review_count in sessions
@@ -134,7 +142,7 @@ async def get_session_words(
 async def create_word_review(
     session_id: int,
     word_id: int,
-    correct: bool,
+    review: WordReviewCreate,
     db: AsyncSession = Depends(get_db)
 ):
     # Verify session and word exist
@@ -156,7 +164,7 @@ async def create_word_review(
     review_item = WordReviewItem(
         word_id=word_id,
         study_session_id=session_id,
-        correct=correct,
+        correct=review.correct,
         created_at=datetime.now(UTC)
     )
     
@@ -167,7 +175,7 @@ async def create_word_review(
         "success": True,
         "word_id": word_id,
         "study_session_id": session_id,
-        "correct": correct,
+        "correct": review.correct,
         "created_at": review_item.created_at.isoformat()
     }
 
