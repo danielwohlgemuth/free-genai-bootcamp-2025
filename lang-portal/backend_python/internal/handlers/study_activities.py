@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from ..models.base import get_db
 from ..models.models import StudyActivity, StudySession, WordReviewItem, Group
 
@@ -114,7 +114,7 @@ async def create_study_session(
     session = StudySession(
         group_id=group_id,
         study_activity_id=study_activity_id,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(UTC)
     )
     
     db.add(session)

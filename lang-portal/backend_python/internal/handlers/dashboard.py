@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, select
-from datetime import datetime, timedelta
+from sqlalchemy import func, select, Integer
+from datetime import datetime
 from ..models.base import get_db
 from ..models.models import StudySession, Group, WordReviewItem, Word
 

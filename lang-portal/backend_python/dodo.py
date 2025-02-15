@@ -1,5 +1,4 @@
 from doit.tools import run_once
-import os
 import json
 import sqlite3
 from pathlib import Path

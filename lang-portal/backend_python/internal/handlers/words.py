@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
 from ..models.base import get_db
 from ..models.models import Word, WordReviewItem, Group
-from typing import Optional
 
 router = APIRouter()
 
