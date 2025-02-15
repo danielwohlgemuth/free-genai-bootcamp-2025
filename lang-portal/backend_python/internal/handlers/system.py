@@ -75,11 +75,6 @@ async def full_reset(db: AsyncSession = Depends(get_db)):
             "thumbnail_url": "/assets/writing-practice.jpg",
             "description": "Practice writing Japanese characters"
         },
-        {
-            "name": "Listening Exercise",
-            "thumbnail_url": "/assets/listening-exercise.jpg",
-            "description": "Improve your listening comprehension"
-        }
     ]
     
     for activity_data in default_activities:
