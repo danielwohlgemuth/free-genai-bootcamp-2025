@@ -111,15 +111,3 @@ The application includes the following pages:
 The frontend communicates with the backend server through a REST API. The base URL for the API is configured through the `VITE_API_URL` environment variable.
 
 Make sure the backend server is running and accessible before starting the frontend application.
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details
