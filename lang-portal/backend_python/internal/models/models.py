@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 from .base import Base
-from datetime import datetime
+from datetime import datetime, UTC
 
 class Word(Base):
     __tablename__ = "words"
@@ -36,7 +36,7 @@ class StudySession(Base):
     
     id = Column(Integer, primary_key=True)
     group_id = Column(Integer, ForeignKey("groups.id"))
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     study_activity_id = Column(Integer, ForeignKey("study_activities.id"))
     
     group = relationship("Group", back_populates="study_sessions")
@@ -60,7 +60,7 @@ class WordReviewItem(Base):
     word_id = Column(Integer, ForeignKey("words.id"))
     study_session_id = Column(Integer, ForeignKey("study_sessions.id"))
     correct = Column(Boolean)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     
     word = relationship("Word", back_populates="review_items")
     study_session = relationship("StudySession", back_populates="review_items") 

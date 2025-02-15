@@ -1,7 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
-export interface ApiResponse<T> {
-  data?: T
+interface ApiResponse<T> {
+  data?: T;
   error?: string
 }
 
@@ -30,10 +30,13 @@ async function fetchApi<T>(
 }
 
 export const api = {
-  get: <T>(endpoint: string) => fetchApi<T>(endpoint),
-  post: <T>(endpoint: string, data: any) =>
-    fetchApi<T>(endpoint, {
+  async get<T>(path: string): Promise<ApiResponse<T>> {
+    return fetchApi<T>(path)
+  },
+  async post<T>(path: string, body?: unknown): Promise<ApiResponse<T>> {
+    return fetchApi<T>(path, {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
+      body: JSON.stringify(body),
+    })
+  },
 } 

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, select
-from datetime import datetime, timedelta
+from sqlalchemy import func, select, and_
+from datetime import datetime, timedelta, UTC
 from sqlalchemy.orm import joinedload
 from ..models.base import get_db
-from ..models.models import StudySession, Word, WordReviewItem, StudyActivity
+from ..models.models import StudySession, Word, WordReviewItem, StudyActivity, WordGroup
 
 router = APIRouter()
 
@@ -113,6 +113,7 @@ async def get_session_words(
     return {
         "items": [
             {
+                "id": word.id,
                 "japanese": word.japanese,
                 "romaji": word.romaji,
                 "english": word.english,
@@ -156,7 +157,7 @@ async def create_word_review(
         word_id=word_id,
         study_session_id=session_id,
         correct=correct,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(UTC)
     )
     
     db.add(review_item)
@@ -168,4 +169,54 @@ async def create_word_review(
         "study_session_id": session_id,
         "correct": correct,
         "created_at": review_item.created_at.isoformat()
+    }
+
+@router.get("/{session_id}/next_words")
+async def get_next_words(
+    session_id: int,
+    limit: int = 10,
+    db: AsyncSession = Depends(get_db)
+):
+    # Get the study session and its group
+    session_query = (
+        select(StudySession)
+        .options(joinedload(StudySession.group))
+        .where(StudySession.id == session_id)
+    )
+    result = await db.execute(session_query)
+    session = result.unique().scalar_one_or_none()
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Study session not found")
+    
+    # Get words from the group that haven't been reviewed in this session
+    words_query = (
+        select(Word)
+        .join(WordGroup)
+        .where(WordGroup.group_id == session.group_id)
+        .outerjoin(
+            WordReviewItem,
+            and_(
+                WordReviewItem.word_id == Word.id,
+                WordReviewItem.study_session_id == session_id
+            )
+        )
+        .where(WordReviewItem.id == None)  # Only get words without reviews
+        .limit(limit)
+    )
+    
+    result = await db.execute(words_query)
+    words = result.scalars().all()
+    
+    return {
+        "items": [
+            {
+                "id": word.id,
+                "japanese": word.japanese,
+                "romaji": word.romaji,
+                "english": word.english,
+                "parts": word.parts
+            }
+            for word in words
+        ]
     } 

@@ -17,19 +17,28 @@ export function StudySession() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [loading, setLoading] = useState(true)
 
+  const fetchNextWords = async () => {
+    try {
+      const { data } = await api.get<{ items: Word[] }>(`/study_sessions/${sessionId}/next_words`)
+      setWords(prev => [...prev, ...data.items])
+    } catch (error) {
+      console.error('Error fetching next words:', error)
+    }
+  }
+
   useEffect(() => {
     async function fetchSessionData() {
       try {
-        const [sessionRes, wordsRes] = await Promise.all([
+        const [sessionRes, nextWordsRes] = await Promise.all([
           api.get<StudySessionDetails>(`/study_sessions/${sessionId}`),
-          api.get<{ items: Word[] }>(`/study_sessions/${sessionId}/words`)
+          api.get<{ items: Word[] }>(`/study_sessions/${sessionId}/next_words`)
         ])
 
         if (sessionRes.data) setSession(sessionRes.data)
-        if (wordsRes.data) setWords(wordsRes.data.items)
+        if (nextWordsRes.data) setWords(nextWordsRes.data.items)
       } catch (error) {
         console.error('Error fetching session data:', error)
-      } finally {
+      } finally {   
         setLoading(false)
       }
     }
@@ -47,9 +56,16 @@ export function StudySession() {
         correct
       })
 
+      // If we're near the end of our word list, fetch more
+      if (currentWordIndex >= words.length - 3) {
+        await fetchNextWords()
+      }
+
+      // Move to next word if available
       if (currentWordIndex < words.length - 1) {
         setCurrentWordIndex(prev => prev + 1)
       } else {
+        // No more words available
         navigate('/study/complete')
       }
     } catch (error) {
