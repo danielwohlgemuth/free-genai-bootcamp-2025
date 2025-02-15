@@ -14,7 +14,7 @@ export function LastStudySession({ session }: LastStudySessionProps) {
     )
   }
 
-  const date = new Date(session.start_time)
+  const date = new Date(session.start_time + 'Z')
   const formattedDate = new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short'

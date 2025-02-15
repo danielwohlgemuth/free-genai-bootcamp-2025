@@ -25,7 +25,10 @@ export function SessionHistory({ sessions }: SessionHistoryProps) {
                 <p className="text-sm text-muted-foreground">{session.group_name}</p>
               </div>
               <span className="text-sm text-muted-foreground">
-                {new Date(session.start_time).toLocaleDateString()}
+                {new Intl.DateTimeFormat('en-US', {
+                  dateStyle: 'medium',
+                  timeStyle: 'short'
+                }).format(new Date(session.start_time + 'Z'))}
               </span>
             </div>
             <div className="text-sm text-muted-foreground">
