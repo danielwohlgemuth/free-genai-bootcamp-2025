@@ -39,4 +39,14 @@ def seed_data(ctx):
 @task(seed_data)
 def setup(ctx):
     """Run all setup tasks in sequence"""
-    print("Setup complete!") 
+    print("Setup complete!")
+
+@task
+def run_server(ctx):
+    """Run the production server"""
+    ctx.run("python cmd/server/main.py")
+
+@task
+def dev_server(ctx):
+    """Run the development server with auto-reload"""
+    ctx.run("uvicorn cmd.server.main:app --reload") 

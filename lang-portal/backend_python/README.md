@@ -45,14 +45,14 @@ invoke seed-data
 
 You can run the server in two ways:
 
-1. Using Python directly:
+1. Using invoke:
 ```bash
-python cmd/server/main.py
+invoke run-server
 ```
 
-2. Using uvicorn (recommended for development):
+2. Using invoke with auto-reload (recommended for development):
 ```bash
-uvicorn cmd.server.main:app --reload
+invoke dev-server
 ```
 
 The server will start on `http://localhost:8000`.
