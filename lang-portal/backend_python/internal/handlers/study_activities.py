@@ -43,7 +43,7 @@ async def get_study_activity(activity_id: int, db: AsyncSession = Depends(get_db
 async def get_activity_study_sessions(
     activity_id: int,
     page: int = 1,
-    per_page: int = 100,
+    per_page: int = 2,
     db: AsyncSession = Depends(get_db)
 ):
     # Calculate offset

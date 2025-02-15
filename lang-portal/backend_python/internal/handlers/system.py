@@ -66,14 +66,16 @@ async def full_reset(db: AsyncSession = Depends(get_db)):
     # Create default study activities
     default_activities = [
         {
-            "name": "Vocabulary Quiz",
+            "name": "Japanese to English",
             "thumbnail_url": "/assets/vocab-quiz.jpg",
-            "description": "Test your vocabulary knowledge with flashcards"
+            "description": "Translate Japanese words into English",
+            "type": "ja_to_en"
         },
         {
-            "name": "Writing Practice",
+            "name": "English to Japanese",
             "thumbnail_url": "/assets/writing-practice.jpg",
-            "description": "Practice writing Japanese characters"
+            "description": "Practice recalling Japanese words from English",
+            "type": "en_to_ja"
         },
     ]
     

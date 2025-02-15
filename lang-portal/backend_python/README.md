@@ -29,19 +29,16 @@ pip install -r requirements.txt
 
 Before running the server for the first time:
 
-1. Initialize the database:
+Run the complete setup with:
 ```bash
-python -m doit init_db
+invoke setup
 ```
 
-2. Run the migrations:
+Or run individual tasks:
 ```bash
-python -m doit run_migrations
-```
-
-3. Load the seed data:
-```bash
-python -m doit seed_data
+invoke init-db
+invoke run-migrations
+invoke seed-data
 ```
 
 ## Running the Server

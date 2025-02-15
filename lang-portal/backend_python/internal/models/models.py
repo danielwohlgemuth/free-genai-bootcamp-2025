@@ -50,6 +50,7 @@ class StudyActivity(Base):
     name = Column(String)
     thumbnail_url = Column(String)
     description = Column(String)
+    type = Column(String, nullable=False)
     
     sessions = relationship("StudySession", back_populates="activity")
 
