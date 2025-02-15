@@ -8,6 +8,7 @@ export function MainLayout() {
     { path: '/study', label: 'Study' },
     { path: '/words', label: 'Words' },
     { path: '/groups', label: 'Groups' },
+    { path: '/settings', label: 'Settings' },
   ]
 
   return (

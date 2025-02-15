@@ -6,6 +6,7 @@ import { StudySession } from '@/pages/StudySession'
 import { Words } from '@/pages/Words'
 import { Groups } from '@/pages/Groups'
 import { GroupDetail } from '@/pages/GroupDetail'
+import Settings from '@/pages/Settings'
 
 export const router = createBrowserRouter([
   {
@@ -45,6 +46,10 @@ export const router = createBrowserRouter([
             element: <GroupDetail />,
           },
         ],
+      },
+      {
+        path: 'settings',
+        element: <Settings />,
       },
     ],
   },
