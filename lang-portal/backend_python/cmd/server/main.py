@@ -32,7 +32,7 @@ app.include_router(words.router, prefix="/api/words", tags=["words"])
 app.include_router(groups.router, prefix="/api/groups", tags=["groups"])
 app.include_router(study_sessions.router, prefix="/api/study_sessions", tags=["study_sessions"])
 app.include_router(study_activities.router, prefix="/api/study_activities", tags=["study_activities"])
-app.include_router(system.router, prefix="/api/system", tags=["system"])
+app.include_router(system.router, prefix="/api", tags=["system"])
 
 if __name__ == "__main__":
     import uvicorn
