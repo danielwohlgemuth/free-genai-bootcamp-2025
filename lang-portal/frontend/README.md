@@ -2,10 +2,24 @@
 
 A modern web application for language learning, built with React, TypeScript, and Tailwind CSS.
 
+Dashboard
+
 ![Frontend Dashboard](assets/frontend_dashboard.png)
+
+Study Activity
+
 ![Frontend Study Activity](assets/frontend_study_activity.png)
+
+Study Session
+
 ![Frontend Study Session](assets/frontend_study_session.png)
+
+Words
+
 ![Frontend Words](assets/frontend_words.png)
+
+Word Groups
+
 ![Frontend Word Groups](assets/frontend_word_groups.png)
 
 ## Features
