@@ -245,5 +245,5 @@ docker compose down
 Remove downloaded models
 
 ```bash
-docker volume rm opea-comps_model_data
+docker volume rm ollama_model_data
 ```
