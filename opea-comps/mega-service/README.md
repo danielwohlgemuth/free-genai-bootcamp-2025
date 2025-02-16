@@ -5,9 +5,8 @@ A service that generates Japanese vocabulary words based on topics using LLM.
 ## Setup
 
 ### Prerequisites
-- Python 3.8+
+- Python
 - Docker
-- Ollama
 
 ### Local Setup
 
@@ -65,8 +64,10 @@ docker run -p 8888:8888 \
 
 Start the services:
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
+
+This will start both the Ollama service and the vocabulary service with the correct networking configuration.
 
 ## Usage
 
@@ -80,6 +81,8 @@ curl -X POST http://localhost:8888/ \
     "word_count": 5
   }'
 ```
+
+Note: `word_count` must be between 3 and 10 words.
 
 ### Environment Variables
 
