@@ -10,8 +10,11 @@ Describes the goals and considerations of this project.
 
 ## [Sentence Constructor](/sentence-constructor/README.md)
 
-Compares the performance of chatbots in following prompts to help a beginner student translate a sentence from english to japanese.
+Compares the performance of chatbots in following prompts to help a beginner student translate a sentence from English to Japanese.
 
+## [Language Learning Portal](/lang-portal/README.md)
+
+A web application for learning Japanese built with an AI-powered code editor.
 
 ## Useful Links
 
