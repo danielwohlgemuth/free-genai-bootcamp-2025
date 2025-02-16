@@ -33,7 +33,7 @@ curl http://localhost:11434/api/tags
 Download model
 
 ```bash
-docker exec ollama-server ollama run llama3.2:1b
+docker exec ollama ollama run llama3.2:1b
 ```
 
 or
@@ -188,7 +188,7 @@ Response
 Download model
 
 ```bash
-docker exec ollama-server ollama run deepseek-r1:1.5b
+docker exec ollama ollama run deepseek-r1:1.5b
 ```
 
 #### Request
