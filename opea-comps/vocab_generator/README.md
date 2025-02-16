@@ -9,7 +9,7 @@ Japanese Vocabulary Generator
 ## Setup
 
 ### Prerequisites
-- Python 3.11 or higher
+- Python
 - Docker and Docker Compose (optional, for containerized setup)
 
 ### Local Setup
@@ -42,7 +42,7 @@ The application will be available at `http://localhost:8501`
 
 ### Docker Setup
 
-1. Build and run using Docker Compose:
+Build and run using Docker Compose:
 ```bash
 docker-compose up --build
 ```
@@ -84,11 +84,11 @@ docker-compose --env-file .env up
 ## Project Structure
 
 ```
-vocab_importer/
+vocab_generator/
 ├── app.py              # Main Streamlit application
-├── Dockerfile         # Docker configuration
-├── docker-compose.yml # Docker Compose configuration
-├── requirements.txt   # Python dependencies
-├── README.md         # This file
-└── tech_specs.md     # Technical specifications
+├── Dockerfile          # Docker configuration
+├── docker-compose.yml  # Docker Compose configuration
+├── requirements.txt    # Python dependencies
+├── README.md           # This file
+└── tech_specs.md       # Technical specifications
 ```
