@@ -8,7 +8,7 @@ from comps import MicroService, ServiceOrchestrator, ServiceRoleType, ServiceTyp
 from comps.cores.proto.docarray import LLMParams
 
 MEGA_SERVICE_PORT = int(os.getenv("MEGA_SERVICE_PORT", 8888))
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:8008")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2:1b")
 
 def align_inputs(self, inputs, cur_node, runtime_graph, llm_parameters_dict, **kwargs):

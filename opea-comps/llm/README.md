@@ -23,7 +23,7 @@ Visit https://ollama.com/library to see the list of available models.
 ## List downloaded models
 
 ```bash
-curl http://localhost:8008/api/tags
+curl http://localhost:11434/api/tags
 ```
 
 ## Model evaluation
@@ -39,7 +39,7 @@ docker exec ollama-server ollama run llama3.2:1b
 or
 
 ```bash
-curl http://localhost:8008/api/pull -d '{
+curl http://localhost:11434/api/pull -d '{
   "model": "llama3.2:1b"
 }'
 ```
@@ -47,7 +47,7 @@ curl http://localhost:8008/api/pull -d '{
 #### Request
 
 ```bash
-curl --noproxy "*" http://localhost:8008/api/generate -d '{
+curl --noproxy "*" http://localhost:11434/api/generate -d '{
   "model": "llama3.2:1b",
   "prompt":"Why is the sky blue?",
   "stream": false
@@ -76,7 +76,7 @@ Response
 #### Request (Structured outputs)
 
 ```bash
-curl -X POST http://localhost:8008/api/generate -H "Content-Type: application/json" -d '{
+curl -X POST http://localhost:11434/api/generate -H "Content-Type: application/json" -d '{
   "model": "llama3.2:1b",
   "prompt": "Ollama is 22 years old and is busy saving the world. Respond using JSON",
   "stream": false,
@@ -120,7 +120,7 @@ Response
 #### Request (JSON mode)
 
 ```bash
-curl http://localhost:8008/api/generate -d '{
+curl http://localhost:11434/api/generate -d '{
   "model": "llama3.2:1b",
   "prompt": "What color is the sky at different times of the day? Respond using JSON",
   "format": "json",
@@ -150,7 +150,7 @@ Response
 #### Request (Chat)
 
 ```bash
-curl http://localhost:8008/api/chat -d '{
+curl http://localhost:11434/api/chat -d '{
   "model": "llama3.2:1b",
   "messages": [
     {
@@ -194,7 +194,7 @@ docker exec ollama-server ollama run deepseek-r1:1.5b
 #### Request
 
 ```bash
-curl --noproxy "*" http://localhost:8008/api/generate -d '{
+curl --noproxy "*" http://localhost:11434/api/generate -d '{
   "model": "deepseek-r1:1.5b",
   "prompt":"Why is the sky blue?",
   "stream": false
@@ -225,12 +225,12 @@ Response
 Unload model from memory
 
 ```bash
-curl http://localhost:8008/api/generate -d '{
+curl http://localhost:11434/api/generate -d '{
   "model": "llama3.2:1b",
   "keep_alive": 0
 }'
 
-curl http://localhost:8008/api/generate -d '{
+curl http://localhost:11434/api/generate -d '{
   "model": "deepseek-r1:1.5b",
   "keep_alive": 0
 }'
