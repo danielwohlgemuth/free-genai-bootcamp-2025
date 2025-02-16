@@ -21,7 +21,7 @@ def fetch_vocabulary(topic: str, word_count: int) -> Optional[Dict]:
         response = requests.post(
             f"{BACKEND_URL}",
             json={"topic": topic, "word_count": word_count},
-            timeout=10
+            timeout=30
         )
         response.raise_for_status()
         return response.json()
@@ -78,10 +78,7 @@ def main():
                 
                 # Collapsible JSON view
                 with st.expander("View Raw JSON"):
-                    st.code(json.dumps(result, indent=2), language="json")
-                    if st.button("Copy to Clipboard"):
-                        st.write("Copied to clipboard!")
-                        st.session_state['clipboard'] = json.dumps(result, indent=2)
+                    st.code(json.dumps(result), language="json")
                 
                 # Display word cards
                 display_word_cards(result['words'])
