@@ -58,6 +58,7 @@ RERANK_SERVER_PORT = int(os.getenv("RERANK_SERVER_PORT", 80))
 LLM_SERVER_HOST_IP = os.getenv("LLM_SERVER_HOST_IP", "0.0.0.0")
 LLM_SERVER_PORT = int(os.getenv("LLM_SERVER_PORT", 80))
 LLM_MODEL = os.getenv("LLM_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:8008")
 
 
 def align_inputs(self, inputs, cur_node, runtime_graph, llm_parameters_dict, **kwargs):
@@ -196,140 +197,83 @@ class VocabImporterService:
         ServiceOrchestrator.align_outputs = align_outputs
         ServiceOrchestrator.align_generator = align_generator
         self.megaservice = ServiceOrchestrator()
-        self.endpoint = str(MegaServiceEndpoint.CHAT_QNA)
+        self.endpoint = "/v1/vocab"
 
     def add_remote_service(self):
-
         llm = MicroService(
             name="llm",
-            host=LLM_SERVER_HOST_IP,
-            port=LLM_SERVER_PORT,
-            endpoint="/v1/chat/completions",
+            host=OLLAMA_HOST,
+            port="",  # Port is included in the host URL
+            endpoint="/api/generate",
             use_remote_service=True,
             service_type=ServiceType.LLM,
         )
         self.megaservice.add(llm)
 
-    def add_remote_service_with_guardrails(self):
-        guardrail_in = MicroService(
-            name="guardrail_in",
-            host=GUARDRAIL_SERVICE_HOST_IP,
-            port=GUARDRAIL_SERVICE_PORT,
-            endpoint="/v1/guardrails",
-            use_remote_service=True,
-            service_type=ServiceType.GUARDRAIL,
-        )
-        embedding = MicroService(
-            name="embedding",
-            host=EMBEDDING_SERVER_HOST_IP,
-            port=EMBEDDING_SERVER_PORT,
-            endpoint="/embed",
-            use_remote_service=True,
-            service_type=ServiceType.EMBEDDING,
-        )
-        retriever = MicroService(
-            name="retriever",
-            host=RETRIEVER_SERVICE_HOST_IP,
-            port=RETRIEVER_SERVICE_PORT,
-            endpoint="/v1/retrieval",
-            use_remote_service=True,
-            service_type=ServiceType.RETRIEVER,
-        )
-        rerank = MicroService(
-            name="rerank",
-            host=RERANK_SERVER_HOST_IP,
-            port=RERANK_SERVER_PORT,
-            endpoint="/rerank",
-            use_remote_service=True,
-            service_type=ServiceType.RERANK,
-        )
-        llm = MicroService(
-            name="llm",
-            host=LLM_SERVER_HOST_IP,
-            port=LLM_SERVER_PORT,
-            endpoint="/v1/chat/completions",
-            use_remote_service=True,
-            service_type=ServiceType.LLM,
-        )
-        # guardrail_out = MicroService(
-        #     name="guardrail_out",
-        #     host=GUARDRAIL_SERVICE_HOST_IP,
-        #     port=GUARDRAIL_SERVICE_PORT,
-        #     endpoint="/v1/guardrails",
-        #     use_remote_service=True,
-        #     service_type=ServiceType.GUARDRAIL,
-        # )
-        # self.megaservice.add(guardrail_in).add(embedding).add(retriever).add(rerank).add(llm).add(guardrail_out)
-        self.megaservice.add(guardrail_in).add(embedding).add(retriever).add(rerank).add(llm)
-        self.megaservice.flow_to(guardrail_in, embedding)
-        self.megaservice.flow_to(embedding, retriever)
-        self.megaservice.flow_to(retriever, rerank)
-        self.megaservice.flow_to(rerank, llm)
-        # self.megaservice.flow_to(llm, guardrail_out)
-
     async def handle_request(self, request: Request):
         data = await request.json()
-        stream_opt = data.get("stream", True)
-        chat_request = ChatCompletionRequest.parse_obj(data)
-        prompt = handle_message(chat_request.messages)
+        topic = data.get("topic")
+        word_count = data.get("word_count", 5)
+        
+        if not topic or not isinstance(word_count, int) or word_count < 3 or word_count > 10:
+            raise ValueError("Invalid input: topic required and word_count must be between 3-10")
+
+        prompt = f"""Generate exactly {word_count} Japanese vocabulary words related to the topic '{topic}'.
+For each word, provide:
+- The Japanese word (in kanji/kana)
+- Romaji (romanized form)
+- English translation
+- Part of speech
+- Formality level (casual/formal/polite)
+
+Format the response as a JSON object exactly matching this structure:
+{{
+    "group_name": "{topic}",
+    "words": [
+        {{
+            "japanese": "...",
+            "romaji": "...",
+            "english": "...",
+            "parts": {{
+                "type": "...",
+                "formality": "..."
+            }}
+        }}
+    ]
+}}"""
+
         parameters = LLMParams(
-            max_tokens=chat_request.max_tokens if chat_request.max_tokens else 1024,
-            top_k=chat_request.top_k if chat_request.top_k else 10,
-            top_p=chat_request.top_p if chat_request.top_p else 0.95,
-            temperature=chat_request.temperature if chat_request.temperature else 0.01,
-            frequency_penalty=chat_request.frequency_penalty if chat_request.frequency_penalty else 0.0,
-            presence_penalty=chat_request.presence_penalty if chat_request.presence_penalty else 0.0,
-            repetition_penalty=chat_request.repetition_penalty if chat_request.repetition_penalty else 1.03,
-            stream=stream_opt,
-            chat_template=chat_request.chat_template if chat_request.chat_template else None,
+            max_tokens=1024,
+            temperature=0.7,
+            stream=False,
         )
-        retriever_parameters = RetrieverParms(
-            search_type=chat_request.search_type if chat_request.search_type else "similarity",
-            k=chat_request.k if chat_request.k else 4,
-            distance_threshold=chat_request.distance_threshold if chat_request.distance_threshold else None,
-            fetch_k=chat_request.fetch_k if chat_request.fetch_k else 20,
-            lambda_mult=chat_request.lambda_mult if chat_request.lambda_mult else 0.5,
-            score_threshold=chat_request.score_threshold if chat_request.score_threshold else 0.2,
-        )
-        reranker_parameters = RerankerParms(
-            top_n=chat_request.top_n if chat_request.top_n else 1,
-        )
+
         result_dict, runtime_graph = await self.megaservice.schedule(
             initial_inputs={"text": prompt},
             llm_parameters=parameters,
-            retriever_parameters=retriever_parameters,
-            reranker_parameters=reranker_parameters,
         )
-        for node, response in result_dict.items():
-            if isinstance(response, StreamingResponse):
-                return response
+
         last_node = runtime_graph.all_leaves()[-1]
         response = result_dict[last_node]["text"]
-        choices = []
-        usage = UsageInfo()
-        choices.append(
-            ChatCompletionResponseChoice(
-                index=0,
-                message=ChatMessage(role="assistant", content=response),
-                finish_reason="stop",
-            )
-        )
-        return ChatCompletionResponse(model="chatqna", choices=choices, usage=usage)
+        
+        # Parse the response to ensure it matches the expected format
+        try:
+            vocab_data = json.loads(response)
+            return vocab_data
+        except json.JSONDecodeError:
+            raise ValueError("Failed to generate properly formatted vocabulary data")
 
     def start(self):
-
         self.service = MicroService(
             self.__class__.__name__,
             service_role=ServiceRoleType.MEGASERVICE,
             host=self.host,
             port=self.port,
             endpoint=self.endpoint,
-            input_datatype=ChatCompletionRequest,
-            output_datatype=ChatCompletionResponse,
         )
 
         self.service.add_route(self.endpoint, self.handle_request, methods=["POST"])
-
+        self.add_remote_service()
         self.service.start()
 
 
