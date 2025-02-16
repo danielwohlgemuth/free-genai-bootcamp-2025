@@ -7,18 +7,13 @@ from typing import Dict, List, Optional
 # Configuration
 BACKEND_URL = os.getenv("BACKEND_SERVICE_URL", "http://0.0.0.0:8888")
 
-# Page config and theme
+# Page config
 st.set_page_config(
     page_title="Japanese Vocabulary Generator",
     page_icon="🇯🇵",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-
-def init_session_state():
-    """Initialize session state variables"""
-    if 'theme' not in st.session_state:
-        st.session_state.theme = "light"
 
 def fetch_vocabulary(topic: str, word_count: int) -> Optional[Dict]:
     """Fetch vocabulary from backend service"""
@@ -55,25 +50,6 @@ def display_word_cards(words: List[Dict]):
             )
 
 def main():
-    init_session_state()
-    
-    # Sidebar
-    with st.sidebar:
-        st.title("Settings")
-        theme = st.toggle("Dark Mode", value=st.session_state.theme == "dark")
-        if theme != (st.session_state.theme == "dark"):
-            st.session_state.theme = "dark" if theme else "light"
-            st.markdown("""
-                <script>
-                    var theme = window.localStorage.getItem('theme');
-                    var isDark = theme === 'dark';
-                    if (isDark !== {}) {{
-                        window.localStorage.setItem('theme', '{}');
-                        window.location.reload();
-                    }}
-                </script>
-            """.format(theme, "dark" if theme else "light"), unsafe_allow_html=True)
-
     # Main content
     st.title("Japanese Vocabulary Generator")
     

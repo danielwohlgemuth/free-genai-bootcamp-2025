@@ -36,11 +36,7 @@ The purpose of this app is to generate a list of Japanese words together with th
      - Copy to clipboard button
      - Initially collapsed
 
-5. Theme Toggle
-   - Dark/light mode switch
-   - Persists user preference
-
-6. Responsive Design
+5. Responsive Design
    - Adapts to different screen sizes
    - Card layout adjusts based on viewport width
 
@@ -84,7 +80,7 @@ Backend Response:
 
 1. Performance
    - Responsive UI during API calls
-   - Smooth animations for collapsible elements and theme changes
+   - Smooth animations for collapsible elements
 
 2. Error Recovery
    - Clear error messages
