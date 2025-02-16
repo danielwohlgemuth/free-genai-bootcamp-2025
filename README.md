@@ -16,6 +16,10 @@ Compares the performance of chatbots in following prompts to help a beginner stu
 
 A web application for learning Japanese built with an AI-powered code editor.
 
+## [OPEA Comps](/opea-comps/README.md)
+
+A web application for generating Japanese vocabulary from a given topic, using Streamlit, OPEA, and Ollama.
+
 ## Useful Links
 
 - [Free GenAI Bootcamp Landing Page](https://genai.cloudprojectbootcamp.com/)
