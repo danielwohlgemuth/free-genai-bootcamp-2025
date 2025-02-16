@@ -28,16 +28,10 @@ pip install -r requirements.txt
 ```
 
 4. Run Ollama (if not already running):
-```bash
-ollama serve
-```
 
-5. Pull the LLM model:
-```bash
-ollama pull llama3.2:1b
-```
+See [llm/README.md](../llm/README.md) for instructions.
 
-6. Start the service:
+5. Start the service:
 ```bash
 python app.py
 ```
@@ -109,9 +103,4 @@ Note: `word_count` must be between 3 and 10 words.
         // ... more words
     ]
 }
-```
-
-
-```bash
-python app.py
 ```
