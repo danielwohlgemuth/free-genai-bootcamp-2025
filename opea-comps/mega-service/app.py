@@ -43,7 +43,7 @@ class VocabImporterService:
             endpoint="/api/generate",
             use_remote_service=True,
             service_type=ServiceType.LLM,
-            model=OLLAMA_MODEL,
+            # model=OLLAMA_MODEL,
         )
         self.megaservice.add(llm)
 
@@ -86,7 +86,7 @@ Format the response as a JSON object exactly matching this structure:
         )
 
         result_dict, runtime_graph = await self.megaservice.schedule(
-            initial_inputs={"text": prompt},
+            initial_inputs={"text": prompt, },
             llm_parameters=parameters,
         )
 
