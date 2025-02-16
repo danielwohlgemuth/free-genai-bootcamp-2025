@@ -59,6 +59,7 @@ LLM_SERVER_HOST_IP = os.getenv("LLM_SERVER_HOST_IP", "0.0.0.0")
 LLM_SERVER_PORT = int(os.getenv("LLM_SERVER_PORT", 80))
 LLM_MODEL = os.getenv("LLM_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:8008")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2:1b")
 
 
 def align_inputs(self, inputs, cur_node, runtime_graph, llm_parameters_dict, **kwargs):
@@ -207,6 +208,7 @@ class VocabImporterService:
             endpoint="/api/generate",
             use_remote_service=True,
             service_type=ServiceType.LLM,
+            model=OLLAMA_MODEL,
         )
         self.megaservice.add(llm)
 
