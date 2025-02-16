@@ -1,26 +1,47 @@
-version: '3.8'
-
 services:
   webapp:
     build: .
     ports:
-      - "8501:8501"
+      - 8501:8501
     environment:
       - BACKEND_SERVICE_URL=http://backend:8888
     volumes:
       - .:/app
     depends_on:
       - backend
-    networks:
-      - vocab-network
 
   backend:
-    image: your-backend-image:latest  # Replace with your actual backend image
+    build: ../mega-service
     ports:
-      - "8888:8888"
-    networks:
-      - vocab-network
+      - 8888:8888
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=llama2:1b
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  ollama:
+    image: ollama/ollama
+    ports:
+      - 11434:11434
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ollama list || exit 1
+      interval: 3s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  ollama_data:
+    name: ollama-data
 
 networks:
-  vocab-network:
+  default:
     driver: bridge 
