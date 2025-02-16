@@ -19,7 +19,7 @@ def fetch_vocabulary(topic: str, word_count: int) -> Optional[Dict]:
     """Fetch vocabulary from backend service"""
     try:
         response = requests.post(
-            f"{BACKEND_URL}/generate",
+            f"{BACKEND_URL}",
             json={"topic": topic, "word_count": word_count},
             timeout=10
         )

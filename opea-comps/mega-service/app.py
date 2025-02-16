@@ -79,9 +79,11 @@ Only respond with the valid JSON object, nothing else."""
 
         last_node = runtime_graph.all_leaves()[-1]
         print('===============================================')
-        print('result_dict[last_node]["response"]', result_dict[last_node]["response"])
+        print('result_dict', result_dict)
         print('===============================================')
-        response = result_dict[last_node]["response"]
+        print('result_dict[last_node]["response"]', result_dict.get(last_node, {}).get("response", "{}"))
+        print('===============================================')
+        response = result_dict.get(last_node, {}).get("response", "{}")
         
         # Parse the response to ensure it matches the expected format
         try:

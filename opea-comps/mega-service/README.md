@@ -35,7 +35,7 @@ ollama serve
 
 5. Pull the LLM model:
 ```bash
-ollama pull llama2:1b
+ollama pull llama3.2:1b
 ```
 
 6. Start the service:
@@ -56,7 +56,7 @@ docker build -t vocab-service .
 ```bash
 docker run -p 8888:8888 \
   -e OLLAMA_HOST=http://host.docker.internal:8008 \
-  -e OLLAMA_MODEL=llama2:1b \
+  -e OLLAMA_MODEL=llama3.2:1b \
   vocab-service
 ```
 
@@ -84,7 +84,7 @@ curl -X POST http://localhost:8888/ \
 
 - `MEGA_SERVICE_PORT`: Port for the service (default: 8888)
 - `OLLAMA_HOST`: Ollama API endpoint (default: http://localhost:8008)
-- `OLLAMA_MODEL`: Ollama model to use (default: llama2:1b)
+- `OLLAMA_MODEL`: Ollama model to use (default: llama3.2:1b)
 
 ## Response Format
 
