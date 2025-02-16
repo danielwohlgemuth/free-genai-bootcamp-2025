@@ -30,7 +30,7 @@ curl http://localhost:8008/api/tags
 
 ### Model [llama3.2:1b](https://ollama.com/library/llama3.2:1b)
 
-Setup
+Download model
 
 ```bash
 docker exec ollama-server ollama run llama3.2:1b
@@ -185,7 +185,7 @@ Response
 
 ### Model [deepseek-r1:1.5b](https://ollama.com/library/deepseek-r1:1.5b)
 
-Setup
+Download model
 
 ```bash
 docker exec ollama-server ollama run deepseek-r1:1.5b
