@@ -39,15 +39,15 @@ def display_word_cards(words: List[Dict]):
     cols = st.columns(3)
     for idx, word in enumerate(words):
         with cols[idx % 3]:
-            st.card(
-                title=word["japanese"],
-                body=f"""
-                **Romaji:** {word["romaji"]}
-                **English:** {word["english"]}
-                **Type:** {word["parts"]["type"]}
-                **Formality:** {word["parts"]["formality"]}
-                """
-            )
+            container = st.container()
+            container.markdown(f"""
+            ### {word["japanese"]}
+            ---
+            **Romaji:** {word["romaji"]}  
+            **English:** {word["english"]}  
+            **Type:** {word["parts"]["type"]}  
+            **Formality:** {word["parts"]["formality"]}
+            """)
 
 def main():
     # Main content
