@@ -8,24 +8,10 @@ from comps import MicroService, ServiceOrchestrator, ServiceRoleType, ServiceTyp
 from comps.cores.proto.docarray import LLMParams
 
 MEGA_SERVICE_PORT = int(os.getenv("MEGA_SERVICE_PORT", 8888))
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "localhost")
 OLLAMA_PORT = os.getenv("OLLAMA_PORT", "11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2:1b")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:1b")
 
-def align_inputs(self, inputs, cur_node, **kwargs):
-    if self.services[cur_node].service_type == ServiceType.LLM:
-        next_inputs = {
-            "model": OLLAMA_MODEL,
-            "prompt": inputs["text"],
-            "stream": False
-        }
-        return next_inputs
-    return inputs
-
-def align_outputs(self, data, cur_node, inputs, runtime_graph, llm_parameters_dict, **kwargs):
-    if self.services[cur_node].service_type == ServiceType.LLM and not llm_parameters_dict["stream"]:
-        return {"text": data["choices"][0]["message"]["content"]}
-    return data
 
 class VocabImporterService:
     def __init__(self, host="0.0.0.0", port=8000):
@@ -42,7 +28,6 @@ class VocabImporterService:
             endpoint="/api/generate",
             use_remote_service=True,
             service_type=ServiceType.LLM,
-            # model=OLLAMA_MODEL,
         )
         self.megaservice.add(llm)
 
@@ -56,7 +41,7 @@ class VocabImporterService:
 
         prompt = f"""Generate exactly {word_count} Japanese vocabulary words related to the topic '{topic}'.
 For each word, provide:
-- The Japanese word (in kanji/kana)
+- The Japanese word (either kanji or kana)
 - Romaji (romanized form)
 - English translation
 - Part of speech
@@ -76,21 +61,27 @@ Format the response as a JSON object exactly matching this structure:
             }}
         }}
     ]
-}}"""
+}}
+
+Only respond with the valid JSON object, nothing else."""
 
         parameters = LLMParams(
-            max_tokens=1024,
+            model=OLLAMA_MODEL,
+            max_tokens=2048,
             temperature=0.7,
             stream=False,
         )
 
         result_dict, runtime_graph = await self.megaservice.schedule(
-            initial_inputs={ "text": prompt },
+            initial_inputs={ "prompt": prompt },
             llm_parameters=parameters,
         )
 
         last_node = runtime_graph.all_leaves()[-1]
-        response = result_dict[last_node]["text"]
+        print('===============================================')
+        print('result_dict[last_node]["response"]', result_dict[last_node]["response"])
+        print('===============================================')
+        response = result_dict[last_node]["response"]
         
         # Parse the response to ensure it matches the expected format
         try:
