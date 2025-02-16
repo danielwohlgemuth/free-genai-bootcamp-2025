@@ -7,6 +7,8 @@ https://github.com/opea-project/GenAIComps/tree/main/comps/third_parties/ollama.
 
 ## Setup Ollama
 
+Run Ollama using Docker Compose with the definition in [docker-compose.yaml](/opea-comps/docker-compose.yaml).
+
 ```bash
 docker compose up -d
 ```
