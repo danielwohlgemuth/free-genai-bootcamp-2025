@@ -1,6 +1,9 @@
-# Japanese Vocabulary Importer
+# Japanese Vocabulary Generator
 
 A Streamlit application that generates Japanese vocabulary words based on user-provided topics.
+
+Japanese Vocabulary Generator
+![Japanese Vocabulary Generator](assets/japanese_vocabulary_generator.png)
 
 ## Setup
 
