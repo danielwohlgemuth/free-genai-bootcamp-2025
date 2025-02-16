@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  webapp:
+    build: .
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_SERVICE_URL=http://backend:8888
+    volumes:
+      - .:/app
+    depends_on:
+      - backend
+    networks:
+      - vocab-network
+
+  backend:
+    image: your-backend-image:latest  # Replace with your actual backend image
+    ports:
+      - "8888:8888"
+    networks:
+      - vocab-network
+
+networks:
+  vocab-network:
+    driver: bridge 
