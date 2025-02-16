@@ -33,7 +33,7 @@ class VocabImporterService:
         self.host = host
         self.port = port
         self.megaservice = ServiceOrchestrator()
-        self.endpoint = "/v1/vocab"
+        self.endpoint = "/"
 
     def add_remote_service(self):
         llm = MicroService(
