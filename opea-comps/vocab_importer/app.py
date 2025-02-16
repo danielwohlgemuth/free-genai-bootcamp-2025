@@ -11,7 +11,8 @@ BACKEND_URL = os.getenv("BACKEND_SERVICE_URL", "http://0.0.0.0:8888")
 st.set_page_config(
     page_title="Japanese Vocabulary Generator",
     page_icon="🇯🇵",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
 def init_session_state():
@@ -60,7 +61,18 @@ def main():
     with st.sidebar:
         st.title("Settings")
         theme = st.toggle("Dark Mode", value=st.session_state.theme == "dark")
-        st.session_state.theme = "dark" if theme else "light"
+        if theme != (st.session_state.theme == "dark"):
+            st.session_state.theme = "dark" if theme else "light"
+            st.markdown("""
+                <script>
+                    var theme = window.localStorage.getItem('theme');
+                    var isDark = theme === 'dark';
+                    if (isDark !== {}) {{
+                        window.localStorage.setItem('theme', '{}');
+                        window.location.reload();
+                    }}
+                </script>
+            """.format(theme, "dark" if theme else "light"), unsafe_allow_html=True)
 
     # Main content
     st.title("Japanese Vocabulary Generator")
