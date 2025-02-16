@@ -1,4 +1,4 @@
-# Frontend Technical Spec
+# Frontend Technical Specs
 
 ## Overview
 
