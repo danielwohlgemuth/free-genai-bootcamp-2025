@@ -28,10 +28,7 @@ def fetch_vocabulary(topic: str, word_count: int) -> Optional[Dict]:
     except requests.exceptions.ConnectionError:
         st.error("Unable to connect to backend service. Please try again later.")
     except requests.exceptions.RequestException as e:
-        if response.status_code == 429:
-            st.error("Rate limit exceeded. Please wait and try again.")
-        else:
-            st.error(f"An error occurred: {str(e)}")
+        st.error(f"An error occurred: {str(e)}")
     return None
 
 def display_word_cards(words: List[Dict]):
@@ -41,8 +38,7 @@ def display_word_cards(words: List[Dict]):
         with cols[idx % 3]:
             container = st.container()
             container.markdown(f"""
-            ### {word["japanese"]}
-            ---
+            **Japanese:** {word["japanese"]}  
             **Romaji:** {word["romaji"]}  
             **English:** {word["english"]}  
             **Type:** {word["parts"]["type"]}  
@@ -80,15 +76,15 @@ def main():
             if result:
                 st.subheader(f"Vocabulary for: {result['group_name']}")
                 
-                # Display word cards
-                display_word_cards(result['words'])
-                
                 # Collapsible JSON view
                 with st.expander("View Raw JSON"):
                     st.code(json.dumps(result, indent=2), language="json")
                     if st.button("Copy to Clipboard"):
                         st.write("Copied to clipboard!")
                         st.session_state['clipboard'] = json.dumps(result, indent=2)
+                
+                # Display word cards
+                display_word_cards(result['words'])
 
 if __name__ == "__main__":
     main() 
