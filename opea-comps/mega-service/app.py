@@ -48,20 +48,10 @@ For each word, provide:
 - Formality level (casual/formal/polite)
 
 Format the response as a JSON object exactly matching this structure:
-{{
-    "group_name": "{topic}",
-    "words": [
-        {{
-            "japanese": "...",
-            "romaji": "...",
-            "english": "...",
-            "parts": {{
-                "type": "...",
-                "formality": "..."
-            }}
-        }}
-    ]
-}}
+{{ "group_name": "{topic}", "words": [{{ "japanese": "...", "romaji": "...", "english": "...", "parts": {{ "type": "...", "formality": "..." }} }} ] }}
+
+Example:
+{{ "group_name": "Basic Greetings", "words": [{{ "japanese": "こんにちは", "romaji": "konnichiwa", "english": "hello", "parts": {{ "type": "greeting", "formality": "neutral" }} }} ] }}
 
 Only respond with the valid JSON object, nothing else."""
 
