@@ -1,0 +1,50 @@
+{
+    "group_name": "Food",
+    "words": [
+        {
+            "japanese": "\u79c1\u306f\u6771\u3057",
+            "romaji": "ramen",
+            "english": "noodles",
+            "parts": {
+                "type": "substance",
+                "formality": "polite"
+            }
+        },
+        {
+            "japanese": "\u3053\u3074\u306b\u5e02\u3060",
+            "romaji": "katsu",
+            "english": "fried chicken",
+            "parts": {
+                "type": "noun",
+                "formality": "casual"
+            }
+        },
+        {
+            "japanese": "\u30c1\u308d\u3057",
+            "romaji": "sushi",
+            "english": "raw fish",
+            "parts": {
+                "type": "adjective",
+                "formality": "polite"
+            }
+        },
+        {
+            "japanese": "\u3068\u30d6\u3044\u3092\u5e0a\u304f",
+            "romaji": "tonkatsu",
+            "english": "breaded and fried pork cutlet",
+            "parts": {
+                "type": "noun",
+                "formality": "polite"
+            }
+        },
+        {
+            "japanese": "\u306b\u3057\u3083\u3074\u30d1\u30f3\u3059",
+            "romaji": "donburi",
+            "english": "hot rice bowl",
+            "parts": {
+                "type": "noun",
+                "formality": "casual"
+            }
+        }
+    ]
+}
