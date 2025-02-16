@@ -8,16 +8,15 @@ from comps import MicroService, ServiceOrchestrator, ServiceRoleType, ServiceTyp
 from comps.cores.proto.docarray import LLMParams
 
 MEGA_SERVICE_PORT = int(os.getenv("MEGA_SERVICE_PORT", 8888))
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost")
+OLLAMA_PORT = os.getenv("OLLAMA_PORT", "11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2:1b")
 
-def align_inputs(self, inputs, cur_node, runtime_graph, llm_parameters_dict, **kwargs):
+def align_inputs(self, inputs, cur_node, **kwargs):
     if self.services[cur_node].service_type == ServiceType.LLM:
         next_inputs = {
-            "messages": [{"role": "user", "content": inputs["text"]}],
-            "max_tokens": llm_parameters_dict["max_tokens"],
-            "top_p": llm_parameters_dict["top_p"],
-            "temperature": llm_parameters_dict["temperature"],
+            "model": OLLAMA_MODEL,
+            "prompt": inputs["text"],
             "stream": False
         }
         return next_inputs
@@ -39,7 +38,7 @@ class VocabImporterService:
         llm = MicroService(
             name="llm",
             host=OLLAMA_HOST,
-            port="",  # Port is included in the host URL
+            port=OLLAMA_PORT,
             endpoint="/api/generate",
             use_remote_service=True,
             service_type=ServiceType.LLM,
@@ -86,7 +85,7 @@ Format the response as a JSON object exactly matching this structure:
         )
 
         result_dict, runtime_graph = await self.megaservice.schedule(
-            initial_inputs={"text": prompt, },
+            initial_inputs={ "text": prompt },
             llm_parameters=parameters,
         )
 
