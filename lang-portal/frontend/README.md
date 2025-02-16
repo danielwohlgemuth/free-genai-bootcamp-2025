@@ -70,16 +70,17 @@ The application will be available at `http://localhost:5173`
 ```
 frontend/
 ├── src/
-│   ├── components/     # Reusable UI components
-│   │   ├── common/    # Shared components
+│   ├── components/    # Reusable UI components
 │   │   ├── dashboard/ # Dashboard-specific components
+│   │   ├── groups/    # Group management components
+│   │   ├── layout/    # Layout components
 │   │   ├── study/     # Study-related components
-│   │   ├── words/     # Word management components
-│   │   └── groups/    # Group management components
+│   │   ├── ui/        # UI components
+│   │   └── words/     # Word management components
+│   ├── lib/           # Utility functions
 │   ├── pages/         # Page components
 │   ├── services/      # API and other services
-│   ├── types/         # TypeScript type definitions
-│   └── utils/         # Utility functions
+│   └── types/         # TypeScript type definitions
 ├── public/            # Static assets
 └── package.json
 ```

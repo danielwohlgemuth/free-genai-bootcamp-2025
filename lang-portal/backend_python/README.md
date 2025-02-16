@@ -92,14 +92,13 @@ backend_python/
 │   └── server/         # Server entry point
 ├── internal/
 │   ├── models/         # Data structures and database operations
-│   ├── handlers/       # HTTP handlers organized by feature
-│   └── service/        # Business logic
+│   └── handlers/       # HTTP handlers organized by feature
 ├── db/
 │   ├── migrations/     # Database migrations
 │   └── seeds/          # Seed data files
-├── dodo.py            # Task definitions
-├── requirements.txt   # Python dependencies
-└── words.db          # SQLite database
+├── tasks.py            # Task definitions
+├── requirements.txt    # Python dependencies
+└── words.db            # SQLite database
 ```
 
 ## API Endpoints

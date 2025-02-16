@@ -16,12 +16,10 @@ Language Portal is a web application designed to help users learn languages thro
 - [Frontend Technical Details](frontend/README.md)
 - Built with React + TypeScript
 - Styled using Tailwind CSS
-- State management with React Query
 - UI components from shadcn/ui
 
 ### Backend
 - [Backend Technical Details](backend_python/README.md)
 - Built with FastAPI (Python)
-- PostgreSQL database
+- SQLite database
 - SQLAlchemy ORM
-- Alembic for migrations
