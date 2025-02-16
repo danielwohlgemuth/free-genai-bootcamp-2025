@@ -2,6 +2,12 @@
 
 A modern web application for language learning, built with React, TypeScript, and Tailwind CSS.
 
+![Frontend Dashboard](assets/frontend_dashboard.png)
+![Frontend Study Activity](assets/frontend_study_activity.png)
+![Frontend Study Session](assets/frontend_study_session.png)
+![Frontend Words](assets/frontend_words.png)
+![Frontend Word Groups](assets/frontend_word_groups.png)
+
 ## Features
 
 - Dashboard with learning progress and statistics
@@ -119,14 +125,3 @@ yarn build
 ```
 
 The build output will be in the `dist` directory.
-
-## Contributing
-
-1. Create a feature branch from `main`
-2. Make your changes
-3. Run tests and type checking
-4. Submit a pull request
-
-## License
-
-[MIT License](LICENSE) 
