@@ -12,7 +12,7 @@ Note that the result of the Vocabulary Generator can be used to add a new JSON f
 
 - ~~The `deepseek-r1:1.5b` model wasn't able to generate a valid JSON response because it also included it's thinking process in the response. A special cleanup step would be needed to return only the JSON response.~~
 
-- Both issues were fixed by specifying the JSON response format in the prompt. Both `llama3.2:1b` and `deepseek-r1:1.5b` were able to generate a valid JSON response.
+- Both issues were fixed by specifying the JSON response format in the prompt. Both `llama3.2:1b` and `deepseek-r1:1.5b` were able to generate a valid JSON response. See an example of how to define the JSON response format in [opea-comps/llm/README.md](./llm/README.md#Request-Structured-outputs).
 
 - Error handling needs to be improved. There is some kind of telemetry collector issue (`requests.exceptions.ConnectionError: HTTPConnectionPool(host='localhost', port=4318) ...`, port 4318 is an Open Telemetry port) that is filling up the logs with distracting information when there is an error.
 
