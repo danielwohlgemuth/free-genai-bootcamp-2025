@@ -5,7 +5,7 @@ import os
 from typing import Dict, List, Optional
 
 # Configuration
-BACKEND_URL = os.getenv("BACKEND_SERVICE_URL", "http://0.0.0.0:8888")
+BACKEND_URL = os.getenv("BACKEND_SERVICE_URL", "http://0.0.0.0:8888/v1/vocab_generator")
 
 # Page config
 st.set_page_config(
@@ -19,7 +19,7 @@ def fetch_vocabulary(topic: str, word_count: int) -> Optional[Dict]:
     """Fetch vocabulary from backend service"""
     try:
         response = requests.post(
-            f"{BACKEND_URL}",
+            BACKEND_URL,
             json={"topic": topic, "word_count": word_count},
             timeout=30
         )

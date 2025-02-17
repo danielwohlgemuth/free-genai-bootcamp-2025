@@ -53,7 +53,7 @@ The application will be available at `http://localhost:8501`
 
 The application can be configured using the following environment variables:
 
-- `BACKEND_SERVICE_URL`: URL of the backend service (default: http://0.0.0.0:8888)
+- `BACKEND_SERVICE_URL`: URL of the backend service (default: http://0.0.0.0:8888/v1/vocab_generator)
 
 Example:
 ```bash
@@ -69,7 +69,7 @@ To modify the backend service URL for local development:
 
 1. Create a `.env` file:
 ```bash
-BACKEND_SERVICE_URL=http://localhost:8888
+BACKEND_SERVICE_URL=http://localhost:8888/v1/vocab_generator
 ```
 
 2. Run the application with the environment file:

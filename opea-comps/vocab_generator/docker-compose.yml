@@ -4,7 +4,7 @@ services:
     ports:
       - 8501:8501
     environment:
-      - BACKEND_SERVICE_URL=http://backend:8888
+      - BACKEND_SERVICE_URL=http://backend:8888/v1/vocab_generator
     volumes:
       - .:/app
     depends_on:

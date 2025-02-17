@@ -3,9 +3,11 @@
 
 import json
 import os
-from fastapi import Request
+from typing import Dict, List
+from fastapi import Body
 from comps import MicroService, ServiceOrchestrator, ServiceRoleType, ServiceType
 from comps.cores.proto.docarray import LLMParams
+from pydantic import BaseModel
 
 MEGA_SERVICE_PORT = int(os.getenv("MEGA_SERVICE_PORT", 8888))
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "localhost")
@@ -13,12 +15,30 @@ OLLAMA_PORT = os.getenv("OLLAMA_PORT", "11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:1b")
 
 
-class VocabImporterService:
+class VocabGeneratorRequest(BaseModel):
+    topic: str
+    word_count: int
+
+class VocabGeneratorPartsResponse(BaseModel):
+    type: str
+    formality: str
+
+class VocabGeneratorWordsResponse(BaseModel):
+    japanese: str
+    romaji: str
+    english: str
+    parts: VocabGeneratorPartsResponse
+
+class VocabGeneratorResponse(BaseModel):
+    group_name: str
+    words: List[VocabGeneratorWordsResponse]
+
+class VocabGeneratorService:
     def __init__(self, host="0.0.0.0", port=8000):
         self.host = host
         self.port = port
         self.megaservice = ServiceOrchestrator()
-        self.endpoint = "/"
+        self.endpoint = "/v1/vocab_generator"
 
     def add_remote_service(self):
         llm = MicroService(
@@ -31,10 +51,9 @@ class VocabImporterService:
         )
         self.megaservice.add(llm)
 
-    async def handle_request(self, request: Request):
-        data = await request.json()
-        topic = data.get("topic")
-        word_count = data.get("word_count", 5)
+    async def handle_request(self, request: VocabGeneratorRequest = Body(...)) -> VocabGeneratorResponse:
+        topic = request.topic
+        word_count = request.word_count
         
         if not topic or not isinstance(word_count, int) or word_count < 3 or word_count > 10:
             raise ValueError("Invalid input: topic required and word_count must be between 3-10")
@@ -62,8 +81,52 @@ Only respond with the valid JSON object, nothing else."""
             stream=False,
         )
 
+        format = {
+            "type": "object",
+            "properties": {
+                "group_name": {
+                    "type": "string"
+                },
+                "words": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "japanese": {
+                                "type": "string"
+                            },
+                            "romaji": {
+                                "type": "string"
+                            },
+                            "english": {
+                                "type": "string"
+                            },
+                            "parts": {
+                                "type": "object",
+                                "properties": { 
+                                    "type": {
+                                        "type": "string"
+                                    },
+                                    "formality": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "required": [
+                "group_name",
+                "words"
+            ]
+        }
+
         result_dict, runtime_graph = await self.megaservice.schedule(
-            initial_inputs={ "prompt": prompt },
+            initial_inputs={
+                "prompt": prompt,
+                "format": format
+            },
             llm_parameters=parameters,
         )
 
@@ -78,7 +141,7 @@ Only respond with the valid JSON object, nothing else."""
         # Parse the response to ensure it matches the expected format
         try:
             vocab_data = json.loads(response)
-            return vocab_data
+            return VocabGeneratorResponse(**vocab_data)
         except json.JSONDecodeError:
             raise ValueError("Failed to generate properly formatted vocabulary data")
 
@@ -97,5 +160,5 @@ Only respond with the valid JSON object, nothing else."""
 
 
 if __name__ == "__main__":
-    vocab_importer = VocabImporterService(port=MEGA_SERVICE_PORT)
+    vocab_importer = VocabGeneratorService(port=MEGA_SERVICE_PORT)
     vocab_importer.start()
