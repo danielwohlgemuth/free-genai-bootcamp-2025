@@ -1,6 +1,10 @@
-# Vocabulary Service
+# Vocabulary Generator Service
 
 A service that generates Japanese vocabulary words based on topics using LLM.
+
+Mega Service API Docs
+
+![Mega Service API Docs](assets/mega_service_api_docs.png)
 
 ## Setup
 
