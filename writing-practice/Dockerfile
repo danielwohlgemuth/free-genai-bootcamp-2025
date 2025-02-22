@@ -14,15 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create data directory
-RUN mkdir -p data
-
-# Expose ports for Gradio and FastAPI
+# Expose port for Gradio
 EXPOSE 7860
-EXPOSE 8000
 
-# Start both services using a shell script
-COPY start.sh .
-RUN chmod +x start.sh
-
-CMD ["./start.sh"]
+CMD ["python", "app.py"]

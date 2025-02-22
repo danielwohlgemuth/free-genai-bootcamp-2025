@@ -5,11 +5,8 @@ services:
     build: .
     ports:
       - "7860:7860"  # Gradio interface
-      - "8000:8000"  # FastAPI backend
     environment:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_REGION=${AWS_REGION}
       - BACKEND_URL=http://localhost:8000
-    volumes:
-      - ./data:/app/data

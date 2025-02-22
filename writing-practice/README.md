@@ -16,7 +16,7 @@ An interactive web application for practicing Japanese kana writing using AWS se
 - AWS Bedrock integration for kana representation generation
 - Amazon Polly integration for Japanese word audio synthesis
 - Manga OCR for character recognition
-- FastAPI backend for word and group management
+- Built-in word groups for Hiragana and Katakana
 - Caching system for frequently used words and audio
 
 ## Prerequisites
@@ -49,19 +49,13 @@ An interactive web application for practicing Japanese kana writing using AWS se
 
 ### Method 1: Direct Python Execution
 
-1. Start the FastAPI backend:
-   ```bash
-   uvicorn api:app --host 0.0.0.0 --port 8000
-   ```
-
-2. In a new terminal, start the Gradio frontend:
+1. Start the application:
    ```bash
    python app.py
    ```
 
-3. Open your browser and navigate to:
-   - Frontend: http://localhost:7860
-   - API Documentation: http://localhost:8000/docs
+2. Open your browser and navigate to:
+   - http://localhost:7860
 
 ### Method 2: Docker Compose
 
@@ -78,8 +72,7 @@ An interactive web application for practicing Japanese kana writing using AWS se
    ```
 
 4. Access the application:
-   - Frontend: http://localhost:7860
-   - API Documentation: http://localhost:8000/docs
+   - http://localhost:7860
 
 ## Usage
 
@@ -97,12 +90,9 @@ An interactive web application for practicing Japanese kana writing using AWS se
 ```
 writing-practice/
 ├── app.py          # Gradio frontend application
-├── api.py          # FastAPI backend service
-├── data/           # JSON files for words and groups
 ├── Dockerfile      # Docker container definition
 ├── docker-compose.yml  # Docker Compose configuration
 ├── requirements.txt    # Python dependencies
-├── start.sh           # Service startup script
 └── .env              # Environment configuration
 ```
 
