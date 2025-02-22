@@ -1,4 +1,4 @@
-# Kana Writing Practice Application Technical Specification
+# Kana Writing Practice Application - Technical Specification
 
 ## Overview
 A web-based application for practicing Japanese kana writing using AWS services and Gradio interface.
@@ -7,26 +7,48 @@ A web-based application for practicing Japanese kana writing using AWS services 
 
 ### Components
 1. **Frontend (Gradio Interface)**
-   - Writing canvas for user input
-   - Display area for kana characters
-   - Audio playback interface
-   - Translation display
-   - Practice mode selection
+   - Interactive drawing canvas (300px high, 900px wide)
+   - Word group selection interface
+   - Clear canvas functionality
+   - Multi-character input support
+   - Loading indicator for API calls
+   - Audio playback controls with progress indicator and speed adjustment
+   - Word regeneration functionality
 
 2. **Backend Services**
-   - AWS Bedrock integration for word generation and translation
-   - AWS Polly integration for text-to-speech
-   - Session management and progress tracking
+   - Configurable backend URL (default: localhost:8000)
+   - Word group retrieval endpoint integration
+   - Word list retrieval endpoint integration
+   - AWS Bedrock for kana representation generation
+   - Amazon Polly for Japanese word audio synthesis
+   - manga_ocr package for OCR and character recognition
+   - Caching system for frequently used words and audio
 
-### AWS Services
-1. **AWS Bedrock**
-   - Generate Japanese vocabulary words
-   - Provide English translations
-   - Validate user input
+### Data Flow
+1. Application startup:
+   - Load backend URL from environment variables (BACKEND_URL)
+   - Fetch available word groups from /api/groups
 
-2. **AWS Polly**
-   - Convert Japanese text to speech
-   - Support for native Japanese voice options
+2. Word group selection:
+   - User selects word group from dropdown
+   - Fetch words for selected group from /api/groups/{groupId}/words
+   - Randomly select one word from the group
+
+3. Word processing:
+   - Display English translation
+   - Generate kana representation using AWS Bedrock
+   - Generate audio using Amazon Polly
+
+4. User input:
+   - Primary: Canvas drawing interface
+   - Alternative: Image file upload (pictures only)
+   - Submit button to trigger validation
+
+5. Validation process:
+   - Process user input (canvas/image) with manga_ocr
+   - Compare OCR result with Bedrock-generated kana
+   - Display success/retry message
+   - Option to generate new word from same group
 
 ## Technical Requirements
 
@@ -34,66 +56,74 @@ A web-based application for practicing Japanese kana writing using AWS services 
 - Python 3.9+
 - Gradio framework for UI
 - AWS SDK (boto3) for AWS services integration
-- Docker for containerization
+- Manga OCR for character recognition
 
-### Core Features
-1. **Writing Practice**
-   - Canvas for drawing kana characters
-   - Real-time stroke order validation
-   - Clear/undo functionality
+### API Integration
+#### Endpoints
+1. GET /api/groups
+   - Response: {"items": [{"id": groupId, "name": groupName}]}
+   - Used for initial word group loading
 
-2. **Word Generation**
-   - Random word selection
-   - Difficulty levels (basic to advanced)
-   - Category-based word groups
+2. GET /api/groups/{groupId}/words
+   - Response: {"items": [{"japanese": japanese, "english": english}]}
+   - Used for word retrieval after group selection
 
-3. **Audio Support**
-   - Text-to-speech for generated words
-   - Playback controls
-   - Speed adjustment options
+### User Interface Requirements
+1. Writing Input
+   - Primary: Drawing canvas
+   - Secondary: File upload input
+   - Automatic fallback to canvas if no file
 
-4. **Progress Tracking**
-   - User session history
-   - Performance metrics
-   - Improvement tracking
+2. Drawing Canvas
+   - Dimensions: 300px high, 900px wide
+   - Multi-character input support
+   - Clear canvas button
+   - No grid lines or guide marks
+   - No reference images while drawing
 
-### Data Flow
-1. Application generates word using AWS Bedrock
-2. Translation is provided by AWS Bedrock
-3. Audio is generated using AWS Polly
-4. User writes character on canvas
-5. System validates input
-6. Progress is recorded
+3. File Handling
+   - Supported formats: JPG, PNG
+   - Maximum file size: 10MB
+   - No batch upload support
+   - Image preprocessing: contrast enhancement
 
-## Implementation Plan
+4. Audio Playback
+   - Play button for Polly-generated audio
+   - Replay functionality
+   - Speed adjustment controls
+   - Progress indicator during playback
+   - No automatic playback for new words
+   - Cached audio for frequently used words
 
-### Phase 1: Basic Setup
-- Set up project structure
-- Implement AWS service connections
-- Create basic Gradio interface
+5. Validation
+   - Submit button for OCR processing
+   - Clear success/failure feedback
+   - "Try Again" option for failures
+   - "Next Word" button for new word from same group
 
-### Phase 2: Core Features
-- Implement writing canvas
-- Add word generation
-- Integrate audio playback
+### Error Handling
+1. Backend Service Unavailability
+   - User-friendly error messages indicating which service failed
+   - No automatic retries
+   - Specific error handling for AWS services (Bedrock/Polly)
 
-### Phase 3: Enhancement
-- Add progress tracking
-- Implement user feedback
-- Add additional practice modes
+2. OCR Processing
+   - Failed OCR treated as incorrect match
+   - No confidence score implementation
+   - No retry attempt limits
 
-## Security Considerations
-- AWS IAM roles and permissions
-- API key management
-- User data protection
+### Performance Considerations
+1. API Rate Limiting
+   - Implemented for Bedrock and Polly services
+   - 30-second timeout for all API calls
+   - Loading indicators during API calls
 
-## Performance Requirements
-- Response time < 2 seconds
-- Audio generation < 1 second
-- Canvas responsiveness < 100ms
+2. Caching
+   - Audio files for frequently used words
+   - Kana representations for common words
+   - No offline mode support
 
-## Future Enhancements
-- Multiple writing systems support
-- Customizable practice sessions
-- Social features and sharing
-- Mobile device optimization
+### Progress Tracking
+- No user progress tracking
+- No success rate tracking
+- No storage of successful attempts
