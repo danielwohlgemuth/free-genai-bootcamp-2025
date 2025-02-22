@@ -1,9 +1,57 @@
 # Kana Writing Practice
 
-A Gradio-based web application for practicing Japanese kana writing with AWS services integration.
+An interactive web application for practicing Japanese kana writing using AWS services and Gradio interface.
+
+## Setup
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Configure AWS credentials:
+   - Create a `.env` file in the project root with:
+     ```
+     AWS_ACCESS_KEY_ID=your_access_key
+     AWS_SECRET_ACCESS_KEY=your_secret_key
+     AWS_REGION=your_region
+     ```
+
+## Running the Application
+
+1. Start the application:
+   ```bash
+   python app.py
+   ```
+2. Open your browser and navigate to `http://localhost:7860`
+
+## Usage
+
+1. Select a kana group from the dropdown menu
+2. Draw the displayed kana character in the canvas
+3. Click Submit to check your writing
+4. Practice and improve!
+
+## Docker Setup
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+2. Edit `.env` with your AWS credentials and settings
+3. Build and run with Docker Compose:
+   ```bash
+   docker compose up --build
+   ```
+4. Access the application at `http://localhost:7860`
 
 ## Features
-- Interactive writing canvas
+- Interactive writing canvas with real-time feedback
+- Multiple kana groups for comprehensive practice
+- AI-powered character recognition using AWS SageMaker
+- Practice history tracking and statistics
+- Rate limiting and error handling for reliability
+- Docker support for easy deployment
 - AWS Bedrock integration for word generation and translation
 - Amazon Polly integration for audio playback
 - Progress tracking and performance metrics

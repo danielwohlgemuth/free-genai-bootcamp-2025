@@ -1,0 +1,8 @@
+{
+    "Hiragana Basic": ["あ", "い", "う", "え", "お"],
+    "Hiragana K-Group": ["か", "き", "く", "け", "こ"],
+    "Hiragana S-Group": ["さ", "し", "す", "せ", "そ"],
+    "Katakana Basic": ["ア", "イ", "ウ", "エ", "オ"],
+    "Katakana K-Group": ["カ", "キ", "ク", "ケ", "コ"],
+    "Katakana S-Group": ["サ", "シ", "ス", "セ", "ソ"]
+}
