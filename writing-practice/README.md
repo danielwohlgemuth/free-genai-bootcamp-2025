@@ -59,6 +59,8 @@ An interactive web application for practicing Japanese kana writing using AWS se
 ## Technical Uncertainty
 - Will AWS Bedrock even work? It didn't work in a previous attempt. See https://github.com/danielwohlgemuth/ai-recipe-generator.
 - Is Amazon Developer Q usable enough to generate the code for the app?
+    - Generating the tech specs with Developer Q produced reasonable results, but it took a long time to generate its output and it created new files instead of updating the existing one.
+    - Generating the code didn't go as expected. It was supposed to use AWS Bedrock, Amazon Polly, backend API, Manga OCR, and it didn't do any of them. Instead, it created a json file instead of using the backend API, it integrated with Amazon SageMaker to recognize characters instead of using Manga OCR, and it made use of Amazon DynamoDB to store results when it was specified not to do that.
 
 ## Setup
 1. Install dependencies
