@@ -20,6 +20,10 @@ A web application for learning Japanese built with an AI-powered code editor.
 
 A web application for generating Japanese vocabulary from a given topic, using Streamlit, OPEA, and Ollama.
 
+## [Kana Writing Practice](/writing-practice/README.md)
+
+An interactive web application for practicing Japanese kana writing using AWS services and Gradio interface.
+
 ## Useful Links
 
 - [Free GenAI Bootcamp Landing Page](https://genai.cloudprojectbootcamp.com/)
