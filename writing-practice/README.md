@@ -13,6 +13,9 @@ An interactive web application for practicing Japanese kana writing using AWS se
     - The things that Developer Q did well is generating tests, a setup script, and Docker files to go along the project.
     - I switched to Windsurf to reimplement the app.
 
+## Development
+See [Technical Specs](Technical-Specs.md) for detailed architecture and implementation details.
+
 ## Features
 - Interactive drawing canvas
 - Word group selection interface (Hiragana and Katakana)
@@ -99,9 +102,6 @@ writing-practice/
 ├── requirements.txt    # Python dependencies
 └── .env              # Environment configuration
 ```
-
-## Development
-See [Technical Specs](Technical-Specs.md) for detailed architecture and implementation details.
 
 ## Error Handling
 - The application includes comprehensive error handling for:
