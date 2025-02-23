@@ -2,6 +2,8 @@
 
 An interactive web application for practicing Japanese kana writing using AWS services and Gradio interface.
 
+![Writing Practice](/writing-practice/assets/writing-practice.png)
+
 ## Technical Uncertainty
 - Will AWS Bedrock even work? It didn't work in a previous attempt. See https://github.com/danielwohlgemuth/ai-recipe-generator.
    - I had initial issues getting it to work until I requested access across all US regions and used the Inference profile ID under Cross-region inference in Bedrock.
