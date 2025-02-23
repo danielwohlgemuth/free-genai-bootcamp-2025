@@ -2,6 +2,7 @@ import os
 import json
 import gradio as gr
 import boto3
+import random
 from dotenv import load_dotenv
 from manga_ocr import MangaOcr
 from PIL import Image
@@ -17,8 +18,6 @@ load_dotenv()
 # Configure logging
 logger = logging.getLogger()
 logHandler = logging.StreamHandler()
-formatter = jsonlogger.JsonFormatter()
-logHandler.setFormatter(formatter)
 logger.addHandler(logHandler)
 logger.setLevel(logging.INFO)
 
@@ -64,13 +63,21 @@ def generate_kana(text):
     
     try:
         response = bedrock.invoke_model(
-            modelId="anthropic.claude-v2",
+            modelId="us.anthropic.claude-3-haiku-20240307-v1:0",
+            contentType="application/json",
+            accept="application/json",
             body=json.dumps({
-                "prompt": f"Convert this English text to Japanese kana: {text}",
-                "max_tokens": 100
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": 100,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": f"Convert this Japanese text to its kana representation: {text}. Respond with ONLY the kana, no other text."
+                    }
+                ]
             })
         )
-        kana = json.loads(response['body'].read())['completion']
+        kana = json.loads(response['body'].read())['content'][0]['text']
         kana_cache[text] = kana
         return kana
     except Exception as e:
@@ -90,19 +97,29 @@ def generate_audio(text):
             LanguageCode='ja-JP'
         )
         
-        audio_stream = io.BytesIO(response['AudioStream'].read())
-        audio_cache[text] = audio_stream
-        return audio_stream
+        # Create a temporary file to store the audio
+        import tempfile
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+        temp_file.write(response['AudioStream'].read())
+        temp_file.close()
+        
+        audio_cache[text] = (temp_file.name, 'audio/mp3')
+        return audio_cache[text]
     except Exception as e:
         logger.error(f"Error generating audio: {str(e)}")
         return None
 
-def process_drawing(image):
+def process_drawing(image_data):
     """Process the drawing using Manga OCR"""
     try:
-        # Convert gradio image to PIL Image
-        if isinstance(image, str):
-            image = Image.open(image)
+        # Convert numpy array to PIL Image
+        if isinstance(image_data, dict) and 'composite' in image_data:
+            # Convert numpy array to PIL Image
+            image = Image.fromarray(image_data['composite'])
+        elif isinstance(image_data, str):
+            image = Image.open(image_data)
+        else:
+            raise ValueError("Unsupported image format")
         
         # Perform OCR
         text = ocr(image)
@@ -133,46 +150,44 @@ def create_interface():
         with gr.Row():
             group_dropdown = gr.Dropdown(
                 choices=fetch_groups(),
+                value=None,
                 label="Select Word Group",
                 interactive=True
             )
         
         with gr.Row():
             english_text = gr.Text(label="English Word", interactive=False)
-            kana_text = gr.Text(label="Kana", interactive=False)
+            kana_text = gr.Text(label="Kana", interactive=False, visible=False)
+            audio_player = gr.Audio(
+                label="Pronunciation",
+                interactive=False,
+                visible=True
+            )
         
         with gr.Row():
-            canvas = gr.Image(
-                source="canvas",
-                tool="sketch",
-                shape=(300, 900),
+            canvas = gr.ImageEditor(
+                canvas_size=(2000, 800),
                 label="Draw here"
             )
         
         with gr.Row():
-            clear_btn = gr.Button("Clear Canvas")
             submit_btn = gr.Button("Submit")
             next_word_btn = gr.Button("Next Word")
         
         with gr.Row():
-            audio_player = gr.Audio(
-                label="Pronunciation",
-                interactive=False,
-                visible=False
-            )
             result_text = gr.Text(label="Result")
         
         def load_new_word(group_id):
             if not group_id:
-                return {}, "", "", None, gr.Audio.update(visible=False)
+                return {}, "", "", None, None, ''
             
             words = fetch_words(group_id)
             if not words:
-                return {}, "", "", None, gr.Audio.update(visible=False)
+                return {}, "", "", None, None, ''
             
-            # Select first word for now (could be randomized)
-            word = words[0]
-            kana = generate_kana(word['english'])
+            word = words[random.randint(0, len(words) - 1)]
+            # word = words[0]
+            kana = generate_kana(word['japanese'])
             audio = generate_audio(word['japanese'])
             
             return (
@@ -180,35 +195,31 @@ def create_interface():
                 word['english'],
                 kana,
                 None,  # Clear canvas
-                gr.Audio.update(value=audio, visible=True) if audio else gr.Audio.update(visible=False)
+                audio[0] if audio else None,  # Just return the file path for audio
+                ''
             )
         
-        def submit_drawing(drawing, word):
-            if not word or 'japanese' not in word:
+        def submit_drawing(drawing, kana):
+            if not kana:
                 return "Please select a word group first!"
-            return validate_input(drawing, word['japanese'])
+            return validate_input(drawing, kana)
         
         # Event handlers
         group_dropdown.change(
             load_new_word,
             inputs=[group_dropdown],
-            outputs=[current_word, english_text, kana_text, canvas, audio_player]
+            outputs=[current_word, english_text, kana_text, canvas, audio_player, result_text]
         )
         
         next_word_btn.click(
             load_new_word,
             inputs=[group_dropdown],
-            outputs=[current_word, english_text, kana_text, canvas, audio_player]
-        )
-        
-        clear_btn.click(
-            lambda: None,
-            outputs=[canvas]
+            outputs=[current_word, english_text, kana_text, canvas, audio_player, result_text]
         )
         
         submit_btn.click(
             submit_drawing,
-            inputs=[canvas, current_word],
+            inputs=[canvas, kana_text],
             outputs=[result_text]
         )
     
