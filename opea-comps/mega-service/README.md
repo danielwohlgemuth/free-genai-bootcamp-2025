@@ -72,7 +72,7 @@ This will start both the Ollama service and the vocabulary service with the corr
 Send a POST request to `/`:
 
 ```bash
-curl -X POST http://localhost:8888/ \
+curl -X POST http://localhost:8888/v1/vocab_generator \
   -H "Content-Type: application/json" \
   -d '{
     "topic": "food",
