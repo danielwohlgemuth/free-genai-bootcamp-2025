@@ -11,9 +11,10 @@ An interactive web application for practicing Japanese kana writing using AWS se
     - Generating the tech specs with Developer Q produced reasonable results, but it took a long time to generate its output and it created new files instead of updating the existing one.
     - Generating the code didn't go as expected. It was supposed to use AWS Bedrock, Amazon Polly, backend API, Manga OCR, and it didn't do any of them. Instead, it created a json file instead of using the backend API, it integrated with Amazon SageMaker to recognize characters instead of using Manga OCR, and it made use of Amazon DynamoDB to store results when it was specified not to do that.
     - The things that Developer Q did well is generating tests, a setup script, and Docker files to go along the project.
+    - I switched to Windsurf to reimplement the app.
 
 ## Features
-- Interactive drawing canvas (300px high, 900px wide)
+- Interactive drawing canvas
 - Word group selection interface (Hiragana and Katakana)
 - Clear canvas functionality
 - AWS Bedrock integration for kana representation generation
@@ -23,7 +24,7 @@ An interactive web application for practicing Japanese kana writing using AWS se
 - Caching system for frequently used words and audio
 
 ## Prerequisites
-- Python 3.9+
+- Python
 - AWS Account with access to:
   - AWS Bedrock
   - Amazon Polly
