@@ -3,6 +3,7 @@
 
 import json
 import os
+import requests
 from typing import Dict, List
 from fastapi import Body
 from comps import MicroService, ServiceOrchestrator, ServiceRoleType, ServiceType
@@ -160,5 +161,8 @@ Only respond with the valid JSON object, nothing else."""
 
 
 if __name__ == "__main__":
+    # Make sure the model is loaded
+    requests.post(f"http://{OLLAMA_HOST}:{OLLAMA_PORT}/api/pull", data=f'{{"model": "{OLLAMA_MODEL}"}}')
+    
     vocab_importer = VocabGeneratorService(port=MEGA_SERVICE_PORT)
     vocab_importer.start()
