@@ -47,7 +47,8 @@ A backend service that extracts and translates key vocabulary from Japanese song
 1. **LLM Agent Workflow**
    - Uses LangChain for agent orchestration
    - ReAct agent pattern for tool selection and execution
-   - LLM determines least common words based on context
+   - LLM determines least common words based on context.
+     The LLM will be available at `http://localhost:11434` and should be configurable through env vars.
 
 2. **Lyrics Processing Pipeline**
    - Search includes "japanese lyrics" in query terms
