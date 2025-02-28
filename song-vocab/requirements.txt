@@ -4,3 +4,6 @@ langchain==0.1.9
 langchain-community==0.0.24
 pydantic==2.6.1
 python-dotenv==1.0.1
+beautifulsoup4==4.12.3
+requests==2.31.0
+bravesearch==0.1.9

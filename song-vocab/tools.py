@@ -2,115 +2,154 @@ from langchain.tools import Tool
 from typing import Dict, List, Optional
 import requests
 from pydantic import BaseModel
-import re
-import json
+from bs4 import BeautifulSoup
+import os
+from dotenv import load_dotenv
+from langchain_community.document_loaders import BraveSearchLoader, WebBaseLoader
+from langchain_community.llms import Ollama
 
-class LyricSearchTool(BaseModel):
-    def search_lyrics(self, song_name: str) -> str:
-        """
-        Search for Japanese song lyrics using the Genius API.
-        Returns the lyrics if found, otherwise returns an error message.
-        """
-        # Note: In a production environment, this would use the Genius API
-        # For demo purposes, we'll return a sample Japanese song lyrics
-        sample_lyrics = """
-        空が青くて
-        雲ひとつない
-        そんな日には
-        君を思い出す
-        """
-        return sample_lyrics
+# Load environment variables
+load_dotenv()
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:3b")
 
-class TranslationTool(BaseModel):
-    def translate(self, text: str, source_lang: str = "ja", target_lang: str = "en") -> str:
-        """
-        Translate text between languages using a translation API.
-        """
-        # Note: In a production environment, this would use a translation API
-        # For demo purposes, we'll use a simple dictionary
-        translations = {
-            "空": "sky",
-            "青い": "blue",
-            "雲": "cloud",
-            "日": "day",
-            "君": "you",
-            "思い出す": "remember"
-        }
+# Initialize LLM
+llm = Ollama(
+    base_url=OLLAMA_BASE_URL,
+    model=MODEL_NAME
+)
+
+class LinkRetrieverTool(BaseModel):
+    """Tool for retrieving links using Brave Search"""
+    def search_lyrics(self, song_name: str) -> List[str]:
+        """Search for Japanese lyrics using Brave Search"""
+        query = f"{song_name} japanese lyrics"
+        loader = BraveSearchLoader(
+            query=query,
+            max_results=5
+        )
+        docs = loader.load()
+        return [doc.metadata['link'] for doc in docs]
+
+class LyricsRetrieverTool(BaseModel):
+    """Tool for retrieving lyrics from web pages"""
+    def get_lyrics(self, url: str) -> str:
+        """Extract lyrics from a webpage using BeautifulSoup4"""
+        loader = WebBaseLoader(
+            web_paths=[url],
+            bs_kwargs=dict(
+                parse_only=BeautifulSoup.SoupStrainer(['p', 'div', 'pre'])
+            )
+        )
+        docs = loader.load()
+        return docs[0].page_content if docs else ""
+
+class LyricsExtractorTool(BaseModel):
+    """Tool for extracting clean lyrics using LLM"""
+    def extract_lyrics(self, raw_text: str) -> str:
+        """Use LLM to extract clean lyrics from raw text"""
+        prompt = f"""
+        Extract only the Japanese lyrics from the following text. 
+        Remove any English translations, advertisements, or other content.
+        Text: {raw_text}
         
-        # Simple word-by-word translation
-        translated = text
-        for jp, en in translations.items():
-            translated = translated.replace(jp, en)
-        return translated
+        Japanese Lyrics:
+        """
+        return llm.invoke(prompt)
 
-class VocabularyAnalyzer(BaseModel):
-    def __init__(self):
-        # Sample vocabulary database
-        self.vocab_db = {
-            "空": {
-                "romaji": "sora",
-                "english": "sky",
-                "parts": {"type": "noun", "formality": "neutral"}
-            },
-            "青い": {
-                "romaji": "aoi",
-                "english": "blue",
-                "parts": {"type": "i-adjective", "formality": "neutral"}
-            },
-            "雲": {
-                "romaji": "kumo",
-                "english": "cloud",
-                "parts": {"type": "noun", "formality": "neutral"}
-            },
-            "思い出す": {
-                "romaji": "omoidasu",
-                "english": "remember",
-                "parts": {"type": "verb", "formality": "casual"}
-            }
-        }
+class VocabularyExtractorTool(BaseModel):
+    """Tool for extracting vocabulary using LLM"""
+    def extract_vocabulary(self, lyrics: str) -> List[Dict]:
+        """Extract vocabulary items from lyrics"""
+        prompt = f"""
+        Extract unique Japanese words from these lyrics:
+        {lyrics}
+        
+        For each word, provide:
+        - The word in Japanese
+        - Its part of speech
+        - Its formality level
+        
+        Format as JSON list.
+        """
+        result = llm.invoke(prompt)
+        try:
+            return eval(result)  # Convert string to Python object
+        except:
+            return []
 
-    def analyze_word(self, word: str) -> Optional[Dict]:
+class VocabularyFilterTool(BaseModel):
+    """Tool for filtering to least common words"""
+    def filter_vocabulary(self, words: List[Dict], min_words: int = 3, max_words: int = 10) -> List[Dict]:
+        """Filter to least common words using LLM"""
+        prompt = f"""
+        From these Japanese words, select the {min_words}-{max_words} least common ones that would be most useful for a Japanese learner:
+        {words}
+        
+        Return only the selected words in the same format.
         """
-        Analyze a Japanese word and return its components.
-        """
-        if word in self.vocab_db:
-            result = self.vocab_db[word].copy()
-            result["japanese"] = word
-            return result
-        return None
+        result = llm.invoke(prompt)
+        try:
+            return eval(result)
+        except:
+            return words[:max_words]  # Fallback to simple truncation
 
-    def extract_vocabulary(self, text: str) -> List[Dict]:
+class VocabularyEnhancerTool(BaseModel):
+    """Tool for enhancing vocabulary with romaji and English"""
+    def enhance_vocabulary(self, words: List[Dict]) -> List[Dict]:
+        """Add romaji and English translations"""
+        prompt = f"""
+        For each Japanese word, add:
+        - Romaji (in Hepburn style)
+        - English translation
+        
+        Words: {words}
+        
+        Return as JSON list with all original fields plus romaji and english.
         """
-        Extract vocabulary from a text and analyze each word.
-        """
-        # Simple word extraction using our vocab database
-        words = []
-        for word in self.vocab_db.keys():
-            if word in text:
-                analysis = self.analyze_word(word)
-                if analysis:
-                    words.append(analysis)
-        return words
+        result = llm.invoke(prompt)
+        try:
+            return eval(result)
+        except:
+            return words
 
 def get_tools() -> List[Tool]:
-    lyric_tool = LyricSearchTool()
-    translation_tool = TranslationTool()
-    vocab_analyzer = VocabularyAnalyzer()
+    link_retriever = LinkRetrieverTool()
+    lyrics_retriever = LyricsRetrieverTool()
+    lyrics_extractor = LyricsExtractorTool()
+    vocab_extractor = VocabularyExtractorTool()
+    vocab_filter = VocabularyFilterTool()
+    vocab_enhancer = VocabularyEnhancerTool()
     
     return [
         Tool(
-            name="search_lyrics",
-            func=lyric_tool.search_lyrics,
-            description="Search for Japanese song lyrics by song name"
+            name="search_lyrics_links",
+            func=link_retriever.search_lyrics,
+            description="Search for Japanese lyrics webpages using Brave Search"
         ),
         Tool(
-            name="translate_text",
-            func=translation_tool.translate,
-            description="Translate text between Japanese and English"
+            name="get_lyrics_from_url",
+            func=lyrics_retriever.get_lyrics,
+            description="Extract raw text from a lyrics webpage"
         ),
         Tool(
-            name="analyze_vocabulary",
-            func=vocab_analyzer.extract_vocabulary,
-            description="Extract and analyze vocabulary from Japanese text"
+            name="extract_clean_lyrics",
+            func=lyrics_extractor.extract_lyrics,
+            description="Extract clean Japanese lyrics from raw text"
+        ),
+        Tool(
+            name="extract_vocabulary",
+            func=vocab_extractor.extract_vocabulary,
+            description="Extract vocabulary items from lyrics"
+        ),
+        Tool(
+            name="filter_vocabulary",
+            func=vocab_filter.filter_vocabulary,
+            description="Filter to least common and most useful words"
+        ),
+        Tool(
+            name="enhance_vocabulary",
+            func=vocab_enhancer.enhance_vocabulary,
+            description="Add romaji and English translations to vocabulary"
         )
     ]
