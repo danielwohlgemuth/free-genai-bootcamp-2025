@@ -19,11 +19,15 @@ app = FastAPI(title="Japanese Song Vocabulary Extractor")
 class SongRequest(BaseModel):
     query: str
 
+class WordParts(BaseModel):
+    type: Optional[str]
+    formality: Optional[str]
+
 class WordInfo(BaseModel):
     japanese: str
     romaji: str
     english: str
-    parts: Dict[str, str]
+    parts: Optional[WordParts]
 
 class VocabularyResponse(BaseModel):
     group_name: str
@@ -57,14 +61,13 @@ Question: {input}
 """)
 
 # Create the agent
-agent = create_react_agent(llm=llm, tools=tools, prompt=prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+agent = create_react_agent(llm=llm, tools=tools, prompt=prompt, response_format=VocabularyResponse, verbose=True)
 
 @app.post("/extract_vocabulary", response_model=VocabularyResponse)
 async def extract_vocabulary(request: SongRequest):
     try:
         # Use the agent to process the request
-        result = agent_executor.invoke({
+        result = agent.invoke({
             "input": f"Find vocabulary from the song: {request.query}"
         })
         
