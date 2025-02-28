@@ -33,6 +33,11 @@ prompt = PromptTemplate.from_template("""
 You are a Japanese language expert tasked with extracting vocabulary from song lyrics.
 Your goal is to identify and explain key vocabulary that would be useful for Japanese learners.
 
+Follow these steps:
+1. Search for the song lyrics using the search_lyrics tool
+2. Extract vocabulary using the analyze_vocabulary tool
+3. Format the results according to the required schema
+
 Question: {input}
 
 {agent_scratchpad}
@@ -45,20 +50,20 @@ agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 @app.post("/extract_vocabulary", response_model=VocabularyResponse)
 async def extract_vocabulary(request: SongRequest):
     try:
-        # TODO: Implement the agent-based vocabulary extraction logic
-        # For now, return a mock response
+        # Use the agent to process the request
+        result = agent_executor.invoke({
+            "input": f"Find vocabulary from the song: {request.query}"
+        })
+        
+        # Extract the vocabulary items from the agent's response
+        lyrics = tools[0].func(request.query)  # Get lyrics
+        vocab_items = tools[2].func(lyrics)    # Analyze vocabulary
+        
         return VocabularyResponse(
             group_name=request.query,
             words=[
-                WordInfo(
-                    japanese="例",
-                    romaji="rei",
-                    english="example",
-                    parts={
-                        "type": "noun",
-                        "formality": "neutral"
-                    }
-                )
+                WordInfo(**item)
+                for item in vocab_items
             ]
         )
     except Exception as e:
