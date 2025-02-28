@@ -220,6 +220,18 @@ Response
 }
 ```
 
+### Model [qwen2.5:3b](https://ollama.com/library/qwen2.5:3b)
+
+Download model
+
+```bash
+docker exec ollama ollama run qwen2.5:3b
+or
+curl http://localhost:11434/api/pull -d '{
+  "model": "qwen2.5:3b"
+}'
+```
+
 ## Cleanup
 
 Unload model from memory
@@ -234,6 +246,11 @@ curl http://localhost:11434/api/generate -d '{
   "model": "deepseek-r1:1.5b",
   "keep_alive": 0
 }'
+
+curl http://localhost:11434/api/generate -d '{
+  "model": "qwen2.5:3b",
+  "keep_alive": 0
+}'
 ```
 
 Stop ollama container
@@ -245,5 +262,5 @@ docker compose down
 Remove downloaded models
 
 ```bash
-docker volume rm ollama_model_data
+docker volume rm ollama-data
 ```
