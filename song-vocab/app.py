@@ -38,6 +38,12 @@ Tool names: {{tool_names}}
 
 Use these tools to process the song lyrics and extract vocabulary.
 
+General Instructions:
+1. Search for lyrics using the "get_lyrics_from_song_name" tool. This provides a list of urls.
+2. Extract vocabulary using the "extract_vocabulary" tool. Use the clean lyrics from step 1.
+3. Filter vocabulary using the "filter_vocabulary" tool. Use the vocabulary from step 2.
+4. Enhance vocabulary using the "enhance_vocabulary" tool. Use the filtered vocabulary from step 3.
+
 After using the tools, your final response should be a list of WordInfo objects, each containing:
 - japanese: The Japanese word or phrase
 - romaji: The romanized version

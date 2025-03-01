@@ -24,18 +24,12 @@ llm = ChatOllama(
 )
 
 @tool
-def search_lyrics(song_name: str) -> List[str]:
-    """Search for Japanese lyrics from a song name"""
+def get_lyrics(song_name: str) -> str:
+    """Search and extract Japanese lyrics from a song name"""
     print('song_name', song_name)
     query = f"{song_name} japanese lyrics"
-    results = DDGS().text(query, max_results=2)
-    urls = [result['href'] for result in results]
-    print('urls', urls)
-    return urls
-
-@tool
-def get_lyrics(url: str) -> str:
-    """Extract lyrics from a webpage"""
+    results = DDGS().text(query, max_results=1)
+    url = results[0]['href']
     print('url', url)
     loader = WebBaseLoader(
         web_paths=[url],
@@ -45,11 +39,7 @@ def get_lyrics(url: str) -> str:
     )
     docs = loader.load()
     print('docs', docs)
-    return docs[0].page_content if docs else ""
-
-@tool
-def extract_lyrics(raw_text: str) -> str:
-    """Use LLM to extract clean lyrics from raw text"""
+    raw_text = docs[0].page_content if docs else ""
     print('raw_text', raw_text)
     prompt = f"""
     Extract only the Japanese lyrics from the following text. 
@@ -159,19 +149,9 @@ def enhance_vocabulary(words: List[str]) -> List[WordInfo]:
 def get_tools() -> List[Tool]:    
     return [
         Tool(
-            name="search_lyrics_links",
-            func=search_lyrics,
-            description="Search for Japanese lyrics webpages from a song name"
-        ),
-        Tool(
-            name="get_lyrics_from_url",
+            name="get_lyrics_from_song_name",
             func=get_lyrics,
-            description="Extract raw text from a lyrics webpage"
-        ),
-        Tool(
-            name="extract_clean_lyrics",
-            func=extract_lyrics,
-            description="Extract clean Japanese lyrics from raw text"
+            description="Get lyrics text from a song name"
         ),
         Tool(
             name="extract_vocabulary",
