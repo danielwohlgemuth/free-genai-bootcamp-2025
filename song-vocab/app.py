@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from typing import List, Dict
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_community.llms import Ollama
-from langchain.prompts import PromptTemplate
+from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 from langchain.tools import Tool
 from tools import get_tools
 import os
@@ -26,32 +26,42 @@ llm = Ollama(
 tools = get_tools()
 
 # Define the agent's prompt template
-prompt = PromptTemplate.from_template("""
+system_template = """
 You are a Japanese language expert tasked with extracting vocabulary from song lyrics.
 Your goal is to identify and explain key vocabulary that would be useful for Japanese learners.
 
-Follow these steps:
-1. Use search_lyrics_links to find webpages with the song lyrics
-2. Use get_lyrics_from_url on the most relevant URL to get the raw text
-3. Use extract_clean_lyrics to get clean Japanese lyrics
-4. Use extract_vocabulary to identify vocabulary items
-5. Use filter_vocabulary to select the most useful words
-6. Use enhance_vocabulary to add romaji and translations
+You have access to the following tools:
 
-Question: {input}
+{tools}
+
+Use these tools to process the song lyrics and extract vocabulary.
+"""
+
+human_template = """
+Find vocabulary from the song: {input}
 
 {agent_scratchpad}
-""")
+"""
+
+prompt = ChatPromptTemplate.from_messages([
+    SystemMessagePromptTemplate.from_template(system_template),
+    HumanMessagePromptTemplate.from_template(human_template)
+])
 
 # Create the agent
-agent = create_react_agent(llm=llm, tools=tools, prompt=prompt, response_format=VocabularyResponse, verbose=True)
+agent = create_react_agent(
+    llm=llm,
+    tools=tools,
+    prompt=prompt,
+    response_format=VocabularyResponse,
+    verbose=True
+)
 
 @app.post("/extract_vocabulary", response_model=VocabularyResponse)
 async def extract_vocabulary(request: SongRequest):
     try:
-        # Use the agent to process the request
         result = agent.invoke({
-            "input": f"Find vocabulary from the song: {request.query}"
+            "input": request.query
         })
         
         # The agent's response should contain the processed vocabulary
