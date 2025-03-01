@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from typing import List, Dict
-from langchain.agents import AgentExecutor, create_react_agent
-from langchain_ollama import OllamaLLM
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain_ollama import ChatOllama
 from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 from langchain.output_parsers import PydanticOutputParser
 from tools import get_tools
@@ -17,7 +17,7 @@ MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:3b")
 app = FastAPI(title="Japanese Song Vocabulary Extractor")
 
 # Initialize Ollama LLM
-llm = OllamaLLM(
+llm = ChatOllama(
     base_url=OLLAMA_BASE_URL,
     model=MODEL_NAME
 )
@@ -32,11 +32,17 @@ Your goal is to identify and explain key vocabulary that would be useful for Jap
 
 You have access to the following tools:
 
-{tools}
+{{tools}}
 
-Tool names: {tool_names}
+Tool names: {{tool_names}}
 
 Use these tools to process the song lyrics and extract vocabulary.
+
+After using the tools, your final response should be a list of WordInfo objects, each containing:
+- japanese: The Japanese word or phrase
+- romaji: The romanized version
+- english: The English translation
+- parts: The grammatical parts (e.g. noun, verb, etc.)
 """
 
 human_template = """
@@ -50,14 +56,15 @@ prompt = ChatPromptTemplate.from_messages([
     HumanMessagePromptTemplate.from_template(human_template)
 ])
 
+# structured_llm = llm.with_structured_output(VocabularyResponse)
+
 # Create the agent
-agent = create_react_agent(
+agent = create_tool_calling_agent(
     llm=llm,
     tools=tools,
-    prompt=prompt,
-    output_parser=PydanticOutputParser(pydantic_object=VocabularyResponse)
+    prompt=prompt
 )
-agent_executor = AgentExecutor(agent=agent, tools=tools)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 @app.post("/extract_vocabulary", response_model=VocabularyResponse)
 async def extract_vocabulary(request: SongRequest):
@@ -65,24 +72,42 @@ async def extract_vocabulary(request: SongRequest):
         result = agent_executor.invoke({
             "input": request.query
         })
+
+        print('result', result)
         
         # The agent should return a List[WordInfo]
         if isinstance(result, dict) and 'output' in result:
             result = result['output']
             
-        # Ensure we have a List[WordInfo]
-        if not isinstance(result, List[WordInfo]):
-            # Create a default response if something went wrong
-            return VocabularyResponse(
-                group_name=request.query,
-                words=[]
-            )
+        # Convert the result to a list of WordInfo objects if it's not already
+        if isinstance(result, str):
+            # Try to evaluate the string as a Python literal
+            import ast
+            try:
+                result = ast.literal_eval(result)
+            except:
+                result = []
+                
+        if not isinstance(result, list):
+            result = []
             
+        # Ensure each item in the list is a WordInfo object
+        word_list = []
+        for item in result:
+            if isinstance(item, dict):
+                try:
+                    word_list.append(WordInfo(**item))
+                except:
+                    continue
+            elif isinstance(item, WordInfo):
+                word_list.append(item)
+                
         return VocabularyResponse(
             group_name=request.query,
-            words=result
+            words=word_list
         )
     except Exception as e:
+        print(f"Error processing request: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

@@ -56,7 +56,7 @@ A backend service that extracts and translates key vocabulary from Japanese song
    - No specific website targeting for lyrics sources
 
 3. **Tools**
-   - Link retriever: Brave Search
+   - Link retriever: DuckDuckGo Search
    - Lyrics retriever: Web scraping using BeautifulSoup4
    - Lyrics extractor: LLM (qwen2.5:3b model)
    - Vocabulary extractor: LLM (qwen2.5:3b model)
@@ -67,7 +67,7 @@ A backend service that extracts and translates key vocabulary from Japanese song
 - Ollama (qwen2.5:3b model)
 - LangChain for agent workflow
 - Python
-- Brave Search API for lyrics discovery
+- DuckDuckGo Search API for lyrics discovery
 - BeautifulSoup4 for web scraping
 - FastAPI for API endpoint
 
@@ -81,7 +81,6 @@ A backend service that extracts and translates key vocabulary from Japanese song
 ## Development References
 
 ### LangChain Integration
-- Brave Search: `langchain_community.document_loaders.BraveSearchLoader`
 - Web Scraping: `langchain_community.document_loaders.WebBaseLoader` with BeautifulSoup4
 - Agent Creation: `langgraph.prebuilt.chat_agent_executor.create_react_agent`
 
