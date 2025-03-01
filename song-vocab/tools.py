@@ -7,6 +7,9 @@ import os
 from dotenv import load_dotenv
 from langchain_community.document_loaders import BraveSearchLoader, WebBaseLoader
 from langchain_community.llms import Ollama
+from langchain.output_parsers import PydanticOutputParser
+from langchain.prompts import PromptTemplate
+from models import WordInfo, VocabularyResponse
 
 # Load environment variables
 load_dotenv()
@@ -59,59 +62,88 @@ class LyricsExtractorTool(BaseModel):
 
 class VocabularyExtractorTool(BaseModel):
     """Tool for extracting vocabulary using LLM"""
-    def extract_vocabulary(self, lyrics: str) -> List[Dict]:
+    def extract_vocabulary(self, lyrics: str) -> List[str]:
         """Extract vocabulary items from lyrics"""
-        prompt = f"""
-        Extract unique Japanese words from these lyrics:
-        {lyrics}
+        # Create a parser for our expected output format
+        parser = PydanticOutputParser(pydantic_object=List[str])
         
-        For each word, provide:
-        - The word in Japanese
-        - Its part of speech
-        - Its formality level
+        prompt = PromptTemplate.from_template(
+            """
+            Extract unique Japanese words from these lyrics:
+            {lyrics}
+            
+            {format_instructions}
+            """,
+            input_variables=["lyrics"],
+            partial_variables={"format_instructions": parser.get_format_instructions()}
+        )
         
-        Format as JSON list.
-        """
-        result = llm.invoke(prompt)
+        formatted_prompt = prompt.format(lyrics=lyrics)
+        result = llm.invoke(formatted_prompt)
+        
         try:
-            return eval(result)  # Convert string to Python object
+            parsed_result = parser.parse(result)
+            return parsed_result
         except:
             return []
 
 class VocabularyFilterTool(BaseModel):
     """Tool for filtering to least common words"""
-    def filter_vocabulary(self, words: List[Dict], min_words: int = 3, max_words: int = 10) -> List[Dict]:
+    def filter_vocabulary(self, words: List[str], min_words: int = 3, max_words: int = 10) -> List[str]:
         """Filter to least common words using LLM"""
-        prompt = f"""
-        From these Japanese words, select the {min_words}-{max_words} least common ones that would be most useful for a Japanese learner:
-        {words}
-        
-        Return only the selected words in the same format.
-        """
-        result = llm.invoke(prompt)
+        # Create a parser for our expected output format
+        parser = PydanticOutputParser(pydantic_object=List[str])
+
+        prompt = PromptTemplate.from_template(
+            """
+            From these Japanese words, select the {min_words}-{max_words} least common ones that would be most useful for a Japanese learner:
+            {words}
+            
+            {format_instructions}
+            """,
+            input_variables=["words", "min_words", "max_words"],
+            partial_variables={"format_instructions": parser.get_format_instructions()}
+        )
+
+        formatted_prompt = prompt.format(words=words, min_words=min_words, max_words=max_words)
+        result = llm.invoke(formatted_prompt)
+
         try:
-            return eval(result)
+            parsed_result = parser.parse(result)
+            return parsed_result
         except:
             return words[:max_words]  # Fallback to simple truncation
 
 class VocabularyEnhancerTool(BaseModel):
     """Tool for enhancing vocabulary with romaji and English"""
-    def enhance_vocabulary(self, words: List[Dict]) -> List[Dict]:
+    def enhance_vocabulary(self, words: List[str]) -> VocabularyResponse:
         """Add romaji and English translations"""
-        prompt = f"""
-        For each Japanese word, add:
-        - Romaji (in Hepburn style)
-        - English translation
+        parser = PydanticOutputParser(pydantic_object=VocabularyResponse)
         
-        Words: {words}
+        prompt = PromptTemplate.from_template(
+            """
+            For each Japanese word, provide:
+            - The word in Japanese
+            - Romaji (in Hepburn style)
+            - English translation
+            - Part of speech and formality level
+            
+            Words: {words}
+            
+            {format_instructions}
+            """,
+            input_variables=["words"],
+            partial_variables={"format_instructions": parser.get_format_instructions()}
+        )
         
-        Return as JSON list with all original fields plus romaji and english.
-        """
-        result = llm.invoke(prompt)
+        formatted_prompt = prompt.format(words=words)
+        result = llm.invoke(formatted_prompt)
+        
         try:
-            return eval(result)
+            parsed_result = parser.parse(result)
+            return parsed_result
         except:
-            return words
+            return VocabularyResponse(group_name="", words=[])
 
 def get_tools() -> List[Tool]:
     link_retriever = LinkRetrieverTool()

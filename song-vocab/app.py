@@ -1,5 +1,4 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from typing import List, Dict
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain_community.llms import Ollama
@@ -8,6 +7,7 @@ from langchain.tools import Tool
 from tools import get_tools
 import os
 from dotenv import load_dotenv
+from models import SongRequest, VocabularyResponse, WordInfo
 
 # Load environment variables
 load_dotenv()
@@ -15,23 +15,6 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:3b")
 
 app = FastAPI(title="Japanese Song Vocabulary Extractor")
-
-class SongRequest(BaseModel):
-    query: str
-
-class WordParts(BaseModel):
-    type: Optional[str]
-    formality: Optional[str]
-
-class WordInfo(BaseModel):
-    japanese: str
-    romaji: str
-    english: str
-    parts: Optional[WordParts]
-
-class VocabularyResponse(BaseModel):
-    group_name: str
-    words: List[WordInfo]
 
 # Initialize Ollama LLM
 llm = Ollama(
