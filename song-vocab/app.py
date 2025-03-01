@@ -8,6 +8,7 @@ from tools import get_tools
 import os
 from dotenv import load_dotenv
 from models import SongRequest, VocabularyResponse, WordInfo
+import traceback
 
 # Load environment variables
 load_dotenv()
@@ -32,17 +33,19 @@ Your goal is to identify and explain key vocabulary that would be useful for Jap
 
 You have access to the following tools:
 
-{{tools}}
+{tools}
 
-Tool names: {{tool_names}}
+Tool names: {tool_names}
 
 Use these tools to process the song lyrics and extract vocabulary.
 
 General Instructions:
-1. Search for lyrics using the "get_lyrics_from_song_name" tool. This provides a list of urls.
-2. Extract vocabulary using the "extract_vocabulary" tool. Use the clean lyrics from step 1.
-3. Filter vocabulary using the "filter_vocabulary" tool. Use the vocabulary from step 2.
-4. Enhance vocabulary using the "enhance_vocabulary" tool. Use the filtered vocabulary from step 3.
+1. First, use the "get_lyrics_from_song_name" tool with the song name as input.
+2. Take the lyrics returned from step 1 and pass them to the "extract_vocabulary" tool using the parameter name "lyrics".
+
+Example tool usage:
+1. lyrics = get_lyrics_from_song_name(song_name="Song Title")
+2. vocabulary = extract_vocabulary(lyrics=lyrics)
 
 After using the tools, your final response should be a list of WordInfo objects, each containing:
 - japanese: The Japanese word or phrase
@@ -58,8 +61,8 @@ Find vocabulary from the song: {input}
 """
 
 prompt = ChatPromptTemplate.from_messages([
-    SystemMessagePromptTemplate.from_template(system_template),
-    HumanMessagePromptTemplate.from_template(human_template)
+    SystemMessagePromptTemplate.from_template(system_template, partial_variables={"tools": tools, "tool_names": ", ".join([tool.name for tool in tools])}),
+    HumanMessagePromptTemplate.from_template(human_template, input_variables=["input"])
 ])
 
 # structured_llm = llm.with_structured_output(VocabularyResponse)
@@ -109,11 +112,13 @@ async def extract_vocabulary(request: SongRequest):
                 word_list.append(item)
                 
         return VocabularyResponse(
-            group_name=request.query,
-            words=word_list
+            group_name=song_request.query,
+            words=result.root if isinstance(result, WordInfoList) else []
         )
+
     except Exception as e:
-        print(f"Error processing request: {str(e)}")
+        print(f"Error in extract_vocabulary: {str(e)}")
+        print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

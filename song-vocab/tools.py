@@ -3,14 +3,16 @@ from typing import Dict, List, Optional
 import requests
 from pydantic import BaseModel
 import os
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, SoupStrainer
 from duckduckgo_search import DDGS
 from dotenv import load_dotenv
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_ollama import ChatOllama
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
-from models import WordInfo
+from models import WordInfo, WordList, ExtractVocabularyInput, WordInfoList
+import traceback
+import json
 
 # Load environment variables
 load_dotenv()
@@ -23,149 +25,217 @@ llm = ChatOllama(
     model=MODEL_NAME
 )
 
-@tool
-def get_lyrics(song_name: str) -> str:
-    """Search and extract Japanese lyrics from a song name"""
-    print('song_name', song_name)
+cache_lyrics = {}
+
+@tool("get_lyrics_from_song_name", return_direct=True)
+def get_lyrics_from_song_name(song_name: str) -> str:
+    """Search for Japanese song lyrics by song name."""
+    try:
+        print('song_name', song_name)
+        if song_name in cache_lyrics:
+            return cache_lyrics[song_name]
+    except Exception as e:
+        print(f"Error in get_lyrics_from_song_name: {str(e)}")
+        print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
+        raise HTTPException(status_code=500, detail=str(e))
     query = f"{song_name} japanese lyrics"
     results = DDGS().text(query, max_results=1)
     url = results[0]['href']
     print('url', url)
+    
+    # Create a SoupStrainer instance
+    only_text_tags = SoupStrainer(['p', 'div', 'pre'])
+    
     loader = WebBaseLoader(
         web_paths=[url],
         bs_kwargs=dict(
-            parse_only=BeautifulSoup.SoupStrainer(['p', 'div', 'pre'])
+            parse_only=only_text_tags
         )
     )
     docs = loader.load()
-    print('docs', docs)
+    # print('docs', docs)
     raw_text = docs[0].page_content if docs else ""
-    print('raw_text', raw_text)
+    # print('raw_text', raw_text)
     prompt = f"""
-    Extract only the Japanese lyrics from the following text. 
+    Extract only the Japanese lyrics from the following text.
     Remove any English translations, advertisements, or other content.
     Text: {raw_text}
     
+    Return only the lyrics, nothing else.
     Japanese Lyrics:
     """
     result = llm.invoke(prompt)
-    print('result', result)
-    return result
+    print('result.content', result.content)
+    cache_lyrics[song_name] = result.content
+    return result.content
 
-@tool
-def extract_vocabulary(lyrics: str) -> List[str]:
-    """Extract vocabulary items from lyrics"""
-    print('lyrics', lyrics)
-    # Create a parser for our expected output format
-    parser = PydanticOutputParser(pydantic_object=List[str])
-    
-    prompt = PromptTemplate.from_template(
-        """
-        Extract unique Japanese words from these lyrics:
+@tool("extract_vocabulary", return_direct=True)
+def extract_vocabulary(lyrics: str) -> WordInfoList:
+    """Extract vocabulary items from lyrics. Takes lyrics text as input and returns a list of vocabulary items."""
+    try:
+        # Early validation of input
+        if not lyrics or not lyrics.strip():
+            print('Warning: Empty lyrics provided')
+            return WordInfoList(root=[])
+            
+        print('Processing lyrics:', lyrics[:100] + '...' if len(lyrics) > 100 else lyrics)
+        
+        # Stage 1: Extract unique Japanese words
+        parser = PydanticOutputParser(pydantic_object=WordList)
+        template = """You are a Japanese language expert. Extract unique Japanese words from these lyrics and return them as a simple list.
+        Only include meaningful vocabulary words that would be useful for a Japanese learner.
+        Focus on nouns, verbs, and adjectives.
+        Do not include particles or grammatical markers.
+        If no Japanese words are found, return an empty list: []
+
+        Lyrics:
         {lyrics}
+
+        Return ONLY a list of strings like this:
+        ["word1", "word2", "word3"]
         
-        {format_instructions}
-        """,
-        input_variables=["lyrics"],
-        partial_variables={"format_instructions": parser.get_format_instructions()}
-    )
-    
-    formatted_prompt = prompt.format(lyrics=lyrics)
-    result = llm.invoke(formatted_prompt)
-    print('result', result)
-    
-    try:
-        parsed_result = parser.parse(result)
-        print('parsed_result', parsed_result)
-        return parsed_result
-    except:
-        return []
+        Or if no Japanese words are found:
+        []
 
-@tool
-def filter_vocabulary(words: List[str]) -> List[str]:
-    """Filter to least common words using LLM"""
-    min_words: int = 3
-    max_words: int = 10
-    print('words', words)
-    # Create a parser for our expected output format
-    parser = PydanticOutputParser(pydantic_object=List[str])
-
-    prompt = PromptTemplate.from_template(
+        Extract the words now:
         """
-        From these Japanese words, select the {min_words}-{max_words} least common ones that would be most useful for a Japanese learner:
-        {words}
+        prompt = PromptTemplate.from_template(
+            template,
+            input_variables=["lyrics"],
+            partial_variables={"format_instructions": parser.get_format_instructions()}
+        )
         
-        {format_instructions}
-        """,
-        input_variables=["words", "min_words", "max_words"],
-        partial_variables={"format_instructions": parser.get_format_instructions()}
-    )
-
-    formatted_prompt = prompt.format(words=words, min_words=min_words, max_words=max_words)
-    result = llm.invoke(formatted_prompt)
-    print('result', result)
-
-    try:
-        parsed_result = parser.parse(result)
-        print('parsed_result', parsed_result)
-        return parsed_result
-    except:
-        return words[:max_words]  # Fallback to simple truncation
-
-@tool
-def enhance_vocabulary(words: List[str]) -> List[WordInfo]:
-    """Add romaji and English translations"""
-    print('words', words)
-    # Create a parser for our expected output format
-    parser = PydanticOutputParser(pydantic_object=List[WordInfo])
+        formatted_prompt = prompt.format(lyrics=lyrics)
+        result = llm.invoke(formatted_prompt)
+        print('Initial word extraction result:', result.content[:100] + '...' if len(result.content) > 100 else result.content)
         
-    prompt = PromptTemplate.from_template(
-        """
-        For each Japanese word, provide:
-        - The word in Japanese
-        - Romaji (in Hepburn style)
-        - English translation
-        - Part of speech and formality level
+        try:
+            parsed_result = parser.parse(result.content)
+            words = parsed_result.root
+            if not words:
+                print('Warning: No words extracted from lyrics')
+                return WordInfoList(root=[])
+        except Exception as e:
+            print(f'Error parsing initial word list: {str(e)}')
+            print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
+            print('Raw content:', result.content)
+            return WordInfoList(root=[])
+            
+        # Stage 2: Select least common words
+        min_words: int = 3
+        max_words: int = 10
+        print(f'Filtering {len(words)} words to {min_words}-{max_words} items')
         
+        template = """
+        From these Japanese words, select the {min_words}-{max_words} least common ones that would be most useful for a Japanese learner.
+        Return ONLY a list of strings like this:
+        ["word1", "word2", "word3"]
+
         Words: {words}
+
+        Select the words now:
+        """
+        prompt = PromptTemplate.from_template(
+            template,
+            input_variables=["words", "min_words", "max_words"],
+            partial_variables={"format_instructions": parser.get_format_instructions()}
+        )
+
+        formatted_prompt = prompt.format(words=words, min_words=min_words, max_words=max_words)
+        result = llm.invoke(formatted_prompt)
+        print('Word filtering result:', result.content[:100] + '...' if len(result.content) > 100 else result.content)
+
+        try:
+            parsed_result = parser.parse(result.content)
+            words = parsed_result.root
+            if not words:
+                print('Warning: No words remained after filtering')
+                return WordInfoList(root=[])
+        except Exception as e:
+            print(f'Error parsing filtered word list: {str(e)}')
+            print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
+            print('Raw content:', result.content)
+            return WordInfoList(root=[])
+
+        # Stage 3: Add word details
+        print(f'Adding details for {len(words)} words')
+            
+        template = """
+        For these Japanese words: {words}
+
+        Create a list of word details. For each word include:
+        - japanese: The word in Japanese
+        - romaji: Romaji (in Hepburn style)
+        - english: English translation
+        - parts: Part of speech and formality level
+
+        Return ONLY a JSON array like this:
+        [
+            {{
+                "japanese": "てっぱん",
+                "romaji": "teppan",
+                "english": "iron plate",
+                "parts": {{"type": "noun", "formality": "neutral"}}
+            }}
+        ]
+
+        Create the word details now:
+        """
+        prompt = PromptTemplate.from_template(template)
         
-        {format_instructions}
-        """,
-        input_variables=["words"],
-        partial_variables={"format_instructions": parser.get_format_instructions()}
-    )
-    
-    formatted_prompt = prompt.format(words=words)
-    result = llm.invoke(formatted_prompt)
-    print('result', result)
+        formatted_prompt = prompt.format(words=words)
+        result = llm.invoke(formatted_prompt)
+        print('Word details result:', result.content[:100] + '...' if len(result.content) > 100 else result.content)
 
-    try:
-        parsed_result = parser.parse(result)
-        print('parsed_result', parsed_result)
-        return parsed_result
-    except:
-        return []
+        try:
+            # Parse the JSON response directly
+            word_details = json.loads(result.content)
+            
+            # Validate each word detail against WordInfo model
+            validated_words = []
+            for detail in word_details:
+                try:
+                    word_info = WordInfo(
+                        japanese=detail["japanese"],
+                        romaji=detail["romaji"],
+                        english=detail["english"],
+                        parts=WordParts(**detail.get("parts", {})) if detail.get("parts") else None
+                    )
+                    validated_words.append(word_info)
+                except Exception as e:
+                    print(f"Error validating word detail: {detail}")
+                    print(f"Error: {str(e)}")
+                    continue
+            
+            if not validated_words:
+                print('Warning: No valid word details were generated')
+                return WordInfoList(root=[])
+                
+            print(f'Successfully processed {len(validated_words)} words')
+            return WordInfoList(root=validated_words)
+            
+        except Exception as e:
+            print(f'Error parsing word details: {str(e)}')
+            print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
+            print('Raw content:', result.content)
+            return WordInfoList(root=[])
+            
+    except Exception as e:
+        print(f'Unexpected error in extract_vocabulary: {str(e)}')
+        print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
+        return WordInfoList(root=[])
 
-def get_tools() -> List[Tool]:    
+def get_tools() -> List[Tool]:
     return [
         Tool(
             name="get_lyrics_from_song_name",
-            func=get_lyrics,
-            description="Get lyrics text from a song name"
+            func=get_lyrics_from_song_name,
+            description="Search for Japanese song lyrics by song name"
         ),
         Tool(
             name="extract_vocabulary",
             func=extract_vocabulary,
-            description="Extract vocabulary items from lyrics"
+            description="Extract vocabulary items from lyrics. Takes lyrics text as input and returns a list of vocabulary items.",
+            args_schema=ExtractVocabularyInput
         ),
-        Tool(
-            name="filter_vocabulary",
-            func=filter_vocabulary,
-            description="Filter to least common and most useful words"
-        ),
-        Tool(
-            name="enhance_vocabulary",
-            func=enhance_vocabulary,
-            description="Add romaji and English translations to vocabulary"
-        )
     ]
