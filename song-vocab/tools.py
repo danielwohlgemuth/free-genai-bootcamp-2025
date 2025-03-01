@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 import os
 from dotenv import load_dotenv
 from langchain_community.document_loaders import BraveSearchLoader, WebBaseLoader
-from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from models import WordInfo
@@ -17,7 +17,7 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:3b")
 
 # Initialize LLM
-llm = Ollama(
+llm = OllamaLLM(
     base_url=OLLAMA_BASE_URL,
     model=MODEL_NAME
 )

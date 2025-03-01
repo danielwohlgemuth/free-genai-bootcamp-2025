@@ -1,9 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from typing import List, Dict
 from langchain.agents import AgentExecutor, create_react_agent
-from langchain_community.llms import Ollama
+from langchain_ollama import OllamaLLM
 from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
-from langchain.tools import Tool
+from langchain.output_parsers import PydanticOutputParser
 from tools import get_tools
 import os
 from dotenv import load_dotenv
@@ -17,7 +17,7 @@ MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:3b")
 app = FastAPI(title="Japanese Song Vocabulary Extractor")
 
 # Initialize Ollama LLM
-llm = Ollama(
+llm = OllamaLLM(
     base_url=OLLAMA_BASE_URL,
     model=MODEL_NAME
 )
@@ -33,6 +33,8 @@ Your goal is to identify and explain key vocabulary that would be useful for Jap
 You have access to the following tools:
 
 {tools}
+
+Tool names: {tool_names}
 
 Use these tools to process the song lyrics and extract vocabulary.
 """
@@ -53,14 +55,14 @@ agent = create_react_agent(
     llm=llm,
     tools=tools,
     prompt=prompt,
-    response_format=VocabularyResponse,
-    verbose=True
+    output_parser=PydanticOutputParser(pydantic_object=VocabularyResponse)
 )
+agent_executor = AgentExecutor(agent=agent, tools=tools)
 
 @app.post("/extract_vocabulary", response_model=VocabularyResponse)
 async def extract_vocabulary(request: SongRequest):
     try:
-        result = agent.invoke({
+        result = agent_executor.invoke({
             "input": request.query
         })
         
