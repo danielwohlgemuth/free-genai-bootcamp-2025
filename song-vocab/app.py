@@ -64,20 +64,21 @@ async def extract_vocabulary(request: SongRequest):
             "input": request.query
         })
         
-        # The agent's response should contain the processed vocabulary
-        # Convert it to our response format
-        if isinstance(result['output'], str):
-            # If the output is a string, try to parse it
-            try:
-                vocab_data = eval(result['output'])
-            except:
-                vocab_data = []
-        else:
-            vocab_data = result['output']
+        # The agent should return a List[WordInfo]
+        if isinstance(result, dict) and 'output' in result:
+            result = result['output']
+            
+        # Ensure we have a List[WordInfo]
+        if not isinstance(result, List[WordInfo]):
+            # Create a default response if something went wrong
+            return VocabularyResponse(
+                group_name=request.query,
+                words=[]
+            )
             
         return VocabularyResponse(
             group_name=request.query,
-            words=[WordInfo(**item) for item in vocab_data]
+            words=result
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

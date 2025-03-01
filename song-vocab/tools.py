@@ -9,7 +9,7 @@ from langchain_community.document_loaders import BraveSearchLoader, WebBaseLoade
 from langchain_community.llms import Ollama
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
-from models import WordInfo, VocabularyResponse
+from models import WordInfo
 
 # Load environment variables
 load_dotenv()
@@ -116,9 +116,9 @@ class VocabularyFilterTool(BaseModel):
 
 class VocabularyEnhancerTool(BaseModel):
     """Tool for enhancing vocabulary with romaji and English"""
-    def enhance_vocabulary(self, words: List[str]) -> VocabularyResponse:
+    def enhance_vocabulary(self, words: List[str]) -> List[WordInfo]:
         """Add romaji and English translations"""
-        parser = PydanticOutputParser(pydantic_object=VocabularyResponse)
+        parser = PydanticOutputParser(pydantic_object=List[WordInfo])
         
         prompt = PromptTemplate.from_template(
             """
@@ -143,7 +143,7 @@ class VocabularyEnhancerTool(BaseModel):
             parsed_result = parser.parse(result)
             return parsed_result
         except:
-            return VocabularyResponse(group_name="", words=[])
+            return []
 
 def get_tools() -> List[Tool]:
     link_retriever = LinkRetrieverTool()
