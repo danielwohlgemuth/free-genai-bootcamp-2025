@@ -13,7 +13,8 @@ import traceback
 # Load environment variables
 load_dotenv()
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:3b")
+# MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:3b")
+MODEL_NAME = "llama3.2:1b"
 
 app = FastAPI(title="Japanese Song Vocabulary Extractor")
 
@@ -52,6 +53,31 @@ After using the tools, your final response should be a list of WordInfo objects,
 - romaji: The romanized version
 - english: The English translation
 - parts: The grammatical parts (e.g. noun, verb, etc.)
+
+Example output format:
+{
+    "group_name": "およげ!たいやきくん",
+    "words": [
+        {
+            "japanese": "およぐ",
+            "romaji": "oyogu",
+            "english": "to swim",
+            "parts": {
+                "type": "verb",
+                "formality": "dictionary"
+            }
+        },
+        {
+            "japanese": "たいやき",
+            "romaji": "taiyaki",
+            "english": "fish-shaped cake filled with red bean paste",
+            "parts": {
+                "type": "noun",
+                "formality": "neutral"
+            }
+        }
+    ]
+}
 """
 
 human_template = """
@@ -64,8 +90,6 @@ prompt = ChatPromptTemplate.from_messages([
     SystemMessagePromptTemplate.from_template(system_template, partial_variables={"tools": tools, "tool_names": ", ".join([tool.name for tool in tools])}),
     HumanMessagePromptTemplate.from_template(human_template, input_variables=["input"])
 ])
-
-# structured_llm = llm.with_structured_output(VocabularyResponse)
 
 # Create the agent
 agent = create_tool_calling_agent(
@@ -101,19 +125,19 @@ async def extract_vocabulary(request: SongRequest):
             result = []
             
         # Ensure each item in the list is a WordInfo object
-        word_list = []
+        words = []
         for item in result:
             if isinstance(item, dict):
                 try:
-                    word_list.append(WordInfo(**item))
+                    words.append(WordInfo(**item))
                 except:
                     continue
             elif isinstance(item, WordInfo):
-                word_list.append(item)
+                words.append(item)
                 
         return VocabularyResponse(
-            group_name=song_request.query,
-            words=result.root if isinstance(result, WordInfoList) else []
+            group_name=request.query,
+            words=words
         )
 
     except Exception as e:

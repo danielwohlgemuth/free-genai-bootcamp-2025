@@ -1,5 +1,5 @@
 from langchain.tools import Tool, tool
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Annotated
 import requests
 from pydantic import BaseModel
 import os
@@ -10,7 +10,7 @@ from langchain_community.document_loaders import WebBaseLoader
 from langchain_ollama import ChatOllama
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
-from models import WordInfo, WordList, ExtractVocabularyInput, WordInfoList
+from models import WordInfo, WordList, WordInfoList
 import traceback
 import json
 
@@ -25,52 +25,87 @@ llm = ChatOllama(
     model=MODEL_NAME
 )
 
-cache_lyrics = {}
+cache_lyrics = {
+    "およげ!たいやきくん": """
+    およげ!たいやきくん
+
+    まいにち　まいにち　ぼくらはてっぱんの
+    うえで　やかれて　いやになっちゃうよ
+    あるあさ　ぼくは　みせのおじさんと
+    けんかして　うみに　にげこんだのさ
+    はじめて　およいだ　うみのそこ
+    とっても　きもちが　いいもんだ
+    おなかの　あんこが　おもいけど
+    うみは　ひろいぜ　こころがはずむ
+    ももいろ　サンゴが　てをふって
+    ぼくの　およぎを　ながめていたよ
+
+    まいにち　まいにち　たのしいことばかり
+    なんぱせんが　ぼくのすみかさ
+    ときどき　サメに　いじめられるけど
+    そんなときゃ　そうさ　にげるのさ
+    いちにち　およげば　はらぺこさ
+    めだまも　くるくる　まわっちゃう
+    たまには　エビでも　くわなけりゃ
+    しおみず　ばかりじゃ　ふやけてしまう
+    いわばの　かげから　くいつけば
+    それは　ちいさな　つりばりだった
+
+    どんなに　どんなに　もがいても
+    ハリが　のどから　とれないよ
+    はまべで　みしらぬ　おじさんが
+    ぼくを　つりあげ　びっくりしてた
+    やっぱり　ぼくは　たいやきさ
+    すこし　こげある　たいやきさ
+    おじさん　つばを　のみこんで
+    ぼくを　うまそうに　たべたのさ
+    """
+}
 
 @tool("get_lyrics_from_song_name", return_direct=True)
-def get_lyrics_from_song_name(song_name: str) -> str:
+def get_lyrics_from_song_name(song_name: Annotated[str, "Japanese song name"]) -> str:
     """Search for Japanese song lyrics by song name."""
     try:
         print('song_name', song_name)
         if song_name in cache_lyrics:
             return cache_lyrics[song_name]
+
+        query = f"{song_name} japanese lyrics"
+        results = DDGS().text(query, max_results=1)
+        url = results[0]['href']
+        print('url', url)
+        
+        # Create a SoupStrainer instance
+        only_text_tags = SoupStrainer(['p', 'div', 'pre'])
+        
+        loader = WebBaseLoader(
+            web_paths=[url],
+            bs_kwargs=dict(
+                parse_only=only_text_tags
+            )
+        )
+        docs = loader.load()
+        # print('docs', docs)
+        raw_text = docs[0].page_content if docs else ""
+        # print('raw_text', raw_text)
+        prompt = f"""
+        Extract only the Japanese lyrics from the following text.
+        Remove any English translations, advertisements, or other content.
+        Text: {raw_text}
+        
+        Return only the lyrics, nothing else.
+        Japanese Lyrics:
+        """
+        result = llm.invoke(prompt)
+        cache_lyrics[song_name] = result.content
+        return result.content
     except Exception as e:
         print(f"Error in get_lyrics_from_song_name: {str(e)}")
         print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
         raise HTTPException(status_code=500, detail=str(e))
-    query = f"{song_name} japanese lyrics"
-    results = DDGS().text(query, max_results=1)
-    url = results[0]['href']
-    print('url', url)
-    
-    # Create a SoupStrainer instance
-    only_text_tags = SoupStrainer(['p', 'div', 'pre'])
-    
-    loader = WebBaseLoader(
-        web_paths=[url],
-        bs_kwargs=dict(
-            parse_only=only_text_tags
-        )
-    )
-    docs = loader.load()
-    # print('docs', docs)
-    raw_text = docs[0].page_content if docs else ""
-    # print('raw_text', raw_text)
-    prompt = f"""
-    Extract only the Japanese lyrics from the following text.
-    Remove any English translations, advertisements, or other content.
-    Text: {raw_text}
-    
-    Return only the lyrics, nothing else.
-    Japanese Lyrics:
-    """
-    result = llm.invoke(prompt)
-    print('result.content', result.content)
-    cache_lyrics[song_name] = result.content
-    return result.content
 
 @tool("extract_vocabulary", return_direct=True)
-def extract_vocabulary(lyrics: str) -> WordInfoList:
+def extract_vocabulary(lyrics: Annotated[str, "The lyrics to extract vocabulary from"]) -> WordInfoList:
     """Extract vocabulary items from lyrics. Takes lyrics text as input and returns a list of vocabulary items."""
     try:
         # Early validation of input
@@ -86,12 +121,9 @@ def extract_vocabulary(lyrics: str) -> WordInfoList:
         Only include meaningful vocabulary words that would be useful for a Japanese learner.
         Focus on nouns, verbs, and adjectives.
         Do not include particles or grammatical markers.
-        If no Japanese words are found, return an empty list: []
+        If no Japanese words are found, return a
 
-        Lyrics:
-        {lyrics}
-
-        Return ONLY a list of strings like this:
+        print('parser.get_format_instructions()', parser.get_format_instructions())ings like this:
         ["word1", "word2", "word3"]
         
         Or if no Japanese words are found:
@@ -104,6 +136,8 @@ def extract_vocabulary(lyrics: str) -> WordInfoList:
             input_variables=["lyrics"],
             partial_variables={"format_instructions": parser.get_format_instructions()}
         )
+
+        print('parser.get_format_instructions()', parser.get_format_instructions())
         
         formatted_prompt = prompt.format(lyrics=lyrics)
         result = llm.invoke(formatted_prompt)
@@ -215,9 +249,8 @@ def extract_vocabulary(lyrics: str) -> WordInfoList:
             return WordInfoList(root=validated_words)
             
         except Exception as e:
-            print(f'Error parsing word details: {str(e)}')
+            print(f'Error in extract_vocabulary: {str(e)}')
             print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
-            print('Raw content:', result.content)
             return WordInfoList(root=[])
             
     except Exception as e:
@@ -227,15 +260,6 @@ def extract_vocabulary(lyrics: str) -> WordInfoList:
 
 def get_tools() -> List[Tool]:
     return [
-        Tool(
-            name="get_lyrics_from_song_name",
-            func=get_lyrics_from_song_name,
-            description="Search for Japanese song lyrics by song name"
-        ),
-        Tool(
-            name="extract_vocabulary",
-            func=extract_vocabulary,
-            description="Extract vocabulary items from lyrics. Takes lyrics text as input and returns a list of vocabulary items.",
-            args_schema=ExtractVocabularyInput
-        ),
+        get_lyrics_from_song_name,  
+        extract_vocabulary,
     ]
