@@ -15,7 +15,7 @@ from tools import search_lyrics, get_lyrics, extract_lyrics, extract_vocabulary,
 from typing import List, Optional
 
 
-# langchain.debug = True
+langchain.debug = True
 
 # Load environment variables
 load_dotenv()
@@ -63,9 +63,9 @@ chain = define_workflow()
 @app.post("/extract_vocabulary", response_model=VocabularyResponse)
 async def extract_vocabulary(request: SongRequest):
     try:
-        state = chain.invoke({ "song_name": request.query })
+        state = chain.invoke({ "song_name": request.topic })
         result = state['enhanced_vocabulary']
-        result.group_name = request.query
+        result.group_name = request.topic
         return result
 
     except Exception as e:

@@ -4,7 +4,7 @@ from typing import TypedDict
 
 
 class SongRequest(BaseModel):
-    query: str
+    topic: str
 
 class WordParts(BaseModel):
     type: Optional[str] = None

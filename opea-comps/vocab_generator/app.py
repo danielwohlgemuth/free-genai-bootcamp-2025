@@ -21,7 +21,7 @@ def fetch_vocabulary(topic: str, word_count: int) -> Optional[Dict]:
         response = requests.post(
             BACKEND_URL,
             json={"topic": topic, "word_count": word_count},
-            timeout=30
+            timeout=600
         )
         response.raise_for_status()
         return response.json()
@@ -53,7 +53,7 @@ def main():
     with st.form("vocab_form"):
         topic = st.text_input(
             "Enter a topic",
-            max_chars=50,
+            max_chars=200,
             placeholder="e.g., Basic Greetings, Food and Drinks, Weather"
         )
         
