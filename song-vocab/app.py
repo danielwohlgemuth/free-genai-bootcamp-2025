@@ -9,12 +9,14 @@ import os
 from dotenv import load_dotenv
 from models import SongRequest, VocabularyResponse, WordInfo
 import traceback
+import langchain
+
+langchain.debug = True
 
 # Load environment variables
 load_dotenv()
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-# MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:3b")
-MODEL_NAME = "llama3.2:1b"
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:3b")
 
 app = FastAPI(title="Japanese Song Vocabulary Extractor")
 
@@ -31,12 +33,11 @@ tools = get_tools()
 system_template = """
 You are a Japanese language expert tasked with extracting vocabulary from song lyrics.
 Your goal is to identify and explain key vocabulary that would be useful for Japanese learners.
+The user will provide the name of the song. Retrieve the lyrics using one of the tools provided.
+Then, extract vocabulary from the lyrics and provide explanations for each word using another tool.
+Don't just return the lyrics. Returns the vocabulary in the expected format.
 
-You have access to the following tools:
-
-{tools}
-
-Tool names: {tool_names}
+Tool names available to use: {tool_names}
 
 Use these tools to process the song lyrics and extract vocabulary.
 
@@ -44,50 +45,41 @@ General Instructions:
 1. First, use the "get_lyrics_from_song_name" tool with the song name as input.
 2. Take the lyrics returned from step 1 and pass them to the "extract_vocabulary" tool using the parameter name "lyrics".
 
-Example tool usage:
-1. lyrics = get_lyrics_from_song_name(song_name="Song Title")
-2. vocabulary = extract_vocabulary(lyrics=lyrics)
-
-After using the tools, your final response should be a list of WordInfo objects, each containing:
-- japanese: The Japanese word or phrase
-- romaji: The romanized version
-- english: The English translation
-- parts: The grammatical parts (e.g. noun, verb, etc.)
 
 Example output format:
-{
+{{
     "group_name": "およげ!たいやきくん",
     "words": [
-        {
+        {{
             "japanese": "およぐ",
             "romaji": "oyogu",
             "english": "to swim",
-            "parts": {
+            "parts": {{
                 "type": "verb",
                 "formality": "dictionary"
-            }
-        },
-        {
+            }}
+        }},
+        {{
             "japanese": "たいやき",
             "romaji": "taiyaki",
             "english": "fish-shaped cake filled with red bean paste",
-            "parts": {
+            "parts": {{
                 "type": "noun",
                 "formality": "neutral"
-            }
-        }
+            }}
+        }}
     ]
-}
+}}
 """
 
 human_template = """
-Find vocabulary from the song: {input}
+The name of the song is: {input}
 
 {agent_scratchpad}
 """
 
 prompt = ChatPromptTemplate.from_messages([
-    SystemMessagePromptTemplate.from_template(system_template, partial_variables={"tools": tools, "tool_names": ", ".join([tool.name for tool in tools])}),
+    SystemMessagePromptTemplate.from_template(system_template, partial_variables={"tool_names": ", ".join([tool.name for tool in tools])}),
     HumanMessagePromptTemplate.from_template(human_template, input_variables=["input"])
 ])
 
@@ -97,7 +89,8 @@ agent = create_tool_calling_agent(
     tools=tools,
     prompt=prompt
 )
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools, verbose=True)
 
 @app.post("/extract_vocabulary", response_model=VocabularyResponse)
 async def extract_vocabulary(request: SongRequest):
