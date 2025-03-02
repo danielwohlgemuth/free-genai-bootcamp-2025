@@ -1,38 +1,30 @@
-from langchain.tools import tool
-from typing import Dict, List, Optional
-import requests
-from pydantic import BaseModel
 import os
+import random
+import requests
+import traceback
 from bs4 import BeautifulSoup, SoupStrainer
-from duckduckgo_search import DDGS
 from dotenv import load_dotenv
+from duckduckgo_search import DDGS
+from fastapi import HTTPException
 from langchain_community.document_loaders import WebBaseLoader
-from langchain_ollama import ChatOllama
+from langchain_ollama import OllamaLLM
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
-from models import WordInfo, StringList, WordInfoList
-import random
-from typing import TypedDict
+from langchain.tools import tool
+from models import State, StringList, VocabularyResponse
+
 
 # Load environment variables
 load_dotenv()
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:3b")
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:7b")
 
 # Initialize LLM
-llm = ChatOllama(
+llm = OllamaLLM(
     base_url=OLLAMA_BASE_URL,
     model=MODEL_NAME
 )
 
-# Graph state
-class State(TypedDict):
-    song_name: str
-    lyrics_urls: StringList
-    lyrics: str
-    vocabulary: StringList
-    limited_vocabulary: StringList
-    enhanced_vocabulary: VocabularyResponse
 
 def search_lyrics(state: State):
     """Search for Japanese song lyrics by song name."""
@@ -79,14 +71,13 @@ def extract_lyrics(state: State):
             Text: {raw_text}
             
             Return only the lyrics, nothing else.
-            Japanese Lyrics:
             """
         )
 
         formatted_prompt = prompt.format(raw_text=state['lyrics'])
         result = llm.invoke(formatted_prompt)
 
-        return { "lyrics": result.content }
+        return { "lyrics": result }
 
     except Exception as e:
         print(f"Error in extract_lyrics: {str(e)}")
@@ -97,7 +88,7 @@ def extract_vocabulary(state: State):
     """Extract vocabulary items from lyrics"""
     try:
         # Create a parser for our expected output format
-        parser = PydanticOutputParser(pydantic_object=WordList)
+        parser = PydanticOutputParser(pydantic_object=StringList)
         
         prompt = PromptTemplate.from_template(
             """
@@ -105,15 +96,19 @@ def extract_vocabulary(state: State):
             {lyrics}
             
             {format_instructions}
+            Return only the JSON object, nothing else.
             """,
-            input_variables=["lyrics"],
             partial_variables={"format_instructions": parser.get_format_instructions()}
         )
         
         formatted_prompt = prompt.format(lyrics=state['lyrics'])
         result = llm.invoke(formatted_prompt)
+        print("result", result)
+        result = result.replace('}', '')
+        print("result", result)
         
         parsed_result = parser.parse(result)
+        print("parsed_result", parsed_result)
         return { "vocabulary": parsed_result }
     
     except Exception as e:
@@ -128,7 +123,7 @@ def filter_vocabulary(state: State):
         max_words: int = 10
 
         # Create a parser for our expected output format
-        parser = PydanticOutputParser(pydantic_object=WordList)
+        parser = PydanticOutputParser(pydantic_object=StringList)
 
         prompt = PromptTemplate.from_template(
             """
@@ -136,15 +131,17 @@ def filter_vocabulary(state: State):
             {words}
             
             {format_instructions}
+            Return only the JSON object, nothing else.
             """,
-            input_variables=["words", "min_words", "max_words"],
             partial_variables={"format_instructions": parser.get_format_instructions()}
         )
 
         formatted_prompt = prompt.format(words=state['vocabulary'], min_words=min_words, max_words=max_words)
         result = llm.invoke(formatted_prompt)
+        print("result", result)
 
         parsed_result = parser.parse(result)
+        print("parsed_result", parsed_result)
         return { "limited_vocabulary": parsed_result }
 
     except Exception as e:
@@ -168,15 +165,17 @@ def enhance_vocabulary(state: State):
             Words: {words}
             
             {format_instructions}
+            Return only the JSON object, nothing else.
             """,
-            input_variables=["words"],
             partial_variables={"format_instructions": parser.get_format_instructions()}
         )
         
         formatted_prompt = prompt.format(words=state['limited_vocabulary'])
         result = llm.invoke(formatted_prompt)
+        print("result", result)
         
         parsed_result = parser.parse(result)
+        print("parsed_result", parsed_result)
         return { "enhanced_vocabulary": parsed_result }
     
     except Exception as e:
