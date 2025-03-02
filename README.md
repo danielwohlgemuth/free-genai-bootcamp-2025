@@ -24,6 +24,10 @@ A web application for generating Japanese vocabulary from a given topic, using S
 
 An interactive web application for practicing Japanese kana writing using AWS services and Gradio interface.
 
+## [Song Vocab](/song-vocab/README.md)
+
+An application to extract a vocabulary from a song.
+
 ## Useful Links
 
 - [Free GenAI Bootcamp Landing Page](https://genai.cloudprojectbootcamp.com/)
