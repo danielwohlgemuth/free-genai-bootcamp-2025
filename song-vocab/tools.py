@@ -103,12 +103,9 @@ def extract_vocabulary(state: State):
         
         formatted_prompt = prompt.format(lyrics=state['lyrics'])
         result = llm.invoke(formatted_prompt)
-        print("result", result)
         result = result.replace('}', '')
-        print("result", result)
         
         parsed_result = parser.parse(result)
-        print("parsed_result", parsed_result)
         return { "vocabulary": parsed_result }
     
     except Exception as e:
@@ -138,10 +135,8 @@ def filter_vocabulary(state: State):
 
         formatted_prompt = prompt.format(words=state['vocabulary'], min_words=min_words, max_words=max_words)
         result = llm.invoke(formatted_prompt)
-        print("result", result)
 
         parsed_result = parser.parse(result)
-        print("parsed_result", parsed_result)
         return { "limited_vocabulary": parsed_result }
 
     except Exception as e:
@@ -172,10 +167,8 @@ def enhance_vocabulary(state: State):
         
         formatted_prompt = prompt.format(words=state['limited_vocabulary'])
         result = llm.invoke(formatted_prompt)
-        print("result", result)
-        
+
         parsed_result = parser.parse(result)
-        print("parsed_result", parsed_result)
         return { "enhanced_vocabulary": parsed_result }
     
     except Exception as e:
