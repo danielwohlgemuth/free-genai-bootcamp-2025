@@ -1,0 +1,20 @@
+%%{init: {'flowchart': {'curve': 'linear'}}}%%
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	search_lyrics(search_lyrics)
+	get_lyrics(get_lyrics)
+	extract_lyrics(extract_lyrics)
+	extract_vocabulary(extract_vocabulary)
+	filter_vocabulary(filter_vocabulary)
+	enhance_vocabulary(enhance_vocabulary)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> search_lyrics;
+	enhance_vocabulary --> __end__;
+	extract_lyrics --> extract_vocabulary;
+	extract_vocabulary --> filter_vocabulary;
+	filter_vocabulary --> enhance_vocabulary;
+	get_lyrics --> extract_lyrics;
+	search_lyrics --> get_lyrics;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
