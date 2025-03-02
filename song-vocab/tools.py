@@ -10,7 +10,9 @@ from langchain_community.document_loaders import WebBaseLoader
 from langchain_ollama import ChatOllama
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
-from models import WordInfo, WordList, WordInfoList
+from models import WordInfo, StringList, WordInfoList
+import random
+from typing import TypedDict
 
 # Load environment variables
 load_dotenv()
@@ -23,58 +25,75 @@ llm = ChatOllama(
     model=MODEL_NAME
 )
 
-@tool
-def search_lyrics(self, song_name: str) -> str:
+# Graph state
+class State(TypedDict):
+    song_name: str
+    lyrics_urls: StringList
+    lyrics: str
+    vocabulary: StringList
+    limited_vocabulary: StringList
+    enhanced_vocabulary: VocabularyResponse
+
+def search_lyrics(state: State):
     """Search for Japanese song lyrics by song name."""
     try:
-        query = f"{song_name} japanese lyrics"
+        query = f"{state['song_name']} japanese lyrics"
         results = DDGS().text(query, max_results=1)
-        url = results[0]['href']
-        return url
+        urls = [result['href'] for result in results]
+        return { "lyrics_urls": urls }
+
     except Exception as e:
         print(f"Error in search_lyrics: {str(e)}")
         print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
         raise HTTPException(status_code=500, detail=str(e))
 
-@tool
-def get_lyrics(self, url: str) -> str:
+def get_lyrics(state: State):
     """Extract lyrics from a webpage"""
     try:
+        lyrics_url = random.choice(state['lyrics_urls'])
+
         # Create a SoupStrainer instance
         only_text_tags = SoupStrainer(['p', 'div', 'pre'])
         loader = WebBaseLoader(
-            web_paths=[url],
+            web_paths=[lyrics_url],
             bs_kwargs=dict(
                 parse_only=only_text_tags
             )
         )
         docs = loader.load()
-        return docs[0].page_content if docs else ""
+        lyrics = docs[0].page_content if docs else ""
+        return { "lyrics": lyrics }
+
     except Exception as e:
         print(f"Error in get_lyrics: {str(e)}")
         print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
         raise HTTPException(status_code=500, detail=str(e))
 
-@tool
-def extract_lyrics(self, raw_text: str) -> str:
+def extract_lyrics(state: State):
     """Use LLM to extract clean lyrics from raw text"""
     try:
-        prompt = f"""
-        Extract only the Japanese lyrics from the following text. 
-        Remove any English translations, advertisements, or other content.
-        Text: {raw_text}
-        
-        Return only the lyrics, nothing else.
-        Japanese Lyrics:
-        """
-        return llm.invoke(prompt)
+        prompt = PromptTemplate.from_template(
+            """
+            Extract only the Japanese lyrics from the following text.
+            Remove any English translations, advertisements, or other content.
+            Text: {raw_text}
+            
+            Return only the lyrics, nothing else.
+            Japanese Lyrics:
+            """
+        )
+
+        formatted_prompt = prompt.format(raw_text=state['lyrics'])
+        result = llm.invoke(formatted_prompt)
+
+        return { "lyrics": result.content }
+
     except Exception as e:
         print(f"Error in extract_lyrics: {str(e)}")
         print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
         raise HTTPException(status_code=500, detail=str(e))
 
-@tool
-def extract_vocabulary(self, lyrics: str) -> WordList:
+def extract_vocabulary(state: State):
     """Extract vocabulary items from lyrics"""
     try:
         # Create a parser for our expected output format
@@ -91,21 +110,23 @@ def extract_vocabulary(self, lyrics: str) -> WordList:
             partial_variables={"format_instructions": parser.get_format_instructions()}
         )
         
-        formatted_prompt = prompt.format(lyrics=lyrics)
+        formatted_prompt = prompt.format(lyrics=state['lyrics'])
         result = llm.invoke(formatted_prompt)
         
         parsed_result = parser.parse(result)
-        return parsed_result
+        return { "vocabulary": parsed_result }
     
     except Exception as e:
         print(f"Error in extract_vocabulary: {str(e)}")
         print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
         raise HTTPException(status_code=500, detail=str(e))
 
-@tool
-def filter_vocabulary(self, words: WordList, min_words: int = 3, max_words: int = 10) -> WordList:
+def filter_vocabulary(state: State):
     """Filter to least common words using LLM"""
     try:
+        min_words: int = 3
+        max_words: int = 10
+
         # Create a parser for our expected output format
         parser = PydanticOutputParser(pydantic_object=WordList)
 
@@ -120,19 +141,18 @@ def filter_vocabulary(self, words: WordList, min_words: int = 3, max_words: int 
             partial_variables={"format_instructions": parser.get_format_instructions()}
         )
 
-        formatted_prompt = prompt.format(words=words, min_words=min_words, max_words=max_words)
+        formatted_prompt = prompt.format(words=state['vocabulary'], min_words=min_words, max_words=max_words)
         result = llm.invoke(formatted_prompt)
 
         parsed_result = parser.parse(result)
-        return parsed_result
+        return { "limited_vocabulary": parsed_result }
 
     except Exception as e:
         print(f"Error in filter_vocabulary: {str(e)}")
         print('Stack trace:', ''.join(traceback.format_tb(e.__traceback__)))
         raise HTTPException(status_code=500, detail=str(e))
 
-@tool
-def enhance_vocabulary(self, words: WordList) -> WordInfoList:
+def enhance_vocabulary(state: State):
     """Add romaji and English translations"""
     try:
         parser = PydanticOutputParser(pydantic_object=VocabularyResponse)
@@ -153,11 +173,11 @@ def enhance_vocabulary(self, words: WordList) -> WordInfoList:
             partial_variables={"format_instructions": parser.get_format_instructions()}
         )
         
-        formatted_prompt = prompt.format(words=words)
+        formatted_prompt = prompt.format(words=state['limited_vocabulary'])
         result = llm.invoke(formatted_prompt)
         
         parsed_result = parser.parse(result)
-        return parsed_result
+        return { "enhanced_vocabulary": parsed_result }
     
     except Exception as e:
         print(f"Error in enhance_vocabulary: {str(e)}")
