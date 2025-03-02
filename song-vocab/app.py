@@ -32,10 +32,10 @@ tools = get_tools()
 # Define the agent's prompt template
 system_template = """You are a Japanese language expert who helps extract vocabulary from song lyrics.
 
-To analyze a song, you should:
-1. First get the lyrics using get_lyrics_from_song_name
-2. Then extract vocabulary using extract_vocabulary
-3. Finally format the results as JSON
+To analyze a song, you must ALWAYS follow these steps in order:
+1. Get the lyrics using get_lyrics_from_song_name
+2. Extract vocabulary using extract_vocabulary with those lyrics
+3. Return the vocabulary list
 
 IMPORTANT: You must follow this EXACT format:
 
@@ -45,20 +45,9 @@ Action: the tool to use (either get_lyrics_from_song_name or extract_vocabulary)
 Action Input: the input to the tool
 Observation: the result
 ... (continue with Thought/Action/Action Input/Observation as needed)
-Final Answer: the final answer
+Final Answer: the vocabulary list from extract_vocabulary
 
-For example:
-
-Question: Find vocabulary from the song およげ!たいやきくん
-Thought: I need to get the lyrics first
-Action: get_lyrics_from_song_name
-Action Input: およげ!たいやきくん
-Observation: <lyrics>
-Thought: Now I can extract vocabulary from these lyrics
-Action: extract_vocabulary
-Action Input: <lyrics>
-Observation: <vocabulary>
-Final Answer: <vocabulary in JSON format>
+DO NOT just return the lyrics. You must ALWAYS use extract_vocabulary after getting the lyrics.
 """
 
 human_template = """
@@ -73,7 +62,7 @@ Question: Find vocabulary from the song {input}
 
 prompt = ChatPromptTemplate.from_messages([
     SystemMessagePromptTemplate.from_template(system_template),
-    HumanMessagePromptTemplate.from_template(human_template, input_variables=["input", "agent_scratchpad"])
+    HumanMessagePromptTemplate.from_template(human_template, input_variables=["input", "agent_scratchpad", "tools", "tool_names"])
 ])
 
 # Create the agent
@@ -83,7 +72,13 @@ agent = create_react_agent(
     prompt=prompt
 )
 
-agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
+agent_executor = AgentExecutor.from_agent_and_tools(
+    agent=agent, 
+    tools=tools, 
+    verbose=True, 
+    handle_parsing_errors=True,
+    max_iterations=3
+)
 
 @app.post("/extract_vocabulary", response_model=VocabularyResponse)
 async def extract_vocabulary(request: SongRequest):
@@ -91,40 +86,30 @@ async def extract_vocabulary(request: SongRequest):
         result = agent_executor.invoke({
             "input": request.query
         })
-        # for chunk in agent_executor.stream({
-        #     "input": request.query
-        # }):
-        #     print('chunc', chunk)
-
 
         print('result', result)
         
-        # # The agent should return a List[WordInfo]
-        # if isinstance(result, dict) and 'output' in result:
-        #     result = result['output']
+        # Extract the vocabulary list from the result
+        if isinstance(result, dict) and 'output' in result:
+            result = result['output']
             
-        # # Convert the result to a list of WordInfo objects if it's not already
-        # if isinstance(result, str):
-        #     # Try to evaluate the string as a Python literal
-        #     import ast
-        #     try:
-        #         result = ast.literal_eval(result)
-        #     except:
-        #         result = []
+        # If it's a string, try to parse it as JSON
+        if isinstance(result, str):
+            try:
+                import json
+                result = json.loads(result)
+            except:
+                result = []
                 
-        # if not isinstance(result, list):
-        #     result = []
-            
-        # Ensure each item in the list is a WordInfo object
+        # Ensure we have a list of word info objects
         words = []
-        # for item in result:
-        #     if isinstance(item, dict):
-        #         try:
-        #             words.append(WordInfo(**item))
-        #         except:
-        #             continue
-        #     elif isinstance(item, WordInfo):
-        #         words.append(item)
+        if isinstance(result, dict) and 'words' in result:
+            for item in result['words']:
+                try:
+                    words.append(WordInfo(**item))
+                except Exception as e:
+                    print(f"Error parsing word: {item}, error: {str(e)}")
+                    continue
                 
         return VocabularyResponse(
             group_name=request.query,
