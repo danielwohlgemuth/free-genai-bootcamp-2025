@@ -3,6 +3,7 @@ from langgraph.graph import StateGraph, START, END
 import os
 from dotenv import load_dotenv
 from langchain_ollama import ChatOllama
+
 import langchain
 langchain.debug = True
 
@@ -73,6 +74,10 @@ workflow.add_edge("polish_joke", END)
 
 # Compile
 chain = workflow.compile()
+
+print("mermaid graph", chain.get_graph().draw_mermaid())
+with open("langchain-langgraph.png", "wb") as f:
+    f.write(chain.get_graph().draw_mermaid_png())
 
 # Invoke
 state = chain.invoke({"topic": "cats"})
