@@ -220,15 +220,15 @@ Response
 }
 ```
 
-### Model [qwen2.5:3b](https://ollama.com/library/qwen2.5:3b)
+### Model [qwen2.5:7b](https://ollama.com/library/qwen2.5:7b)
 
 Download model
 
 ```bash
-docker exec ollama ollama run qwen2.5:3b
+docker exec ollama ollama run qwen2.5:7b
 or
 curl http://localhost:11434/api/pull -d '{
-  "model": "qwen2.5:3b"
+  "model": "qwen2.5:7b"
 }'
 ```
 
@@ -248,7 +248,7 @@ curl http://localhost:11434/api/generate -d '{
 }'
 
 curl http://localhost:11434/api/generate -d '{
-  "model": "qwen2.5:3b",
+  "model": "qwen2.5:7b",
   "keep_alive": 0
 }'
 ```
