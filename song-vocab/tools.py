@@ -64,6 +64,7 @@ def extract_lyrics(self, raw_text: str) -> str:
         Remove any English translations, advertisements, or other content.
         Text: {raw_text}
         
+        Return only the lyrics, nothing else.
         Japanese Lyrics:
         """
         return llm.invoke(prompt)
@@ -76,19 +77,25 @@ def extract_lyrics(self, raw_text: str) -> str:
 def extract_vocabulary(self, lyrics: str) -> WordList:
     """Extract vocabulary items from lyrics"""
     try:
-        prompt = f"""
-        Extract unique Japanese words from these lyrics:
-        {lyrics}
+        # Create a parser for our expected output format
+        parser = PydanticOutputParser(pydantic_object=WordList)
         
-        For each word, provide:
-        - The word in Japanese
-        - Its part of speech
-        - Its formality level
+        prompt = PromptTemplate.from_template(
+            """
+            Extract unique Japanese words from these lyrics:
+            {lyrics}
+            
+            {format_instructions}
+            """,
+            input_variables=["lyrics"],
+            partial_variables={"format_instructions": parser.get_format_instructions()}
+        )
         
-        Format as JSON list of strings.
-        """
-        result = llm.invoke(prompt)
-        return WordList(root=eval(result))
+        formatted_prompt = prompt.format(lyrics=lyrics)
+        result = llm.invoke(formatted_prompt)
+        
+        parsed_result = parser.parse(result)
+        return parsed_result
     
     except Exception as e:
         print(f"Error in extract_vocabulary: {str(e)}")
@@ -99,14 +106,25 @@ def extract_vocabulary(self, lyrics: str) -> WordList:
 def filter_vocabulary(self, words: WordList, min_words: int = 3, max_words: int = 10) -> WordList:
     """Filter to least common words using LLM"""
     try:
-        prompt = f"""
-        From these Japanese words, select the {min_words}-{max_words} least common ones that would be most useful for a Japanese learner:
-        {words}
-        
-        Return only the selected words in the same format.
-        """
-    result = llm.invoke(prompt)
-    return WordList(root=eval(result))
+        # Create a parser for our expected output format
+        parser = PydanticOutputParser(pydantic_object=WordList)
+
+        prompt = PromptTemplate.from_template(
+            """
+            From these Japanese words, select the {min_words}-{max_words} least common ones that would be most useful for a Japanese learner:
+            {words}
+            
+            {format_instructions}
+            """,
+            input_variables=["words", "min_words", "max_words"],
+            partial_variables={"format_instructions": parser.get_format_instructions()}
+        )
+
+        formatted_prompt = prompt.format(words=words, min_words=min_words, max_words=max_words)
+        result = llm.invoke(formatted_prompt)
+
+        parsed_result = parser.parse(result)
+        return parsed_result
 
     except Exception as e:
         print(f"Error in filter_vocabulary: {str(e)}")
@@ -117,17 +135,29 @@ def filter_vocabulary(self, words: WordList, min_words: int = 3, max_words: int 
 def enhance_vocabulary(self, words: WordList) -> WordInfoList:
     """Add romaji and English translations"""
     try:
-        prompt = f"""
-        For each Japanese word, add:
-        - Romaji (in Hepburn style)
-        - English translation
+        parser = PydanticOutputParser(pydantic_object=VocabularyResponse)
         
-        Words: {words}
+        prompt = PromptTemplate.from_template(
+            """
+            For each Japanese word, provide:
+            - The word in Japanese
+            - Romaji (in Hepburn style)
+            - English translation
+            - Part of speech and formality level
+            
+            Words: {words}
+            
+            {format_instructions}
+            """,
+            input_variables=["words"],
+            partial_variables={"format_instructions": parser.get_format_instructions()}
+        )
         
-        Return as JSON list with all original fields plus romaji and english.
-        """
-        result = llm.invoke(prompt)
-        return WordInfoList(root=eval(result))
+        formatted_prompt = prompt.format(words=words)
+        result = llm.invoke(formatted_prompt)
+        
+        parsed_result = parser.parse(result)
+        return parsed_result
     
     except Exception as e:
         print(f"Error in enhance_vocabulary: {str(e)}")
