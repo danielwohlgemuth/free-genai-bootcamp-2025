@@ -30,45 +30,39 @@ llm = ChatOllama(
 tools = get_tools()
 
 # Define the agent's prompt template
-system_template = """
-You are a Japanese language expert tasked with helping Japanese learners to understand song lyrics.
+system_template = """You are a Japanese language expert who helps extract vocabulary from song lyrics.
 
+To analyze a song, you should:
+1. First get the lyrics using get_lyrics_from_song_name
+2. Then extract vocabulary using extract_vocabulary
+3. Finally format the results as JSON
 
+IMPORTANT: You must follow this EXACT format:
 
-You must follow this workflow:
-1. Use 'get_lyrics_from_song_name' first to retrieve the lyrics.
-2. Use 'extract_vocabulary' on the lyrics to extract word details.
-3. Return the response as a JSON object: {{"group_name": "...", "words": ["japanese": "...", "romaji": "...", "english": "...", "parts": [{{"type": "...", "formality": "..."}}]]}}
-Never skip steps. Only call tools when needed.
+Question: the input question
+Thought: your thoughts about what to do next
+Action: the tool to use (either get_lyrics_from_song_name or extract_vocabulary)
+Action Input: the input to the tool
+Observation: the result
+... (continue with Thought/Action/Action Input/Observation as needed)
+Final Answer: the final answer
 
-Example output format:
-{{
-    "group_name": "およげ!たいやきくん",
-    "words": [
-        {{
-            "japanese": "およぐ",
-            "romaji": "oyogu",
-            "english": "to swim",
-            "parts": {{
-                "type": "verb",
-                "formality": "dictionary"
-            }}
-        }},
-        {{
-            "japanese": "たいやき",
-            "romaji": "taiyaki",
-            "english": "fish-shaped cake filled with red bean paste",
-            "parts": {{
-                "type": "noun",
-                "formality": "neutral"
-            }}
-        }}
-    ]
-}}
+For example:
+
+Question: Find vocabulary from the song およげ!たいやきくん
+Thought: I need to get the lyrics first
+Action: get_lyrics_from_song_name
+Action Input: およげ!たいやきくん
+Observation: <lyrics>
+Thought: Now I can extract vocabulary from these lyrics
+Action: extract_vocabulary
+Action Input: <lyrics>
+Observation: <vocabulary>
+Final Answer: <vocabulary in JSON format>
 """
 
 human_template = """
-The name of the song is: {input}
+Question: Find vocabulary from the song {input}
 
 {tools}
 
@@ -79,7 +73,7 @@ The name of the song is: {input}
 
 prompt = ChatPromptTemplate.from_messages([
     SystemMessagePromptTemplate.from_template(system_template),
-    HumanMessagePromptTemplate.from_template(human_template, input_variables=["input"])
+    HumanMessagePromptTemplate.from_template(human_template, input_variables=["input", "agent_scratchpad"])
 ])
 
 # Create the agent
@@ -89,7 +83,7 @@ agent = create_react_agent(
     prompt=prompt
 )
 
-agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools, verbose=True)
+agent_executor = AgentExecutor.from_agent_and_tools(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
 
 @app.post("/extract_vocabulary", response_model=VocabularyResponse)
 async def extract_vocabulary(request: SongRequest):
