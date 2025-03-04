@@ -42,9 +42,19 @@ SQLite will be used to store information about the haiku and each row will inclu
 - audio link 2
 - audio link 3
 
+A separate table will hold the chat history for each haiku and will have the following columns:
+- id
+- haiku id
+- role ("user", "chatbot")
+- message
+
 MinIO will be used to store the images and audios. The bucket name will be the haiku id.
 
 FastAPI will be used to serve the app with these endpoints:
-- /chat: for the user to interact with the chatbot
-- /haiku: for the user to get all haiku ids
+- /chat/{id}: for the user to interact with the chatbot
+- /chat/{id}/history: for the user to get the chat history
+- /haiku: for the user to get all haiku ids, text, and status
 - /haiku/{id}: for the user to get the haiku based on the haiku id
+
+Rate limiting
+The user will only be able to have one haiku that's in progress at a time.
