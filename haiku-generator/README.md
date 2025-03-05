@@ -37,3 +37,9 @@ python setup_database.py
 ```bash
 uvicorn main:app --reload
 ```
+
+## Usage
+
+```bash
+docker-compose up -d --build
+```
