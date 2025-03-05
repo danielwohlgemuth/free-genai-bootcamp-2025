@@ -94,6 +94,7 @@ graph TD;
 - Stable Diffusion: A model from Hugging Face for generating images based on textual descriptions.
 - MinIO: Object storage for images and audio files.
 - SQLite: Database for storing haiku information, user interactions, and multimedia outputs.
+- Ollama: Hosts the LLM for generating haikus, translating text, and generating image descriptions.
 
 ### Database Schema:
 - Haiku Table:
@@ -137,6 +138,13 @@ graph TD;
 - `GET /haiku/{haiku_id}`: Retrieve a specific haiku based on its ID.
 	- Response: `{ "haiku": { ... } }`
 - `DELETE /haiku/{haiku_id}`: Delete a haiku and its associated data.
+
+### Services
+
+The following services are expected to be available, and should be configurable via environment variables.
+
+- **MinIO**: Available at `http://localhost:9000`
+- **Ollama**: Available at `http://localhost:11434`
 
 ### Rate Limiting and User Interaction
 - Users can only have one haiku in progress at a time.
