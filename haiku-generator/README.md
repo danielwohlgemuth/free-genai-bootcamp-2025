@@ -27,3 +27,13 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+
+3. Setup the database:
+```bash
+python setup_database.py
+```
+
+4. Start the FastAPI server:
+```bash
+uvicorn main:app --reload
+```

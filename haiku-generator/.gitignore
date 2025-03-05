@@ -1,2 +1,3 @@
 venv
 haiku_generator.db
+__pycache__
