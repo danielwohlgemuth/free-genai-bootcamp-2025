@@ -98,7 +98,7 @@ graph TD;
 ### Database Schema:
 - Haiku Table:
 	- `haiku_id`: Primary key (36 characters).
-	- `status`: Current status of the haiku ("in progress", "completed", "failed", defaults to "in progress").
+	- `status`: Current status of the haiku ("new", "in progress", "completed", "failed", defaults to "new").
 	- `error_message`: Error message if applicable (limited to 1000 characters).
 	- `haiku_line_en_1`: First line of the haiku in English (255 characters).
 	- `haiku_line_en_2`: Second line of the haiku in English (255 characters).
