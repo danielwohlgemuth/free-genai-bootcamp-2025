@@ -22,8 +22,9 @@ The application utilizes a microservices architecture, with the following key co
 	- Generating haikus in English.
 	- Translating haikus into Japanese.
 	- Calling available tools:
-		1. **Image and Audio Generation Tool**: Function that takes the haiku and haiku ID as inputs and starts the multimedia generation process.
-		2. **Completion Check Tool**: Function that takes the haiku ID as input and returns the status of the generation process.
+		- **Update Haiku Tool**: Function that takes the haiku and haiku ID as inputs and updates the haiku in the database.
+		- **Image and Audio Generation Tool**: Function that takes the haiku ID as input and starts the multimedia generation process.
+		- **Completion Check Tool**: Function that takes the haiku ID as input and returns the status of the generation process.
 
 3. **Multimedia Generation Service**: Utilizes the following tools to generate images and audio files:
 	- Image Generation: Creates images corresponding to each line of the English haiku. The images are generated based on descriptions derived from the haiku.
@@ -117,7 +118,7 @@ graph TD;
 	- `audio_link_2`: Link to the second generated audio file (255 characters).
 	- `audio_link_3`: Link to the third generated audio file (255 characters).
 - Chat History Table:
-	- `id`: Primary key (autoincrement).
+	- `chat_id`: Primary key (autoincrement).
 	- `haiku_id`: Foreign key linking to the Haiku table.
 	- `role`: Role of the participant ("user" or "chatbot").
 	- `message`: The message content (limited to 1000 characters).
@@ -128,11 +129,16 @@ graph TD;
 - Object names: image-1, audio-1, etc.
 
 ### API Endpoints
-- POST /chat/{id}: Interact with the chatbot.
-- GET /chat/{id}/history: Retrieve chat history.
-- GET /haiku: List all haiku IDs and their statuses.
-- GET /haiku/{id}: Retrieve a specific haiku based on its ID.
-- DELETE /haiku/{id}: Delete a haiku and its associated data.
+- `POST /chat/{haiku_id}`: Interact with the chatbot.
+	- Body: `{ "message": "string" }`
+	- Response: `{ "chat_id": "string", "message": "string", "haiku": { "haiku_line_en_1": "string", "haiku_line_en_2": "string", "haiku_line_en_3": "string", "status": "string", "error_message": "string" } }`
+- `GET /chat/{haiku_id}/history`: Retrieve chat history.
+	- Response: `{ "messages": [ { "chat_id": "string", "role": "string", "message": "string" } ] }`
+- `GET /haiku`: List all haiku IDs and their statuses.
+	- Response: `{ "haikus": [ { "haiku_id": "string", "status": "string", "error_message": "string" } ] }`
+- `GET /haiku/{haiku_id}`: Retrieve a specific haiku based on its ID.
+	- Response: `{ "haiku": { ... } }`
+- `DELETE /haiku/{haiku_id}`: Delete a haiku and its associated data.
 
 ### Rate Limiting and User Interaction
 - Users can only have one haiku in progress at a time.
