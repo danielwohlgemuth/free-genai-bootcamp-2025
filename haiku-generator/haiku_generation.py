@@ -4,15 +4,11 @@ import sqlite3
 import logging
 import os
 
-# Configure logging
 logging.basicConfig(level=logging.INFO, filename='haiku_generator.log', filemode='a',
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Initialize Ollama model
 MODEL_NAME = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
 ollama_model = Ollama(model=MODEL_NAME)
-
-# Function to retrieve chat history for a specific haiku_id
 
 def retrieve_chat_history(haiku_id: str):
     conn = sqlite3.connect('haiku_generator.db')
@@ -21,8 +17,6 @@ def retrieve_chat_history(haiku_id: str):
     history = cursor.fetchall()
     conn.close()
     return history
-
-# Function to store user interaction in chat history
 
 def store_chat_interaction(haiku_id: str, user_message: str, response: str):
     conn = sqlite3.connect('haiku_generator.db')
@@ -34,118 +28,92 @@ def store_chat_interaction(haiku_id: str, user_message: str, response: str):
     conn.commit()
     conn.close()
 
-# Function to generate haiku
 async def generate_haiku(user_message: str, haiku_id: str):
     try:
-        # Retrieve chat history for the haiku_id
         chat_history = retrieve_chat_history(haiku_id)
-
-        # Create prompt based on user message and chat history
         prompt = create_prompt(user_message, chat_history)
-
-        # Generate haiku
         haiku = await ollama_model.generate(prompt)
         logging.info(f"Haiku generated: {haiku}")
-
-        # Store the interaction in chat history
+        await update_haiku_in_db(haiku_id, haiku)
         store_chat_interaction(haiku_id, user_message, haiku)
-
-        # Return generated haiku
-        return haiku
+        multimedia = await generate_multimedia(haiku_id)
+        return multimedia
     except Exception as e:
         logging.error(f"Error generating haiku: {e}")
         raise
 
-# Function to handle user feedback and refine haiku
-async def handle_user_feedback(haiku_id: str, user_feedback: str):
-    # Logic to refine the haiku based on user feedback
-    if user_feedback.lower() == 'satisfied':
-        # Proceed to generate multimedia
-        multimedia = await generate_multimedia(haiku_id)
-        return multimedia
-    else:
-        # Logic to refine the haiku based on feedback
-        refined_haiku = await refine_haiku(haiku_id, user_feedback)
-        return refined_haiku
+async def update_haiku_in_db(haiku_id: str, haiku: str):
+    conn = sqlite3.connect('haiku_generator.db')
+    cursor = conn.cursor()
+    cursor.execute('UPDATE haiku SET haiku_line_en_1 = ?, haiku_line_en_2 = ?, haiku_line_en_3 = ? WHERE haiku_id = ?', (haiku.split('\n')[0], haiku.split('\n')[1], haiku.split('\n')[2], haiku_id))
+    conn.commit()
+    conn.close()
 
-# Function to refine haiku
-async def refine_haiku(haiku_id: str, user_feedback: str):
-    # Logic to refine the haiku based on user feedback
-    pass
-
-# Function to generate multimedia (images and audio)
 async def generate_multimedia(haiku_id: str):
-    # Logic to generate images and audio for the haiku
-    image = await generate_image(haiku_id)
-    audio = await generate_audio(haiku_id)
-    haiku = await retrieve_haiku(haiku_id)
-    translation = await translate_haiku(haiku)
-    return {'image': image, 'audio': audio, 'translation': translation}
+    for i in range(1, 4):
+        haiku_line = await retrieve_haiku_line(haiku_id, i)
+        await generate_image(haiku_id, haiku_line, i)
+        await generate_audio(haiku_id, haiku_line, i)
 
-# Function to create image description based on haiku
+async def retrieve_haiku_line(haiku_id: str, line_number: int):
+    conn = sqlite3.connect('haiku_generator.db')
+    cursor = conn.cursor()
+    cursor.execute(f'SELECT haiku_line_en_{line_number} FROM haiku WHERE haiku_id = ?', (haiku_id,))
+    line = cursor.fetchone()[0]
+    conn.close()
+    return line
+
 async def create_image_description(haiku: str):
     return f'An artistic representation of the haiku: {haiku}'
 
-# Function to generate image
-async def generate_image(haiku_id: str):
-    # Retrieve the haiku from chat history
+async def generate_image(haiku_id: str, haiku_line: str, line_number: int):
+    description = await create_image_description(haiku_line)
+    await update_image_description_in_db(haiku_id, description, line_number)
+    await generate_image_from_description(description)
+
+async def generate_audio(haiku_id: str, haiku_line: str, line_number: int):
     haiku = await retrieve_haiku(haiku_id)
+    translated_haiku = await translate_haiku(haiku_line)
+    await update_translation_in_db(haiku_id, translated_haiku, line_number)
+    await generate_audio_from_text(translated_haiku)
 
-    # Create a description based on the haiku
-    description = await create_image_description(haiku)
-
-    # Call the image generation method from media_generation.py
-    image_url = await generate_image_from_description(description)
-    return image_url
-
-# Function to generate audio
-async def generate_audio(haiku_id: str):
-    # Retrieve the haiku from chat history
-    haiku = await retrieve_haiku(haiku_id)
-
-    # Translate the haiku into Japanese
-    translated_haiku = await translate_haiku(haiku)
-
-    # Call the audio generation method from media_generation.py
-    audio_url = await generate_audio_from_text(translated_haiku)
-    return audio_url
-
-# Function to translate haiku into Japanese
 async def translate_haiku(haiku: str):
     try:
-        # Create prompt for translation
         prompt = f'Translate the following haiku into Japanese: {haiku}'
-
-        # Generate translation using Ollama model
         translation = await ollama_model.generate(prompt)
         logging.info(f"Haiku translated: {translation}")
-
         return translation
     except Exception as e:
         logging.error(f"Error translating haiku: {e}")
         raise
 
-# Function to retrieve haiku from chat history
-async def retrieve_haiku(haiku_id: str):
-    conn = sqlite3.connect('haiku_generator.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT response FROM chat_history WHERE haiku_id = ?', (haiku_id,))
-    haiku = cursor.fetchone()[0]
-    conn.close()
-    return haiku
-
-# Function to create prompt based on user message and chat history
-
 def create_prompt(user_message: str, chat_history: list):
-    # Start with the user message
     prompt = f'User: {user_message}\n'
-
-    # Add previous chat history to the prompt
     for entry in chat_history:
         user_msg, response = entry
         prompt += f'User: {user_msg}\nBot: {response}\n'
-
-    # Add instruction for haiku generation
-    prompt += 'Generate a haiku based on the above conversation.'
-
+    prompt += 'Generate a single haiku with three lines based on the above conversation.'
     return prompt
+
+async def update_translation_in_db(haiku_id: str, translated_haiku: str, line_number: int):
+    conn = sqlite3.connect('haiku_generator.db')
+    cursor = conn.cursor()
+    cursor.execute(f'UPDATE haiku SET haiku_line_ja_{line_number} = ? WHERE haiku_id = ?', (translated_haiku, haiku_id))
+    conn.commit()
+    conn.close()
+
+async def update_image_description_in_db(haiku_id: str, description: str, line_number: int):
+    conn = sqlite3.connect('haiku_generator.db')
+    cursor = conn.cursor()
+    cursor.execute(f'UPDATE haiku SET image_description_{line_number} = ? WHERE haiku_id = ?', (description, haiku_id))
+    conn.commit()
+    conn.close()
+
+async def retrieve_haiku(haiku_id: str):
+    conn = sqlite3.connect('haiku_generator.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT haiku_line_en_1, haiku_line_en_2, haiku_line_en_3 FROM haiku WHERE haiku_id = ?', (haiku_id,))
+    lines = cursor.fetchone()
+    haiku = '\n'.join(lines)
+    conn.close()
+    return haiku
