@@ -1,11 +1,13 @@
 import os
 import torch
-from database import retrieve_haiku_line_by_id_and_line_number, update_translation, update_image_description, update_haiku_links
+from database import retrieve_haiku_line, update_translation, update_image_description, update_haiku_links
 from diffusers import StableDiffusionPipeline
 from minio import Minio
 from TTS.api import TTS
+from langchain_ollama import OllamaLLM
 
 
+MODEL_NAME = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 MINIO_URL = os.getenv("MINIO_URL", "http://localhost:9000")
 BUCKET_NAME = os.getenv("BUCKET_NAME", "haiku")
@@ -13,6 +15,7 @@ MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", None)
 MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", None)
 
 
+model = OllamaLLM(model=MODEL_NAME)
 pipe = StableDiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-3.5-medium", token=HUGGINGFACEHUB_API_TOKEN)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 pipe = pipe.to(device)
@@ -67,11 +70,11 @@ async def generate_audio_translation(haiku_id: str, haiku_line: str, line_number
 
 async def translate_haiku(haiku: str):
     prompt = f'Translate the following haiku into Japanese: {haiku}'
-    translation = await ollama_model.generate(prompt)
+    translation = await model.invoke(prompt)
     return translation
 
-async def generate_multimedia(haiku_id: str):
+async def generate_media(haiku_id: str):
     for i in range(1, 4):
-        haiku_line = await retrieve_haiku_line_by_id_and_line_number(haiku_id, i)
+        haiku_line = await retrieve_haiku_line(haiku_id, i)
         await generate_image_description(haiku_id, haiku_line, i)
         await generate_audio_translation(haiku_id, haiku_line, i)

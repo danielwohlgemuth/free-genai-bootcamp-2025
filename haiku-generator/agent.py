@@ -1,6 +1,6 @@
 import os
-from database import store_chat_interaction, retrieve_chat_history, update_haiku_lines
-from haiku_generation import generate_multimedia
+from database import store_chat_interaction, retrieve_chat_history, update_haiku_lines, retrieve_haiku_line
+from media import generate_media
 from langchain_core.tools import InjectedToolArg, tool
 from langchain_ollama import OllamaLLM
 from typing import Annotated
@@ -8,21 +8,21 @@ from typing import List
 
 
 MODEL_NAME = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
-ollama_model = OllamaLLM(model=MODEL_NAME)
+model = OllamaLLM(model=MODEL_NAME)
 
 
-@tool(parse_docstring=True)
-def generate_haiku_media(haiku_id: Annotated[str, InjectedToolArg]) -> str:
+@tool
+async def start_media_generation(haiku_id: Annotated[str, InjectedToolArg]):
     """Start haiku media generation from haiku.
 
     Args:
         haiku_id: Haiku ID.
     """
-    generate_multimedia(haiku_id)
+    generate_media(haiku_id)
     return f"Haiku media generation started"
 
 @tool(parse_docstring=True)
-def update_haiku_in_db(haiku: List[str], haiku_id: Annotated[str, InjectedToolArg]) -> str:
+def update_haiku(haiku: List[str], haiku_id: Annotated[str, InjectedToolArg]) -> str:
     """Update haiku in database.
 
     Args:
@@ -36,7 +36,7 @@ async def process_message(user_message: str, haiku_id: str):
     store_chat_interaction(haiku_id, user_message, 'user')
     chat_history = retrieve_chat_history(haiku_id)
     prompt = create_prompt(user_message, chat_history)
-    agent_message = await ollama_model.generate(prompt)
+    agent_message = await model.invoke(prompt)
     store_chat_interaction(haiku_id, agent_message, 'agent')
 
 def create_prompt(user_message: str, chat_history: list):
