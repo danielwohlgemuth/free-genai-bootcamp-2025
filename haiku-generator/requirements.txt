@@ -6,3 +6,6 @@ minio==7.2.15
 torch==2.6.0
 pydantic==2.10.6
 uvicorn==0.34.0
+python-dotenv==1.0.1
+langchain-community==0.3.19
+langchain-ollama==0.2.3
