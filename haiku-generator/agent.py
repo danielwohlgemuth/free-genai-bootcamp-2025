@@ -6,6 +6,7 @@ from langchain_ollama import OllamaLLM
 from langchain.tools import Tool
 from typing import Annotated
 from typing import List
+from database import get_db_connection, close_db_connection
 
 
 MODEL_NAME = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
@@ -30,11 +31,11 @@ def update_haiku_in_db(haiku: List[str], haiku_id: Annotated[str, InjectedToolAr
         haiku: Haiku with each line as a separate string.
         haiku_id: Haiku ID.
     """
-    conn = sqlite3.connect('haiku_generator.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('UPDATE haiku SET haiku_line_en_1 = ?, haiku_line_en_2 = ?, haiku_line_en_3 = ? WHERE haiku_id = ?', (haiku.split('\n')[0], haiku.split('\n')[1], haiku.split('\n')[2], haiku_id))
     conn.commit()
-    conn.close()
+    close_db_connection(conn)
     return f"Haiku updated in database"
 
 def get_tools() -> List[Tool]:    
@@ -44,22 +45,22 @@ def get_tools() -> List[Tool]:
     ]
     
 def retrieve_chat_history(haiku_id: str):
-    conn = sqlite3.connect('haiku_generator.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM chat_history WHERE haiku_id = ?', (haiku_id,))
     history = cursor.fetchall()
-    conn.close()
+    close_db_connection(conn)
     return history
 
 def store_chat_interaction(haiku_id: str, user_message: str, response: str):
-    conn = sqlite3.connect('haiku_generator.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
         INSERT INTO chat_history (haiku_id, user_message, response)
         VALUES (?, ?, ?)
     ''', (haiku_id, user_message, response))
     conn.commit()
-    conn.close()
+    close_db_connection(conn)
 
 async def generate_haiku(user_message: str, haiku_id: str):
     chat_history = retrieve_chat_history(haiku_id)
@@ -71,11 +72,11 @@ async def generate_haiku(user_message: str, haiku_id: str):
     return f"Haiku generation started"
 
 async def update_haiku_in_db(haiku_id: str, haiku: str):
-    conn = sqlite3.connect('haiku_generator.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('UPDATE haiku SET haiku_line_en_1 = ?, haiku_line_en_2 = ?, haiku_line_en_3 = ? WHERE haiku_id = ?', (haiku.split('\n')[0], haiku.split('\n')[1], haiku.split('\n')[2], haiku_id))
     conn.commit()
-    conn.close()
+    close_db_connection(conn)
 
 def create_prompt(user_message: str, chat_history: list):
     prompt = f'User: {user_message}\n'

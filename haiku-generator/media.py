@@ -4,6 +4,7 @@ import torch
 from diffusers import StableDiffusionPipeline
 from minio import Minio
 from TTS.api import TTS
+from database import get_db_connection
 
 
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
@@ -29,7 +30,7 @@ def upload_to_minio(file_path: str, object_name: str):
     minio_client.fput_object(BUCKET_NAME, object_name, file_path)
 
 def update_haiku_links(haiku_id: str, image_link: str, audio_link: str, image_number: int = None, audio_number: int = None):
-    conn = sqlite3.connect('haiku_generator.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     if image_number is not None:
         cursor.execute(f'''UPDATE haiku SET image_link_{image_number} = ? WHERE haiku_id = ?''', (image_link, haiku_id))
@@ -94,7 +95,7 @@ async def generate_multimedia(haiku_id: str):
         await generate_audio(haiku_id, haiku_line, i)
 
 async def retrieve_haiku_line(haiku_id: str, line_number: int):
-    conn = sqlite3.connect('haiku_generator.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(f'SELECT haiku_line_en_{line_number} FROM haiku WHERE haiku_id = ?', (haiku_id,))
     line = cursor.fetchone()[0]
@@ -102,14 +103,14 @@ async def retrieve_haiku_line(haiku_id: str, line_number: int):
     return line
 
 async def update_translation_in_db(haiku_id: str, translated_haiku: str, line_number: int):
-    conn = sqlite3.connect('haiku_generator.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(f'UPDATE haiku SET haiku_line_ja_{line_number} = ? WHERE haiku_id = ?', (translated_haiku, haiku_id))
     conn.commit()
     conn.close()
 
 async def update_image_description_in_db(haiku_id: str, description: str, line_number: int):
-    conn = sqlite3.connect('haiku_generator.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(f'UPDATE haiku SET image_description_{line_number} = ? WHERE haiku_id = ?', (description, haiku_id))
     conn.commit()
