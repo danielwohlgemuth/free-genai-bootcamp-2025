@@ -33,11 +33,11 @@ def update_haiku(haiku: List[str], haiku_id: Annotated[str, InjectedToolArg]) ->
     update_haiku_lines(haiku, haiku_id)
     return f"Haiku updated in database"
 
-async def process_message(user_message: str, haiku_id: str):
+def process_message(user_message: str, haiku_id: str):
     store_chat_interaction(haiku_id, user_message, 'user')
     chat_history = retrieve_chat_history(haiku_id)
     prompt = create_prompt(user_message, chat_history)
-    agent_message = await model.invoke(prompt)
+    agent_message = model.invoke(prompt)
     store_chat_interaction(haiku_id, agent_message, 'agent')
 
 def create_prompt(user_message: str, chat_history: list):

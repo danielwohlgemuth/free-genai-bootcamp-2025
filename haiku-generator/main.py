@@ -17,7 +17,7 @@ class HaikuResponse(BaseModel):
 
 @app.post('/chat/{haiku_id}')
 async def interact_with_chatbot(haiku_id: str, chat_message: ChatMessage):
-    await process_message(chat_message.message, haiku_id)
+    process_message(chat_message.message, haiku_id)
     chat = retrieve_last_chat(haiku_id)
     haiku = retrieve_haiku(haiku_id)
     return {'chat': chat, 'haiku': haiku}

@@ -1,7 +1,7 @@
 from langchain_ollama import OllamaLLM
 from langgraph.graph import StateGraph, START, END
 from typing import TypedDict
-from database import set_error_message, retrieve_haiku
+from database import set_status, retrieve_haiku
 from media import generate_image_description, generate_image, generate_audio_translation, generate_audio
 
 
@@ -29,6 +29,7 @@ def initialize_haiku(state: State):
     state["haiku_line_1_ja"] = haiku["haiku_line_ja_1"]
     state["haiku_line_2_ja"] = haiku["haiku_line_ja_2"]
     state["haiku_line_3_ja"] = haiku["haiku_line_ja_3"]
+    set_status(state["haiku_id"], "in_progress", "")
     return state
 
 def generate_image_description_1(state: State):
@@ -101,11 +102,13 @@ def check_state_and_set_error(state: State):
         'audio_link_3',
     ]
 
+    status = 'completed'
+    error_message = ''
     missing_fields = [field for field in required_fields if not getattr(state, field)]
     if missing_fields:
+        status = 'failed'
         error_message = f'Missing fields: {', '.join(missing_fields)}'
-        set_error_message(error_message, state['haiku_id'])
-
+    set_status(state['haiku_id'], status, error_message)
     return state
 
 def define_workflow(generate_mermaid: bool = False):

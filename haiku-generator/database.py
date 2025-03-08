@@ -141,11 +141,11 @@ def update_haiku_link(haiku_id: str, image_link: str = None, audio_link: str = N
     conn.commit()
     conn.close()
 
-# Function to set error message in the database
+# Function to set status and error message in the database
 
-def set_error_message(error_message: str, haiku_id: str):
+def set_status(haiku_id: str, status: str, error_message: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('UPDATE haiku SET error_message = ? WHERE haiku_id = ?', (error_message, haiku_id))
+    cursor.execute('UPDATE haiku SET status = ?, error_message = ? WHERE haiku_id = ?', (status, error_message, haiku_id))
     conn.commit()
     conn.close()
