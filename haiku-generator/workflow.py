@@ -7,12 +7,12 @@ from media import generate_image_description, generate_image, generate_audio_tra
 
 class State(TypedDict):
     haiku_id: str
-    haiku_line_1_en: str
-    haiku_line_2_en: str
-    haiku_line_3_en: str
-    haiku_line_1_ja: str
-    haiku_line_2_ja: str
-    haiku_line_3_ja: str
+    haiku_line_en_1: str
+    haiku_line_en_2: str
+    haiku_line_en_3: str
+    haiku_line_ja_1: str
+    haiku_line_ja_2: str
+    haiku_line_ja_3: str
     image_description_1: str
     image_description_2: str
     image_description_3: str
@@ -29,71 +29,93 @@ class State(TypedDict):
 
 def initialize_haiku(state: State):
     haiku = retrieve_haiku(state["haiku_id"])
-    state["haiku_line_1_en"] = haiku["haiku_line_en_1"]
-    state["haiku_line_2_en"] = haiku["haiku_line_en_2"]
-    state["haiku_line_3_en"] = haiku["haiku_line_en_3"]
-    state["haiku_line_1_ja"] = haiku["haiku_line_ja_1"]
-    state["haiku_line_2_ja"] = haiku["haiku_line_ja_2"]
-    state["haiku_line_3_ja"] = haiku["haiku_line_ja_3"]
     set_status(state["haiku_id"], "in_progress", "")
-    return state
+    return {
+        "haiku_line_en_1": haiku["haiku_line_en_1"],
+        "haiku_line_en_2": haiku["haiku_line_en_2"],
+        "haiku_line_en_3": haiku["haiku_line_en_3"],
+    }
 
 def generate_image_description_1(state: State):
-    state["image_description_1"] = generate_image_description(state["haiku_id"], state["haiku_line_1_en"], 1)
-    return state
+    description = generate_image_description(state["haiku_id"], state["haiku_line_en_1"], 1)
+    return {
+        "image_description_1": description
+    }
 
 def generate_image_description_2(state: State):
-    state["image_description_2"] = generate_image_description(state["haiku_id"], state["haiku_line_2_en"], 2)
-    return state
+    description = generate_image_description(state["haiku_id"], state["haiku_line_en_2"], 2)
+    return {
+        "image_description_2": description
+    }
 
 def generate_image_description_3(state: State):
-    state["image_description_3"] = generate_image_description(state["haiku_id"], state["haiku_line_3_en"], 3)
-    return state
+    description = generate_image_description(state["haiku_id"], state["haiku_line_en_3"], 3)
+    return {
+        "image_description_3": description
+    }
 
 def generate_image_1(state: State):
-    state["image_link_1"] = generate_image(state["haiku_id"], state["image_description_1"], 1)
-    return state
+    link = generate_image(state["haiku_id"], state["image_description_1"], 1)
+    return {
+        "image_link_1": link
+    }
 
 def generate_image_2(state: State):
-    state["image_link_2"] = generate_image(state["haiku_id"], state["image_description_2"], 2)
-    return state
+    link = generate_image(state["haiku_id"], state["image_description_2"], 2)
+    return {
+        "image_link_2": link
+    }
 
 def generate_image_3(state: State):
-    state["image_link_3"] = generate_image(state["haiku_id"], state["image_description_3"], 3)
-    return state
+    link = generate_image(state["haiku_id"], state["image_description_3"], 3)
+    return {
+        "image_link_3": link
+    }
 
 def generate_audio_translation_1(state: State):
-    state["audio_translation_1"] = generate_audio_translation(state["haiku_id"], state["haiku_line_1_ja"], 1)
-    return state
+    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_ja_1"], 1)
+    return {
+        "audio_translation_1": translation
+    }
 
 def generate_audio_translation_2(state: State):
-    state["audio_translation_2"] = generate_audio_translation(state["haiku_id"], state["haiku_line_2_ja"], 2)
-    return state
+    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_ja_2"], 2)
+    return {
+        "audio_translation_2": translation
+    }
 
 def generate_audio_translation_3(state: State):
-    state["audio_translation_3"] = generate_audio_translation(state["haiku_id"], state["haiku_line_3_ja"], 3)
-    return state
+    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_ja_3"], 3)
+    return {
+        "audio_translation_3": translation
+    }
 
 def generate_audio_1(state: State):
-    state["audio_link_1"] = generate_audio(state["haiku_id"], state["audio_translation_1"], 1)
-    return state
+    link = generate_audio(state["haiku_id"], state["audio_translation_1"], 1)
+    return {
+        "audio_link_1": link
+    }
 
 def generate_audio_2(state: State):
-    state["audio_link_2"] = generate_audio(state["haiku_id"], state["audio_translation_2"], 2)
-    return state
+    link = generate_audio(state["haiku_id"], state["audio_translation_2"], 2)
+    return {
+        "audio_link_2": link
+    }
 
 def generate_audio_3(state: State):
-    state["audio_link_3"] = generate_audio(state["haiku_id"], state["audio_translation_3"], 3)
-    return state
+    link = generate_audio(state["haiku_id"], state["audio_translation_3"], 3)
+    return {
+        "audio_link_3": link
+    }
 
 def check_status(state: State):
     required_fields = [
-        'haiku_line_1_en',
-        'haiku_line_2_en',
-        'haiku_line_3_en',
-        'haiku_line_1_ja',
-        'haiku_line_2_ja',
-        'haiku_line_3_ja',
+        'haiku_line_en_1',
+        'haiku_line_en_2',
+        'haiku_line_en_3',
+        'haiku_line_ja_1',
+        'haiku_line_ja_2',
+        'haiku_line_ja_3',
         'image_description_1',
         'image_description_2',
         'image_description_3',
