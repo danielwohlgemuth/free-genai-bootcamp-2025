@@ -1,3 +1,4 @@
+import io
 import os
 from minio import Minio
 
@@ -13,10 +14,9 @@ create_bucket_if_not_exists()
 
 
 def create_bucket_if_not_exists():
-    try:
+    found = minio_client.bucket_exists(BUCKET_NAME)
+    if not found:
         minio_client.make_bucket(BUCKET_NAME)
-    except Exception as e:
-        print(f"Bucket {BUCKET_NAME} already exists or could not be created: {e}")
 
-def upload_file(file_path: str, object_name: str):
-    minio_client.fput_object(BUCKET_NAME, object_name, file_path)
+def upload_file(file: io.BytesIO, object_name: str):
+    minio_client.put_object(BUCKET_NAME, object_name, file)

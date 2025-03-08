@@ -71,18 +71,6 @@ def retrieve_last_chat(haiku_id: str):
     conn.close()
     return dict(last_chat) if last_chat else {}
 
-# Function to update haiku links
-
-def update_haiku_links(haiku_id: str, image_link: str, audio_link: str, image_number: int = None, audio_number: int = None):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    if image_number is not None:
-        cursor.execute(f'''UPDATE haiku SET image_link_{image_number} = ? WHERE haiku_id = ?''', (image_link, haiku_id))
-    if audio_number is not None:
-        cursor.execute(f'''UPDATE haiku SET audio_link_{audio_number} = ? WHERE haiku_id = ?''', (audio_link, haiku_id))
-    conn.commit()
-    conn.close()
-
 # Function to retrieve all haikus
 
 def retrieve_haikus():
@@ -141,15 +129,15 @@ def update_image_description(haiku_id: str, description: str, line_number: int):
     conn.commit()
     conn.close()
 
-# Function to update haiku links
+# Function to update haiku link
 
-def update_haiku_links(haiku_id: str, image_link: str = None, audio_link: str = None, image_number: int = None, audio_number: int = None):
+def update_haiku_link(haiku_id: str, image_link: str = None, audio_link: str = None, number: int = None):
     conn = get_db_connection()
     cursor = conn.cursor()
-    if image_number is not None:
-        cursor.execute(f'UPDATE haiku SET image_link_{image_number} = ? WHERE haiku_id = ?', (image_link, haiku_id))
-    if audio_number is not None:
-        cursor.execute(f'UPDATE haiku SET audio_link_{audio_number} = ? WHERE haiku_id = ?', (audio_link, haiku_id))
+    if number is not None:
+        cursor.execute(f'UPDATE haiku SET image_link_{number} = ? WHERE haiku_id = ?', (image_link, haiku_id))
+    if number is not None:
+        cursor.execute(f'UPDATE haiku SET audio_link_{number} = ? WHERE haiku_id = ?', (audio_link, haiku_id))
     conn.commit()
     conn.close()
 
