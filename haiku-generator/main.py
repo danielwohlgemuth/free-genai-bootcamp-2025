@@ -1,8 +1,11 @@
-from database import retrieve_chat_history, retrieve_haikus, retrieve_haiku, delete_haiku_db, retrieve_last_chat, process_message
+from database import retrieve_chat_history, retrieve_haikus, retrieve_haiku, delete_haiku_db, retrieve_last_chat
+from agent import process_message
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+
 app = FastAPI()
+
 
 class ChatMessage(BaseModel):
     message: str
@@ -15,9 +18,10 @@ class HaikuResponse(BaseModel):
     haiku_line_en_2: str
     haiku_line_en_3: str
 
+
 @app.post('/chat/{haiku_id}')
 async def interact_with_chatbot(haiku_id: str, chat_message: ChatMessage):
-    process_message(chat_message.message, haiku_id)
+    process_message(haiku_id, chat_message.message)
     chat = retrieve_last_chat(haiku_id)
     haiku = retrieve_haiku(haiku_id)
     return {'chat': chat, 'haiku': haiku}

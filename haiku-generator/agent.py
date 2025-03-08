@@ -29,20 +29,20 @@ def update_haiku(haiku: List[str], haiku_id: Annotated[str, InjectedToolArg]) ->
         haiku: Haiku with each line as a separate string.
         haiku_id: Haiku ID.
     """
-    update_haiku_lines(haiku, haiku_id)
+    update_haiku_lines(haiku_id, haiku)
     return f"Haiku updated in database"
 
-def process_message(user_message: str, haiku_id: str):
+def process_message(haiku_id: str, user_message: str):
     store_chat_interaction(haiku_id, user_message, 'user')
-    chat_history = retrieve_chat_history(haiku_id)
-    prompt = create_prompt(user_message, chat_history)
+    prompt = create_prompt(haiku_id, user_message)
     agent_message = model.invoke(prompt)
     store_chat_interaction(haiku_id, agent_message, 'agent')
 
-def create_prompt(user_message: str, chat_history: list):
-    prompt = f'User: {user_message}\n'
-    for entry in chat_history:
-        user_msg, response = entry
-        prompt += f'User: {user_msg}\nBot: {response}\n'
+def create_prompt(haiku_id: str, user_message: str):
+    chat_history = retrieve_chat_history(haiku_id)
+    prompt = ''
+    for chat in chat_history:
+        prompt += f'{chat["role"]}: {chat["message"]}\n'
+    prompt += f'user: {user_message}\n'
     prompt += 'Generate a single haiku with three lines based on the above conversation.'
     return prompt
