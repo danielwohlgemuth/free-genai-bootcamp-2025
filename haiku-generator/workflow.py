@@ -5,9 +5,6 @@ from database import set_status, retrieve_haiku
 from media import generate_image_description, generate_image, generate_audio_translation, generate_audio
 
 
-workflow = define_workflow()
-
-
 class State(TypedDict):
     haiku_id: str
     haiku_line_1_en: str
@@ -19,9 +16,15 @@ class State(TypedDict):
     image_description_1: str
     image_description_2: str
     image_description_3: str
+    image_link_1: str
+    image_link_2: str
+    image_link_3: str
     audio_translation_1: str
     audio_translation_2: str
     audio_translation_3: str
+    audio_link_1: str
+    audio_link_2: str
+    audio_link_3: str
 
 
 def initialize_haiku(state: State):
@@ -83,7 +86,7 @@ def generate_audio_3(state: State):
     state["audio_link_3"] = generate_audio(state["haiku_id"], state["audio_translation_3"], 3)
     return state
 
-def check_state_and_set_error(state: State):
+def check_status(state: State):
     required_fields = [
         'haiku_line_1_en',
         'haiku_line_2_en',
@@ -114,7 +117,8 @@ def check_state_and_set_error(state: State):
     set_status(state['haiku_id'], status, error_message)
     return state
 
-def define_workflow():
+
+def create_workflow():
     graph = StateGraph(State)
 
     graph.add_node("initialize_haiku", initialize_haiku)
@@ -130,7 +134,7 @@ def define_workflow():
     graph.add_node("generate_audio_1", generate_audio_1)
     graph.add_node("generate_audio_2", generate_audio_2)
     graph.add_node("generate_audio_3", generate_audio_3)
-    graph.add_node("check_state_and_set_error", check_state_and_set_error)
+    graph.add_node("check_status", check_status)
     
     graph.add_edge("initialize_haiku", "generate_image_description_1")
     graph.add_edge("generate_image_description_1", "generate_image_description_2")
@@ -144,19 +148,23 @@ def define_workflow():
     graph.add_edge("generate_audio_translation_1", "generate_audio_1")
     graph.add_edge("generate_audio_translation_2", "generate_audio_2")
     graph.add_edge("generate_audio_translation_3", "generate_audio_3")
-    graph.add_edge("generate_image_1", "check_state_and_set_error")
-    graph.add_edge("generate_image_2", "check_state_and_set_error")
-    graph.add_edge("generate_image_3", "check_state_and_set_error")
-    graph.add_edge("generate_audio_1", "check_state_and_set_error")
-    graph.add_edge("generate_audio_2", "check_state_and_set_error")
-    graph.add_edge("generate_audio_3", "check_state_and_set_error")
+    graph.add_edge("generate_image_1", "check_status")
+    graph.add_edge("generate_image_2", "check_status")
+    graph.add_edge("generate_image_3", "check_status")
+    graph.add_edge("generate_audio_1", "check_status")
+    graph.add_edge("generate_audio_2", "check_status")
+    graph.add_edge("generate_audio_3", "check_status")
 
     graph.set_entry_point("initialize_haiku")
-    graph.set_finish_point("check_state_and_set_error")
+    graph.set_finish_point("check_status")
 
     workflow = graph.compile()
 
     return workflow
+
+
+workflow = create_workflow()
+
 
 async def start_workflow(haiku_id: str):
     workflow.invoke({"haiku_id": haiku_id})

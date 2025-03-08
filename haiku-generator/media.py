@@ -2,18 +2,24 @@ import io
 import os
 import torch
 from database import update_translation, update_image_description, update_haiku_link
-from diffusers import StableDiffusionPipeline
+from diffusers import StableDiffusion3Pipeline
+from dotenv import load_dotenv
 from langchain_ollama import OllamaLLM
 from storage import upload_file
 from TTS.api import TTS
 
 
-MODEL_NAME = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+load_dotenv()
+MODEL_BASE_URL = os.getenv("MODEL_BASE_URL", "http://localhost:11434")
+MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:7b")
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 
 
-model = OllamaLLM(model=MODEL_NAME)
-pipe = StableDiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-3.5-medium", token=HUGGINGFACEHUB_API_TOKEN)
+model = OllamaLLM(
+    base_url=MODEL_BASE_URL,
+    model=MODEL_NAME
+)
+pipe = StableDiffusion3Pipeline.from_pretrained("stabilityai/stable-diffusion-3.5-medium", token=HUGGINGFACEHUB_API_TOKEN)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 pipe = pipe.to(device)
 tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
@@ -22,7 +28,7 @@ tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
 def generate_image(description: str, haiku_id: str, image_number: int):
     image = pipe(
         description,
-        num_inference_steps=10,
+        num_inference_steps=5,
         guidance_scale=5.0,
     ).images[0]
     file_path = f"{haiku_id}/image-{image_number}.png"

@@ -1,9 +1,11 @@
 import os
 import sqlite3
 from typing import List
+from dotenv import load_dotenv
 
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///haiku_generator.db")
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL", "haiku_generator.db")
 
 
 def get_db_connection():
