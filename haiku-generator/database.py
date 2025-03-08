@@ -6,13 +6,46 @@ from typing import List
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///haiku_generator.db")
 
 
-# Function to get a database connection
-
 def get_db_connection():
     conn = sqlite3.connect(DATABASE_URL)
     return conn
 
-# Function to update haiku lines in the database
+def create_tables():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS haiku (
+        haiku_id TEXT PRIMARY KEY,
+        status TEXT DEFAULT "new",
+        error_message TEXT,
+        haiku_line_en_1 TEXT,
+        haiku_line_en_2 TEXT,
+        haiku_line_en_3 TEXT,
+        haiku_line_ja_1 TEXT,
+        haiku_line_ja_2 TEXT,
+        haiku_line_ja_3 TEXT,
+        image_description_1 TEXT,
+        image_description_2 TEXT,
+        image_description_3 TEXT,
+        image_link_1 TEXT,
+        image_link_2 TEXT,
+        image_link_3 TEXT,
+        audio_link_1 TEXT,
+        audio_link_2 TEXT,
+        audio_link_3 TEXT
+    )''')
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS chat_history (
+        chat_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        haiku_id TEXT,
+        role TEXT,
+        message TEXT,
+        FOREIGN KEY (haiku_id) REFERENCES haiku (haiku_id)
+    )''')
+    conn.commit()
+    conn.close()
+
+create_tables()
 
 def update_haiku_lines(haiku: List[str], haiku_id: str):
     conn = get_db_connection()
@@ -21,8 +54,6 @@ def update_haiku_lines(haiku: List[str], haiku_id: str):
     conn.commit()
     conn.close()
 
-# Function to update image description in the database
-
 def update_image_description(haiku_id: str, description: str, line_number: int):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -30,16 +61,12 @@ def update_image_description(haiku_id: str, description: str, line_number: int):
     conn.commit()
     conn.close()
 
-# Function to update translation in the database
-
 def update_translation(haiku_id: str, translated_haiku: str, line_number: int):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(f'UPDATE haiku SET translation_{line_number} = ? WHERE haiku_id = ?', (translated_haiku, haiku_id))
+    cursor.execute(f'UPDATE haiku SET haiku_line_ja_{line_number} = ? WHERE haiku_id = ?', (translated_haiku, haiku_id))
     conn.commit()
     conn.close()
-
-# Function to store chat interaction in the database
 
 def store_chat_interaction(haiku_id: str, message: str, role: str):
     conn = get_db_connection()
@@ -51,8 +78,6 @@ def store_chat_interaction(haiku_id: str, message: str, role: str):
     conn.commit()
     conn.close()
 
-# Function to retrieve chat history
-
 def retrieve_chat_history(haiku_id: str):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -60,8 +85,6 @@ def retrieve_chat_history(haiku_id: str):
     history = cursor.fetchall()
     conn.close()
     return [dict(row) for row in history]
-
-# Function to retrieve the last chat entry for a specific haiku ID
 
 def retrieve_last_chat(haiku_id: str):
     conn = get_db_connection()
@@ -71,8 +94,6 @@ def retrieve_last_chat(haiku_id: str):
     conn.close()
     return dict(last_chat) if last_chat else {}
 
-# Function to retrieve all haikus
-
 def retrieve_haikus():
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -80,8 +101,6 @@ def retrieve_haikus():
     haikus = cursor.fetchall()
     conn.close()
     return [dict(row) for row in haikus]
-
-# Function to retrieve a specific haiku by ID
 
 def retrieve_haiku(haiku_id: str):
     conn = get_db_connection()
@@ -91,8 +110,6 @@ def retrieve_haiku(haiku_id: str):
     conn.close()
     return dict(haiku) if haiku else {}
 
-# Function to delete a haiku by ID
-
 def delete_haiku_db(haiku_id: str):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -101,8 +118,6 @@ def delete_haiku_db(haiku_id: str):
     conn.commit()
     conn.close()
 
-# Function to retrieve a specific haiku line by ID
-
 def retrieve_haiku_line(haiku_id: str, line_number: int):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -110,26 +125,6 @@ def retrieve_haiku_line(haiku_id: str, line_number: int):
     line = cursor.fetchone()
     conn.close()
     return line[0] if line else None
-
-# Function to update translation in the database
-
-def update_translation(haiku_id: str, translated_haiku: str, line_number: int):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(f'UPDATE haiku SET haiku_line_ja_{line_number} = ? WHERE haiku_id = ?', (translated_haiku, haiku_id))
-    conn.commit()
-    conn.close()
-
-# Function to update image description in the database
-
-def update_image_description(haiku_id: str, description: str, line_number: int):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(f'UPDATE haiku SET image_description_{line_number} = ? WHERE haiku_id = ?', (description, haiku_id))
-    conn.commit()
-    conn.close()
-
-# Function to update haiku link
 
 def update_haiku_link(haiku_id: str, image_link: str = None, audio_link: str = None, number: int = None):
     conn = get_db_connection()
@@ -140,8 +135,6 @@ def update_haiku_link(haiku_id: str, image_link: str = None, audio_link: str = N
         cursor.execute(f'UPDATE haiku SET audio_link_{number} = ? WHERE haiku_id = ?', (audio_link, haiku_id))
     conn.commit()
     conn.close()
-
-# Function to set status and error message in the database
 
 def set_status(haiku_id: str, status: str, error_message: str):
     conn = get_db_connection()
