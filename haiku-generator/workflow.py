@@ -5,6 +5,9 @@ from database import set_status, retrieve_haiku
 from media import generate_image_description, generate_image, generate_audio_translation, generate_audio
 
 
+workflow = define_workflow()
+
+
 class State(TypedDict):
     haiku_id: str
     haiku_line_1_en: str
@@ -160,6 +163,9 @@ def define_workflow(generate_mermaid: bool = False):
             f.write(workflow.get_graph().draw_mermaid_png())
 
     return workflow
+
+async def start_workflow(haiku_id: str):
+    workflow.invoke({"haiku_id": haiku_id})
 
 if __name__ == "__main__":
     define_workflow(True)

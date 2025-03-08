@@ -1,6 +1,6 @@
 import os
 from database import store_chat_interaction, retrieve_chat_history, update_haiku_lines, retrieve_haiku_line
-from workflow import define_workflow
+from workflow import start_workflow
 from langchain_core.tools import InjectedToolArg, tool
 from langchain_ollama import OllamaLLM
 from typing import Annotated
@@ -9,7 +9,6 @@ from typing import List
 
 MODEL_NAME = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
 model = OllamaLLM(model=MODEL_NAME)
-workflow = define_workflow()
 
 
 @tool
@@ -19,7 +18,7 @@ async def start_media_generation(haiku_id: Annotated[str, InjectedToolArg]):
     Args:
         haiku_id: Haiku ID.
     """
-    workflow.invoke({"haiku_id": haiku_id})
+    start_workflow(haiku_id)
     return f"Haiku media generation started"
 
 @tool(parse_docstring=True)
