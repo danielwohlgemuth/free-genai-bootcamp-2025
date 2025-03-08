@@ -12,15 +12,6 @@ def get_db_connection():
     conn = sqlite3.connect(DATABASE_URL)
     return conn
 
-# Function to update haiku in the database
-
-def update_haiku(haiku: List[str], haiku_id: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('UPDATE haiku SET haiku_line_en_1 = ?, haiku_line_en_2 = ?, haiku_line_en_3 = ? WHERE haiku_id = ?', (haiku[0], haiku[1], haiku[2], haiku_id))
-    conn.commit()
-    conn.close()
-
 # Function to update haiku lines in the database
 
 def update_haiku_lines(haiku: List[str], haiku_id: str):
@@ -32,7 +23,7 @@ def update_haiku_lines(haiku: List[str], haiku_id: str):
 
 # Function to update image description in the database
 
-def update_image_description_in_db(haiku_id: str, description: str, line_number: int):
+def update_image_description(haiku_id: str, description: str, line_number: int):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(f'UPDATE haiku SET image_description_{line_number} = ? WHERE haiku_id = ?', (description, haiku_id))
@@ -41,7 +32,7 @@ def update_image_description_in_db(haiku_id: str, description: str, line_number:
 
 # Function to update translation in the database
 
-def update_translation_in_db(haiku_id: str, translated_haiku: str, line_number: int):
+def update_translation(haiku_id: str, translated_haiku: str, line_number: int):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(f'UPDATE haiku SET translation_{line_number} = ? WHERE haiku_id = ?', (translated_haiku, haiku_id))
@@ -159,5 +150,14 @@ def update_haiku_links(haiku_id: str, image_link: str = None, audio_link: str = 
         cursor.execute(f'UPDATE haiku SET image_link_{image_number} = ? WHERE haiku_id = ?', (image_link, haiku_id))
     if audio_number is not None:
         cursor.execute(f'UPDATE haiku SET audio_link_{audio_number} = ? WHERE haiku_id = ?', (audio_link, haiku_id))
+    conn.commit()
+    conn.close()
+
+# Function to set error message in the database
+
+def set_error_message(error_message: str, haiku_id: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('UPDATE haiku SET error_message = ? WHERE haiku_id = ?', (error_message, haiku_id))
     conn.commit()
     conn.close()
