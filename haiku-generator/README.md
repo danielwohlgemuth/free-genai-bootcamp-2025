@@ -30,7 +30,7 @@ pip install -r requirements.txt
 
 3. Setup the database:
 ```bash
-python setup_database.py
+python database.py
 ```
 
 4. Start the FastAPI server:
