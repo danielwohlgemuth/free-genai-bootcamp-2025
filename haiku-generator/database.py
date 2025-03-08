@@ -50,6 +50,46 @@ def create_tables():
 
 create_tables()
 
+def retrieve_haikus():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM haiku')
+    haikus = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in haikus]
+
+def retrieve_haiku(haiku_id: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM haiku WHERE haiku_id = ?', (haiku_id,))
+    haiku = cursor.fetchone()
+    conn.close()
+    return dict(haiku) if haiku else {}
+
+def retrieve_haiku_line(haiku_id: str, line_number: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(f'SELECT haiku_line_en_{line_number} FROM haiku WHERE haiku_id = ?', (haiku_id,))
+    line = cursor.fetchone()
+    conn.close()
+    return line[0] if line else None
+
+def retrieve_chat_history(haiku_id: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM chat_history WHERE haiku_id = ?', (haiku_id,))
+    history = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in history]
+
+def retrieve_last_chat(haiku_id: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM chat_history WHERE haiku_id = ? ORDER BY chat_id DESC LIMIT 1', (haiku_id,))
+    last_chat = cursor.fetchone()
+    conn.close()
+    return dict(last_chat) if last_chat else {}
+
 def update_haiku_lines(haiku_id: str, haiku: List[str]):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -80,64 +120,6 @@ def update_translation(haiku_id: str, translated_haiku: str, line_number: int):
     conn.commit()
     conn.close()
 
-def store_chat_interaction(haiku_id: str, message: str, role: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO chat_history (haiku_id, message, role)
-        VALUES (?, ?, ?)
-    ''', (haiku_id, message, role))
-    conn.commit()
-    conn.close()
-
-def retrieve_chat_history(haiku_id: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM chat_history WHERE haiku_id = ?', (haiku_id,))
-    history = cursor.fetchall()
-    conn.close()
-    return [dict(row) for row in history]
-
-def retrieve_last_chat(haiku_id: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM chat_history WHERE haiku_id = ? ORDER BY chat_id DESC LIMIT 1', (haiku_id,))
-    last_chat = cursor.fetchone()
-    conn.close()
-    return dict(last_chat) if last_chat else {}
-
-def retrieve_haikus():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM haiku')
-    haikus = cursor.fetchall()
-    conn.close()
-    return [dict(row) for row in haikus]
-
-def retrieve_haiku(haiku_id: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM haiku WHERE haiku_id = ?', (haiku_id,))
-    haiku = cursor.fetchone()
-    conn.close()
-    return dict(haiku) if haiku else {}
-
-def delete_haiku_db(haiku_id: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM haiku WHERE haiku_id = ?', (haiku_id,))
-    cursor.execute('DELETE FROM chat_history WHERE haiku_id = ?', (haiku_id,))
-    conn.commit()
-    conn.close()
-
-def retrieve_haiku_line(haiku_id: str, line_number: int):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(f'SELECT haiku_line_en_{line_number} FROM haiku WHERE haiku_id = ?', (haiku_id,))
-    line = cursor.fetchone()
-    conn.close()
-    return line[0] if line else None
-
 def update_haiku_link(haiku_id: str, image_link: str = None, audio_link: str = None, number: int = None):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -155,5 +137,23 @@ def set_status(haiku_id: str, status: str, error_message: str):
     INSERT OR REPLACE INTO haiku (haiku_id, status, error_message)
     VALUES (?, ?, ?);
     ''', (haiku_id, status, error_message))
+    conn.commit()
+    conn.close()
+
+def store_chat_interaction(haiku_id: str, message: str, role: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO chat_history (haiku_id, message, role)
+        VALUES (?, ?, ?)
+    ''', (haiku_id, message, role))
+    conn.commit()
+    conn.close()
+
+def delete_haiku_db(haiku_id: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('DELETE FROM haiku WHERE haiku_id = ?', (haiku_id,))
+    cursor.execute('DELETE FROM chat_history WHERE haiku_id = ?', (haiku_id,))
     conn.commit()
     conn.close()
