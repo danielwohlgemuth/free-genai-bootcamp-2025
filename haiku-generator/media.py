@@ -2,7 +2,6 @@ import os
 import torch
 from database import update_translation, update_image_description, update_haiku_links
 from diffusers import StableDiffusionPipeline
-from graph import define_workflow
 from langchain_ollama import OllamaLLM
 from minio import Minio
 from TTS.api import TTS
@@ -21,7 +20,8 @@ pipe = StableDiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-3.5
 device = "cuda" if torch.cuda.is_available() else "cpu"
 pipe = pipe.to(device)
 minio_client = Minio(MINIO_URL, access_key=MINIO_ACCESS_KEY, secret_key=MINIO_SECRET_KEY, secure=False)
-workflow = define_workflow()
+tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
+
 
 def create_bucket_if_not_exists():
     try:
@@ -48,7 +48,6 @@ def generate_image(description: str, haiku_id: str, image_number: int):
     return object_url
 
 def generate_audio(text: str, haiku_id: str, audio_number: int):
-    tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
     audio_file_path = f"{haiku_id}/audio-{audio_number}.wav"
     tts.tts_to_file(
         text=text,
@@ -71,6 +70,3 @@ def generate_audio_translation(haiku_id: str, haiku_line: str, line_number: int)
     translation = model.invoke(prompt)
     update_translation(haiku_id, translation, line_number)
     return translation
-
-def generate_media(haiku_id: str):
-    workflow.invoke({"haiku_id": haiku_id})
