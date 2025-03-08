@@ -2,7 +2,7 @@ import langchain
 import os
 from database import store_chat_interaction, retrieve_chat_history, update_haiku_lines, retrieve_haiku_line
 from dotenv import load_dotenv
-from langchain_core.prompts import PromptTemplate
+from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import InjectedToolArg, tool
 from langchain_ollama import ChatOllama
 from langgraph.prebuilt.chat_agent_executor import create_react_agent
@@ -22,25 +22,30 @@ model = ChatOllama(
     model=MODEL_NAME
 )
 
+system_template="""You are an assistant that helps generate haikus.
+
+A haiku is a traditional Japanese poem with the following format:
+- Three lines
+- Syllable pattern:
+    - 5 syllables in the first line
+    - 7 syllables in the second line
+    - 5 syllables in the third line
+
+If the user provides a haiku or you generate one, save it in the database.
+Once the user confirms that the haiku is correct, start the media generation process.
+"""
 
 @tool
-async def start_media_generation(haiku_id: Annotated[str, InjectedToolArg]):
-    """Start haiku media generation from haiku.
-
-    Args:
-        haiku_id: Haiku ID.
-    """
+async def start_media_generation(config: RunnableConfig) -> str:
+    """Start haiku media generation from haiku."""
+    haiku_id = config.get("configurable", {}).get("haiku_id")
     start_workflow(haiku_id)
     return f"Haiku media generation started"
 
-@tool(parse_docstring=True)
-def update_haiku(haiku: List[str], haiku_id: Annotated[str, InjectedToolArg]) -> str:
-    """Update haiku in database.
-
-    Args:
-        haiku: Haiku with each line as a separate string.
-        haiku_id: Haiku ID.
-    """
+@tool
+def update_haiku(haiku: List[str], config: RunnableConfig) -> str:
+    """Update haiku in database."""
+    haiku_id = config.get("configurable", {}).get("haiku_id")
     update_haiku_lines(haiku_id, haiku)
     return f"Haiku updated in database"
 
@@ -51,51 +56,29 @@ def get_tool_names():
     return [tool.name for tool in get_tools()]
 
 def create_agent():
-    template="""You are an assistant that helps generate haikus.
-
-    A haiku is a traditional Japanese poem with the following format:
-    - Three lines
-    - Syllable pattern:
-        - 5 syllables in the first line
-        - 7 syllables in the second line
-        - 5 syllables in the third line
-
-    If the user provides a haiku or you generate one, save it in the database.
-    Once the user confirms that the haiku is correct, start the media generation process.
-
-    Tools:
-    {tools}
-
-    Tool names:
-    {tool_names}
-
-    {agent_scratchpad}
-
-    {input}
-    """
-
-    prompt = PromptTemplate.from_template(template, partial_variables={"tools": get_tools(), "tool_names": get_tool_names()})
-
-    agent = create_react_agent(model, tools=get_tools(), prompt=prompt)
+    agent_model = create_react_agent(model, tools=get_tools())
+    return agent_model
 
 
-agent = create_agent()
+agent_model = create_agent()
 
 
 def process_message(haiku_id: str, user_message: str):
-    store_chat_interaction(haiku_id, user_message, 'user')
+    store_chat_interaction(haiku_id, user_message, 'human')
 
     chat_history = retrieve_chat_history(haiku_id)
-    messages = 'Chat history:\n'
+    messages = [('system', system_template)]
     for chat in chat_history:
-        messages += f'{chat["role"]}: {chat["message"]}\n'
-    messages += f'user: {user_message}\n'
+        messages.append((chat["role"], chat["message"]))
 
     inputs = {
-        "haiku_id": haiku_id,
-        "input": messages
+        "messages": messages,
+        "configurable": {
+            "haiku_id": haiku_id
+        }
     }
 
-    agent_message = agent.invoke(inputs)
+    agent_message = agent_model.invoke(inputs)
+    print('agent_message', agent_message)
 
-    store_chat_interaction(haiku_id, agent_message, 'agent')
+    store_chat_interaction(haiku_id, agent_message["messages"][-1].content, 'ai')
