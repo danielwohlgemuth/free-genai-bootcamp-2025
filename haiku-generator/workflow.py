@@ -114,7 +114,7 @@ def check_state_and_set_error(state: State):
     set_status(state['haiku_id'], status, error_message)
     return state
 
-def define_workflow(generate_mermaid: bool = False):
+def define_workflow():
     graph = StateGraph(State)
 
     graph.add_node("initialize_haiku", initialize_haiku)
@@ -156,16 +156,13 @@ def define_workflow(generate_mermaid: bool = False):
 
     workflow = graph.compile()
 
-    if generate_mermaid:
-        with open("media.mermaid", "w") as f:
-            f.write(workflow.get_graph().draw_mermaid())
-        with open("media-mermaid.png", "wb") as f:
-            f.write(workflow.get_graph().draw_mermaid_png())
-
     return workflow
 
 async def start_workflow(haiku_id: str):
     workflow.invoke({"haiku_id": haiku_id})
 
 if __name__ == "__main__":
-    define_workflow(True)
+    with open("media.mermaid", "w") as f:
+        f.write(workflow.get_graph().draw_mermaid())
+    with open("media-mermaid.png", "wb") as f:
+        f.write(workflow.get_graph().draw_mermaid_png())
