@@ -74,7 +74,7 @@ def generate_image_description(haiku_id: str, haiku_line: str, line_number: int)
     update_image_description(haiku_id, description, line_number)
     return description
 
-def generate_audio_translation(haiku_id: str, haiku_line: str, line_number: int):
+def generate_translation(haiku_id: str, haiku_line: str, line_number: int):
     prompt = f"""Translate the sentence into Japanese
     If the sentence cannot be translated directly, provide the closest equivalent translation.
     Only return the Japanese translation. Do not add any additional text.

@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph
 from typing import TypedDict
 from database import set_status, retrieve_haiku
-from media import generate_image_description, generate_image, generate_audio_translation, generate_audio
+from media import generate_image_description, generate_image, generate_translation, generate_audio
 
 
 class State(TypedDict):
@@ -68,20 +68,20 @@ def generate_image_3(state: State):
         "image_link_3": link
     }
 
-def generate_audio_translation_1(state: State):
-    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_en_1"], 1)
+def generate_translation_1(state: State):
+    translation = generate_translation(state["haiku_id"], state["haiku_line_en_1"], 1)
     return {
         "haiku_line_ja_1": translation
     }
 
-def generate_audio_translation_2(state: State):
-    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_en_2"], 2)
+def generate_translation_2(state: State):
+    translation = generate_translation(state["haiku_id"], state["haiku_line_en_2"], 2)
     return {
         "haiku_line_ja_2": translation
     }
 
-def generate_audio_translation_3(state: State):
-    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_en_3"], 3)
+def generate_translation_3(state: State):
+    translation = generate_translation(state["haiku_id"], state["haiku_line_en_3"], 3)
     return {
         "haiku_line_ja_3": translation
     }
@@ -106,35 +106,35 @@ def generate_audio_3(state: State):
 
 def check_status(state: State):
     missing_fields = []
-    if not state['haiku_line_en_1']:
+    if not state.get('haiku_line_en_1'):
         missing_fields.append('haiku_line_en_1')
-    if not state['haiku_line_en_2']:
+    if not state.get('haiku_line_en_2'):
         missing_fields.append('haiku_line_en_2')
-    if not state['haiku_line_en_3']:
+    if not state.get('haiku_line_en_3'):
         missing_fields.append('haiku_line_en_3')
-    if not state['image_description_1']:
+    if not state.get('image_description_1'):
         missing_fields.append('image_description_1')
-    if not state['image_description_2']:
+    if not state.get('image_description_2'):
         missing_fields.append('image_description_2')
-    if not state['image_description_3']:
+    if not state.get('image_description_3'):
         missing_fields.append('image_description_3')
-    if not state['image_link_1']:
+    if not state.get('image_link_1'):
         missing_fields.append('image_link_1')
-    if not state['image_link_2']:
+    if not state.get('image_link_2'):
         missing_fields.append('image_link_2')
-    if not state['image_link_3']:
+    if not state.get('image_link_3'):
         missing_fields.append('image_link_3')
-    if not state['haiku_line_ja_1']:
+    if not state.get('haiku_line_ja_1'):
         missing_fields.append('haiku_line_ja_1')
-    if not state['haiku_line_ja_2']:
+    if not state.get('haiku_line_ja_2'):
         missing_fields.append('haiku_line_ja_2')
-    if not state['haiku_line_ja_3']:
+    if not state.get('haiku_line_ja_3'):
         missing_fields.append('haiku_line_ja_3')
-    if not state['audio_link_1']:
+    if not state.get('audio_link_1'):
         missing_fields.append('audio_link_1')
-    if not state['audio_link_2']:
+    if not state.get('audio_link_2'):
         missing_fields.append('audio_link_2')
-    if not state['audio_link_3']:
+    if not state.get('audio_link_3'):
         missing_fields.append('audio_link_3')
 
     status = 'completed'
@@ -156,9 +156,9 @@ def create_workflow():
     graph.add_node("generate_image_1", generate_image_1)
     graph.add_node("generate_image_2", generate_image_2)
     graph.add_node("generate_image_3", generate_image_3)
-    graph.add_node("generate_audio_translation_1", generate_audio_translation_1)
-    graph.add_node("generate_audio_translation_2", generate_audio_translation_2)
-    graph.add_node("generate_audio_translation_3", generate_audio_translation_3)
+    graph.add_node("generate_translation_1", generate_translation_1)
+    graph.add_node("generate_translation_2", generate_translation_2)
+    graph.add_node("generate_translation_3", generate_translation_3)
     graph.add_node("generate_audio_1", generate_audio_1)
     graph.add_node("generate_audio_2", generate_audio_2)
     graph.add_node("generate_audio_3", generate_audio_3)
@@ -170,12 +170,12 @@ def create_workflow():
     graph.add_edge("generate_image_description_1", "generate_image_1")
     graph.add_edge("generate_image_description_2", "generate_image_2")
     graph.add_edge("generate_image_description_3", "generate_image_3")
-    graph.add_edge("initialize_haiku", "generate_audio_translation_1")
-    graph.add_edge("initialize_haiku", "generate_audio_translation_2")
-    graph.add_edge("initialize_haiku", "generate_audio_translation_3")
-    graph.add_edge("generate_audio_translation_1", "generate_audio_1")
-    graph.add_edge("generate_audio_translation_2", "generate_audio_2")
-    graph.add_edge("generate_audio_translation_3", "generate_audio_3")
+    graph.add_edge("initialize_haiku", "generate_translation_1")
+    graph.add_edge("initialize_haiku", "generate_translation_2")
+    graph.add_edge("initialize_haiku", "generate_translation_3")
+    graph.add_edge("generate_translation_1", "generate_audio_1")
+    graph.add_edge("generate_translation_2", "generate_audio_2")
+    graph.add_edge("generate_translation_3", "generate_audio_3")
     graph.add_edge("generate_image_1", "check_status")
     graph.add_edge("generate_image_2", "check_status")
     graph.add_edge("generate_image_3", "check_status")
