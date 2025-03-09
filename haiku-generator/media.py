@@ -31,14 +31,15 @@ cutlet_path = cutlet.__file__.replace("__init__.py", "exceptions.tsv")
 def generate_image(haiku_id: str, description: str, image_number: int):
     image = pipe(
         description,
-        num_inference_steps=5,
+        num_inference_steps=1,
         guidance_scale=5.0,
     ).images[0]
     file_path = f"{haiku_id}/image-{image_number}.png"
     image_bytes = io.BytesIO()
     image.save(image_bytes, format="PNG")
+    image_bytes_length = len(image_bytes.getvalue())
     image_bytes.seek(0)
-    upload_file(image_bytes, file_path)
+    upload_file(image_bytes, image_bytes_length, file_path)
     update_haiku_link(haiku_id, image_link=file_path, number=image_number)
     return file_path
 
@@ -56,8 +57,10 @@ def generate_audio(haiku_id: str, text: str, audio_number: int):
             file_path=file_path
         )
         with open(file_path, 'rb') as f:
-            audio_content = f.read()
-            upload_file(io.BytesIO(audio_content), file_path)
+            audio_content = io.BytesIO(f.read())
+            audio_content_length = len(audio_content.getvalue())
+            audio_content.seek(0)
+            upload_file(audio_content, audio_content_length, file_path)
             update_haiku_link(haiku_id, audio_link=file_path, number=audio_number)
     return file_path
 

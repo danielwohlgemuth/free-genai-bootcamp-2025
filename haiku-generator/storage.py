@@ -23,6 +23,5 @@ def create_bucket_if_not_exists():
 create_bucket_if_not_exists()
 
 
-def upload_file(file: io.BytesIO, object_name: str):
-    length = len(file.getvalue())
+def upload_file(file: io.BytesIO, length: int, object_name: str):
     minio_client.put_object(BUCKET_NAME, object_name, file, length=length)
