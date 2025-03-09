@@ -2,7 +2,8 @@ import io
 import os
 import torch
 from database import update_translation, update_image_description, update_haiku_link
-from diffusers import StableDiffusion3Pipeline
+# from diffusers import StableDiffusion3Pipeline
+from diffusers import AmusedPipeline
 from dotenv import load_dotenv
 from langchain_ollama import OllamaLLM
 from pyfakefs.fake_filesystem_unittest import Patcher
@@ -21,7 +22,8 @@ model = OllamaLLM(
     base_url=MODEL_BASE_URL,
     model=MODEL_NAME
 )
-pipe = StableDiffusion3Pipeline.from_pretrained("stabilityai/stable-diffusion-3.5-medium", token=HUGGINGFACEHUB_API_TOKEN)
+# pipe = StableDiffusion3Pipeline.from_pretrained("stabilityai/stable-diffusion-3.5-medium", token=HUGGINGFACEHUB_API_TOKEN)
+pipe = AmusedPipeline.from_pretrained("amused/amused-256", token=HUGGINGFACEHUB_API_TOKEN)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 pipe = pipe.to(device)
 tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
@@ -31,7 +33,7 @@ cutlet_path = cutlet.__file__.replace("__init__.py", "exceptions.tsv")
 def generate_image(haiku_id: str, description: str, image_number: int):
     image = pipe(
         description,
-        num_inference_steps=1,
+        num_inference_steps=50,
         guidance_scale=5.0,
     ).images[0]
     file_path = f"{haiku_id}/image-{image_number}.png"
