@@ -1,6 +1,6 @@
-from database import retrieve_chat_history, retrieve_haikus, retrieve_haiku, delete_haiku_db, retrieve_last_chat
 from agent import process_message
-from fastapi import FastAPI, HTTPException
+from database import retrieve_chat_history, retrieve_haikus, retrieve_haiku, delete_haiku_db, retrieve_last_chat, insert_haiku
+from fastapi import FastAPI
 from pydantic import BaseModel
 
 

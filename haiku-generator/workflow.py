@@ -1,5 +1,4 @@
-from langchain_ollama import OllamaLLM
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import StateGraph
 from typing import TypedDict
 from database import set_status, retrieve_haiku
 from media import generate_image_description, generate_image, generate_audio_translation, generate_audio
@@ -73,19 +72,19 @@ def generate_image_3(state: State):
     }
 
 def generate_audio_translation_1(state: State):
-    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_ja_1"], 1)
+    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_en_1"], 1)
     return {
         "audio_translation_1": translation
     }
 
 def generate_audio_translation_2(state: State):
-    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_ja_2"], 2)
+    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_en_2"], 2)
     return {
         "audio_translation_2": translation
     }
 
 def generate_audio_translation_3(state: State):
-    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_ja_3"], 3)
+    translation = generate_audio_translation(state["haiku_id"], state["haiku_line_en_3"], 3)
     return {
         "audio_translation_3": translation
     }
@@ -188,7 +187,7 @@ def create_workflow():
 workflow = create_workflow()
 
 
-async def start_workflow(haiku_id: str):
+def start_workflow(haiku_id: str):
     workflow.invoke({"haiku_id": haiku_id})
 
 if __name__ == "__main__":

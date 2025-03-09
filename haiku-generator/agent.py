@@ -1,6 +1,6 @@
 import langchain
 import os
-from database import store_chat_interaction, retrieve_chat_history, update_haiku_lines, retrieve_haiku_line, retrieve_haiku
+from database import store_chat_interaction, retrieve_chat_history, update_haiku_lines, retrieve_haiku
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
@@ -51,8 +51,8 @@ def start_media_generation(haiku_id: str | int) -> str:
     """Start haiku media generation from haiku."""
     haiku = retrieve_haiku(str(haiku_id))
     if not haiku.get('haiku_line_en_1') or not haiku.get('haiku_line_en_2') or not haiku.get('haiku_line_en_3'):
-        return f"Haiku not available for media generation. Please save a haiku first."
-    start_workflow(haiku_id)
+        return f"Haiku not available for media generation. Please save a haiku first."    
+    start_workflow(str(haiku_id))
     return f"Haiku media generation started"
 
 @tool("update_haiku", args_schema=HaikuUpdate)
