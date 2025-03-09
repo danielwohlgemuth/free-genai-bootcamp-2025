@@ -90,13 +90,21 @@ def retrieve_last_chat(haiku_id: str):
     conn.close()
     return dict(last_chat) if last_chat else {}
 
+def insert_haiku(haiku_id: str):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+    INSERT INTO haiku (haiku_id) VALUES (?)
+    ''', (haiku_id,))
+    conn.commit()
+    conn.close()
+
 def update_haiku_lines(haiku_id: str, haiku: List[str]):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
-    INSERT OR REPLACE INTO haiku (haiku_id, haiku_line_en_1, haiku_line_en_2, haiku_line_en_3)
-    VALUES (?, ?, ?, ?);
-    ''', (haiku_id, haiku[0], haiku[1], haiku[2]))
+    UPDATE haiku SET haiku_line_en_1 = ?, haiku_line_en_2 = ?, haiku_line_en_3 = ? WHERE haiku_id = ?;
+    ''', (haiku[0], haiku[1], haiku[2], haiku_id))
     conn.commit()
     conn.close()
 
@@ -104,9 +112,8 @@ def update_image_description(haiku_id: str, description: str, line_number: int):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
-    INSERT OR REPLACE INTO haiku (haiku_id, image_description_{})
-    VALUES (?, ?);
-    '''.format(line_number), (haiku_id, description))
+    UPDATE haiku SET image_description_{} = ? WHERE haiku_id = ?;
+    '''.format(line_number), (description, haiku_id))
     conn.commit()
     conn.close()
 
@@ -114,9 +121,8 @@ def update_translation(haiku_id: str, translated_haiku: str, line_number: int):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
-    INSERT OR REPLACE INTO haiku (haiku_id, haiku_line_ja_{})
-    VALUES (?, ?);
-    '''.format(line_number), (haiku_id, translated_haiku))
+    UPDATE haiku SET haiku_line_ja_{} = ? WHERE haiku_id = ?;
+    '''.format(line_number), (translated_haiku, haiku_id))
     conn.commit()
     conn.close()
 
@@ -124,9 +130,8 @@ def update_haiku_link(haiku_id: str, image_link: str = None, audio_link: str = N
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
-    INSERT OR REPLACE INTO haiku (haiku_id, image_link_{}, audio_link_{})
-    VALUES (?, ?, ?);
-    '''.format(number, number), (haiku_id, image_link, audio_link))
+    UPDATE haiku SET image_link_{}, audio_link_{} = ?, ? WHERE haiku_id = ?;
+    '''.format(number, number), (image_link, audio_link, haiku_id))
     conn.commit()
     conn.close()
 
@@ -134,9 +139,8 @@ def set_status(haiku_id: str, status: str, error_message: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
-    INSERT OR REPLACE INTO haiku (haiku_id, status, error_message)
-    VALUES (?, ?, ?);
-    ''', (haiku_id, status, error_message))
+    UPDATE haiku SET status = ?, error_message = ? WHERE haiku_id = ?;
+    ''', (status, error_message, haiku_id))
     conn.commit()
     conn.close()
 
