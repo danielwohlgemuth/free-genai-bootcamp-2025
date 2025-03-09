@@ -9,18 +9,15 @@ class State(TypedDict):
     haiku_line_en_1: str
     haiku_line_en_2: str
     haiku_line_en_3: str
-    haiku_line_ja_1: str
-    haiku_line_ja_2: str
-    haiku_line_ja_3: str
     image_description_1: str
     image_description_2: str
     image_description_3: str
     image_link_1: str
     image_link_2: str
     image_link_3: str
-    audio_translation_1: str
-    audio_translation_2: str
-    audio_translation_3: str
+    haiku_line_ja_1: str
+    haiku_line_ja_2: str
+    haiku_line_ja_3: str
     audio_link_1: str
     audio_link_2: str
     audio_link_3: str
@@ -74,64 +71,74 @@ def generate_image_3(state: State):
 def generate_audio_translation_1(state: State):
     translation = generate_audio_translation(state["haiku_id"], state["haiku_line_en_1"], 1)
     return {
-        "audio_translation_1": translation
+        "haiku_line_ja_1": translation
     }
 
 def generate_audio_translation_2(state: State):
     translation = generate_audio_translation(state["haiku_id"], state["haiku_line_en_2"], 2)
     return {
-        "audio_translation_2": translation
+        "haiku_line_ja_2": translation
     }
 
 def generate_audio_translation_3(state: State):
     translation = generate_audio_translation(state["haiku_id"], state["haiku_line_en_3"], 3)
     return {
-        "audio_translation_3": translation
+        "haiku_line_ja_3": translation
     }
 
 def generate_audio_1(state: State):
-    link = generate_audio(state["haiku_id"], state["audio_translation_1"], 1)
+    link = generate_audio(state["haiku_id"], state["haiku_line_ja_1"], 1)
     return {
         "audio_link_1": link
     }
 
 def generate_audio_2(state: State):
-    link = generate_audio(state["haiku_id"], state["audio_translation_2"], 2)
+    link = generate_audio(state["haiku_id"], state["haiku_line_ja_2"], 2)
     return {
         "audio_link_2": link
     }
 
 def generate_audio_3(state: State):
-    link = generate_audio(state["haiku_id"], state["audio_translation_3"], 3)
+    link = generate_audio(state["haiku_id"], state["haiku_line_ja_3"], 3)
     return {
         "audio_link_3": link
     }
 
 def check_status(state: State):
-    required_fields = [
-        'haiku_line_en_1',
-        'haiku_line_en_2',
-        'haiku_line_en_3',
-        'haiku_line_ja_1',
-        'haiku_line_ja_2',
-        'haiku_line_ja_3',
-        'image_description_1',
-        'image_description_2',
-        'image_description_3',
-        'image_link_1',
-        'image_link_2',
-        'image_link_3',
-        'audio_translation_1',
-        'audio_translation_2',
-        'audio_translation_3',
-        'audio_link_1',
-        'audio_link_2',
-        'audio_link_3',
-    ]
+    missing_fields = []
+    if not state['haiku_line_en_1']:
+        missing_fields.append('haiku_line_en_1')
+    if not state['haiku_line_en_2']:
+        missing_fields.append('haiku_line_en_2')
+    if not state['haiku_line_en_3']:
+        missing_fields.append('haiku_line_en_3')
+    if not state['image_description_1']:
+        missing_fields.append('image_description_1')
+    if not state['image_description_2']:
+        missing_fields.append('image_description_2')
+    if not state['image_description_3']:
+        missing_fields.append('image_description_3')
+    if not state['image_link_1']:
+        missing_fields.append('image_link_1')
+    if not state['image_link_2']:
+        missing_fields.append('image_link_2')
+    if not state['image_link_3']:
+        missing_fields.append('image_link_3')
+    if not state['haiku_line_ja_1']:
+        missing_fields.append('haiku_line_ja_1')
+    if not state['haiku_line_ja_2']:
+        missing_fields.append('haiku_line_ja_2')
+    if not state['haiku_line_ja_3']:
+        missing_fields.append('haiku_line_ja_3')
+    if not state['audio_link_1']:
+        missing_fields.append('audio_link_1')
+    if not state['audio_link_2']:
+        missing_fields.append('audio_link_2')
+    if not state['audio_link_3']:
+        missing_fields.append('audio_link_3')
 
     status = 'completed'
     error_message = ''
-    missing_fields = [field for field in required_fields if not getattr(state, field)]
     if missing_fields:
         status = 'failed'
         error_message = f'Missing fields: {', '.join(missing_fields)}'

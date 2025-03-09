@@ -45,19 +45,23 @@ def generate_image(haiku_id: str, description: str, image_number: int):
 def generate_audio(haiku_id: str, text: str, audio_number: int):
     tmp_file_path = f"/tmp/haiku-{haiku_id}-audio-{audio_number}.wav"
     storage_file_path = f"{haiku_id}/audio-{audio_number}.wav"
-    tts.tts_to_file(
-        text=text,
-        speaker="Chandra MacFarland",
-        language="ja",
-        file_path=tmp_file_path
-    )
-    with open(tmp_file_path, 'rb') as f:
-        audio_content = io.BytesIO(f.read())
-        audio_content_length = len(audio_content.getvalue())
-        audio_content.seek(0)
-        upload_file(audio_content, audio_content_length, storage_file_path)
-        update_haiku_link(haiku_id, audio_link=storage_file_path, number=audio_number)
-    return storage_file_path
+    try:
+        tts.tts_to_file(
+            text=text,
+            speaker="Chandra MacFarland",
+            language="ja",
+            file_path=tmp_file_path
+        )
+        with open(tmp_file_path, 'rb') as f:
+            audio_content = io.BytesIO(f.read())
+            audio_content_length = len(audio_content.getvalue())
+            audio_content.seek(0)
+            upload_file(audio_content, audio_content_length, storage_file_path)
+            update_haiku_link(haiku_id, audio_link=storage_file_path, number=audio_number)
+        return storage_file_path
+    except Exception as e:
+        print(f"Error generating audio: {e}")
+        return None
 
 def generate_image_description(haiku_id: str, haiku_line: str, line_number: int):
     prompt = f"""Generate a high-contrast image with a plain background.
