@@ -64,8 +64,10 @@ def start_media_generation(haiku_id: str | int) -> str:
 @tool("update_haiku", args_schema=HaikuUpdate)
 def update_haiku(haiku: List[str], haiku_id: str | int) -> str:
     """Update haiku in database."""
+    if len(haiku) != 3:
+        return "Invalid haiku format. Please provide 3 lines."
     update_haiku_lines(str(haiku_id), haiku)
-    return f"Haiku updated in database"
+    return "Haiku updated in database"
 
 def get_tools():
     return [update_haiku, start_media_generation]
