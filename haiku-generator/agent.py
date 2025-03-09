@@ -1,4 +1,3 @@
-import asyncio
 import langchain
 import os
 from database import store_chat_interaction, retrieve_chat_history, update_haiku_lines, retrieve_haiku_line, retrieve_haiku
@@ -53,12 +52,7 @@ def start_media_generation(haiku_id: str | int) -> str:
     haiku = retrieve_haiku(str(haiku_id))
     if not haiku.get('haiku_line_en_1') or not haiku.get('haiku_line_en_2') or not haiku.get('haiku_line_en_3'):
         return f"Haiku not available for media generation. Please save a haiku first."
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    loop.create_task(start_workflow(haiku_id))
+    start_workflow(haiku_id)
     return f"Haiku media generation started"
 
 @tool("update_haiku", args_schema=HaikuUpdate)
