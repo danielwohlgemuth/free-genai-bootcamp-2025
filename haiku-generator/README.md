@@ -18,6 +18,13 @@ Golden leaves drift to the ground
 Whispers of the past
 ```
 
+## Findings
+
+- Making an async call from a synchronous context is not that simple in Python. I tried making the media generation run in the background since it was a long-running process. It's not as easy as a fire-and-forget in JavaScript. I ended up making it synchronous after multiple failed attempts to make it asynchronous with the help of chatbots.
+- Running a text-to-image model can consume a lot of RAM and slows the development feedback loop. I tried using `stable-diffusion-3.5-medium`. It consumed around 30GB of RAM, took several minutes just to load, and took a lot of time to generate the image, depending on the amount of inference steps. Generating an image with 40 steps took ~30 minutes. I ended up using `amused-256` instead. The model is much faster (seconds to a few minutes) and consumes less RAM (~3GB) but the quality is not as good.
+- There aren't a lot of options when it comes to generating Japanese voice. I ended up using the `coqui-tts` library and the `XTTS-v2` model with reasonable results.
+- It helps creating small proof-of-concept projects to test new technologies and find the configuration that works best before including it in a larger project, where it gets more complex to debug.
+
 ## Backend
 
 [Backend Tech Specs](Backend-Tech-Specs.md)
