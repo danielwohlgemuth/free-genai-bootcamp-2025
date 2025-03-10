@@ -1,6 +1,6 @@
 # Haiku Generator
 
-This project provides a chatbot for user interaction to generate haikus and generate an image and audio for each line of the haiku.
+This project provides a chatbot for user interaction to generate haikus and a corresponding image and audio for each line of the haiku.
 
 ## What is a Haiku?
 

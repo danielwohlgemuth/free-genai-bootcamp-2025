@@ -28,6 +28,10 @@ An interactive web application for practicing Japanese kana writing using AWS se
 
 An application to extract a vocabulary from a song.
 
+## [Haiku Generator](/haiku-generator/README.md)
+
+A chatbot for user interaction to generate haikus and a corresponding image and audio for each line of the haiku.
+
 ## Useful Links
 
 - [Free GenAI Bootcamp Landing Page](https://genai.cloudprojectbootcamp.com/)
