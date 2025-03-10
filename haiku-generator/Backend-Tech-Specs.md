@@ -22,7 +22,7 @@ The application utilizes a microservices architecture, with the following key co
 	- Calling available tools:
 		- **Update Haiku Tool**: Function that takes the haiku and haiku ID as inputs and updates the haiku in the database.
 		- **Image and Audio Generation Tool**: Function that takes the haiku ID as input and starts the multimedia generation process.
-		- **Completion Check Tool**: Function that takes the haiku ID as input and returns the status of the generation process.
+		~~- **Completion Check Tool**: Function that takes the haiku ID as input and returns the status of the generation process.~~ The media generation service ended up being synchronous and this can also be achieved by calling an API endpoint.
 
 2. **Multimedia Generation Service**: Utilizes the following tools to generate images and audio files:
 	- Image Generation: Creates images corresponding to each line of the English haiku. The images are generated based on descriptions derived from the haiku.
