@@ -17,13 +17,13 @@ pip install -r requirements.txt
 python database.py
 ```
 
-4. Start the FastAPI server:
-```bash
-uvicorn main:app --reload
-```
-
-### Usage
+4. Start Ollama and MinIO:
 
 ```bash
 docker-compose up -d --build
+```
+
+5. Start the FastAPI server:
+```bash
+uvicorn main:app --reload
 ```
