@@ -29,6 +29,8 @@ Whispers of the past
 
 [Backend Tech Specs](Backend-Tech-Specs.md)
 
+[Backend Setup](backend/README.md)
+
 ### Agentic Workflow
 
 An agentic workflow is a chatbot with which users can interact and where the chatbot can decide to use the tools available to it, in this case, to save the haiku and start generating the media content.
@@ -52,31 +54,3 @@ Generating the audio can also be broken down into two steps: generate a translat
 ### Backend API
 
 ![Backend API](assets/backend-api.png)
-
-### Setup
-
-1. Create a virtual environment:
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-2. Install the required packages:
-```bash
-pip install -r requirements.txt
-```
-
-3. Setup the database:
-```bash
-python database.py
-```
-
-4. Start the FastAPI server:
-```bash
-uvicorn main:app --reload
-```
-
-### Usage
-
-```bash
-docker-compose up -d --build
-```
