@@ -1,11 +1,12 @@
 import langchain
 import os
-from database import store_chat_interaction, retrieve_chat_history, update_haiku_lines, retrieve_haiku
+from database import store_chat_interaction, retrieve_chats, update_haiku_lines, retrieve_haiku
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
 from langchain.agents import create_tool_calling_agent, AgentExecutor
+from model import UpdateHaiku
 from pydantic import BaseModel, Field
 from typing import List
 from workflow import start_workflow
@@ -41,11 +42,6 @@ Pass the haiku as a list of strings to the tool.
 """
 
 
-class HaikuUpdate(BaseModel):
-    haiku: List[str] = Field(description="Haiku lines as list of strings")
-    haiku_id: str | int = Field(description="Haiku ID as string")
-
-
 @tool
 def start_media_generation(haiku_id: str | int) -> str:
     """Start haiku media generation from haiku."""
@@ -55,7 +51,7 @@ def start_media_generation(haiku_id: str | int) -> str:
     start_workflow(str(haiku_id))
     return f"Haiku media generation started"
 
-@tool("update_haiku", args_schema=HaikuUpdate)
+@tool("update_haiku", args_schema=UpdateHaiku)
 def update_haiku(haiku: List[str], haiku_id: str | int) -> str:
     """Update haiku in database."""
     if len(haiku) != 3:
@@ -86,9 +82,9 @@ agent_model = create_agent()
 def process_message(haiku_id: str, user_message: str):
     store_chat_interaction(haiku_id, user_message, 'human')
 
-    chat_history = retrieve_chat_history(haiku_id)
+    chats = retrieve_chats(haiku_id)
     messages = []
-    for chat in chat_history:
+    for chat in chats:
         messages.append((chat["role"], chat["message"]))
 
     inputs = {
