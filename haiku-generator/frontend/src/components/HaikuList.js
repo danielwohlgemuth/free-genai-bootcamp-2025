@@ -15,7 +15,7 @@ const HaikuList = () => {
       setError(null);
       try {
         const fetchedHaikus = await fetchHaikus();
-        setHaikus(fetchedHaikus);
+        setHaikus(fetchedHaikus.haikus);
       } catch (error) {
         setError('Error fetching haikus');
         console.error('Error fetching haikus:', error);

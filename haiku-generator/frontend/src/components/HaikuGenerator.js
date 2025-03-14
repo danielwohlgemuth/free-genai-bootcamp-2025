@@ -16,7 +16,7 @@ const HaikuGenerator = () => {
     const getHaiku = async () => {
       try {
         const fetchedHaiku = await fetchHaiku(haiku_id);
-        setHaiku(fetchedHaiku);
+        setHaiku(fetchedHaiku.haiku);
       } catch (error) {
         setError('Error fetching haiku');
         console.error('Error fetching haiku:', error);

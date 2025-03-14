@@ -7,8 +7,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" exact component={HaikuOverview} />
-        <Route path="/haiku/:haiku_id" component={HaikuGenerator} />
+        <Route path="/" element={<HaikuOverview />} />
+        <Route path="/haiku/:haiku_id" element={<HaikuGenerator />} />
       </Routes>
     </BrowserRouter>
   );
