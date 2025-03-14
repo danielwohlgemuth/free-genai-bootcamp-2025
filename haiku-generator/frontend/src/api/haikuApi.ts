@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// @ts-ignore
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 
 export interface Haiku {
