@@ -2,7 +2,7 @@ from agent import process_message
 from database import retrieve_chats, retrieve_haikus, retrieve_haiku, delete_haiku_db, retrieve_last_chat, insert_haiku
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from model import InteractWithChatbotRequest, InteractWithChatbotResponse, ListHaikusResponse, GetHaikuResponse, DeleteHaikuResponse
+from model import SendChatRequest, SendChatResponse, ListHaikusResponse, GetHaikuResponse, DeleteHaikuResponse
 
 
 app = FastAPI()
@@ -17,13 +17,13 @@ app.add_middleware(
 )
 
 @app.post('/chat/{haiku_id}')
-async def interact_with_chatbot(haiku_id: str, chat_message: InteractWithChatbotRequest) -> InteractWithChatbotResponse:
+async def send_chat(haiku_id: str, chat_message: SendChatRequest) -> SendChatResponse:
     if not retrieve_haiku(haiku_id):
         insert_haiku(haiku_id)
     process_message(haiku_id, chat_message.message)
     chat = retrieve_last_chat(haiku_id)
     haiku = retrieve_haiku(haiku_id)
-    return InteractWithChatbotResponse(chat=chat, haiku=haiku)
+    return SendChatResponse(chat=chat, haiku=haiku)
 
 @app.get('/haiku')
 async def list_haikus() -> ListHaikusResponse:

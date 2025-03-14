@@ -31,10 +31,10 @@ class Chat(BaseModel):
     role: str
     message: str
 
-class InteractWithChatbotRequest(BaseModel):
+class SendChatRequest(BaseModel):
     message: str
 
-class InteractWithChatbotResponse(BaseModel):
+class SendChatResponse(BaseModel):
     chat: Chat
     haiku: Haiku
 
