@@ -38,7 +38,7 @@ const HaikuGenerator = () => {
       const updatedHaiku = await sendMessage(haiku_id, message);
       setHaiku(updatedHaiku.haiku);
       setMessage('');
-      setChats([...chats, { chat_id: generateUUID(), role: 'user', message }, updatedHaiku.chat]);
+      setChats([...chats, { chat_id: generateUUID(), role: 'human', message }, updatedHaiku.chat]);
     } catch (error) {
       setError('Error sending message');
       console.error('Error sending message:', error);
