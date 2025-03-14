@@ -61,13 +61,13 @@ def retrieve_haikus()-> List[Haiku]:
     conn.close()
     return [Haiku(**dict(row)) for row in haikus]
 
-def retrieve_haiku(haiku_id: str) -> Haiku | Empty:
+def retrieve_haiku(haiku_id: str) -> Haiku:
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM haiku WHERE haiku_id = ?', (haiku_id,))
     haiku = cursor.fetchone()
     conn.close()
-    return Haiku(**dict(haiku)) if haiku else Empty()
+    return Haiku(**dict(haiku)) if haiku else Haiku(haiku_id=haiku_id, status="new")
 
 def retrieve_haiku_line(haiku_id: str, line_number: int) -> str:
     conn = get_db_connection()
