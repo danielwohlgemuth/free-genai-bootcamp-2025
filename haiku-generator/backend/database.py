@@ -3,6 +3,7 @@ import sqlite3
 import uuid
 from typing import List
 from dotenv import load_dotenv
+from model import Empty, Haiku, Chat
 
 
 load_dotenv()
@@ -52,45 +53,45 @@ def create_tables():
 
 create_tables()
 
-def retrieve_haikus():
+def retrieve_haikus()-> List[Haiku]:
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM haiku')
     haikus = cursor.fetchall()
     conn.close()
-    return [dict(row) for row in haikus]
+    return [Haiku(**dict(row)) for row in haikus]
 
-def retrieve_haiku(haiku_id: str):
+def retrieve_haiku(haiku_id: str) -> Haiku | Empty:
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM haiku WHERE haiku_id = ?', (haiku_id,))
     haiku = cursor.fetchone()
     conn.close()
-    return dict(haiku) if haiku else {}
+    return Haiku(**dict(haiku)) if haiku else Empty()
 
-def retrieve_haiku_line(haiku_id: str, line_number: int):
+def retrieve_haiku_line(haiku_id: str, line_number: int) -> str:
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(f'SELECT haiku_line_en_{line_number} FROM haiku WHERE haiku_id = ?', (haiku_id,))
     line = cursor.fetchone()
     conn.close()
-    return line[0] if line else None
+    return line[0] if line else ''
 
-def retrieve_chats(haiku_id: str):
+def retrieve_chats(haiku_id: str) -> List[Chat]:
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM chat WHERE haiku_id = ? ORDER BY created_at ASC', (haiku_id,))
     history = cursor.fetchall()
     conn.close()
-    return [dict(row) for row in history]
+    return [Chat(**dict(row)) for row in history]
 
-def retrieve_last_chat(haiku_id: str):
+def retrieve_last_chat(haiku_id: str) -> Chat | Empty:
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM chat WHERE haiku_id = ? ORDER BY created_at DESC LIMIT 1', (haiku_id,))
     last_chat = cursor.fetchone()
     conn.close()
-    return dict(last_chat) if last_chat else {}
+    return Chat(**dict(last_chat)) if last_chat else Empty()
 
 def insert_haiku(haiku_id: str):
     conn = get_db_connection()

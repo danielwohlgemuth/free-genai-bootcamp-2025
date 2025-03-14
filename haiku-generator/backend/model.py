@@ -1,7 +1,9 @@
 from pydantic import BaseModel
 from typing import Optional, List
-from pydantic import Field
+from pydantic import Field, ConfigDict
 
+class Empty(BaseModel):
+    model_config = ConfigDict(extra="forbid")
 
 class Haiku(BaseModel):
     haiku_id: str
@@ -40,7 +42,7 @@ class ListHaikusResponse(BaseModel):
     haikus: List[Haiku]
 
 class GetHaikuResponse(BaseModel):
-    haiku: Haiku
+    haiku: Haiku | Empty
     chats: List[Chat]
 
 class DeleteHaikuResponse(BaseModel):
