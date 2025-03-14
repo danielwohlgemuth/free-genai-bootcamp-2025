@@ -21,15 +21,17 @@ The Haiku Generator frontend consists of two main pages:
 
 ### Haiku Overview Page
 This page displays a list of haikus with the following features:
+- **Route**: Served at `/haiku`.
 - **Haiku ID**: Unique identifier for each haiku.
 - **Haiku**: Displays the combined English haiku lines.
 - **Status**: Indicates whether the haiku generation has failed, along with a count of populated fields versus total fields.
 - **Data Fetching**: Utilizes the `GET /haiku` endpoint to retrieve haiku data.
 - **Delete Functionality**: Each haiku has a delete button that triggers the `DELETE /haiku/{haiku_id}` endpoint.
-- **Create Haiku Button**: Redirects to the generator page with a new haiku ID.
+- **Create Haiku Button**: Redirects to the generator page with a new `haiku_id`, generated using `uuidv4`.
 
 ### Haiku Generator Page
 This page features a chat interface for generating haikus:
+- **Route**: Served at `/haiku/{haiku_id}`.
 - **Message Sending**: Each message is sent to the backend using the `POST /chat/{haiku_id}` endpoint, with a loading indicator displayed during processing.
 - **Chat Disablement**: The chat interface is disabled once the backend returns a haiku status that is not "new".
 - **Summary Section**: Conditionally displays available haiku information, including:
