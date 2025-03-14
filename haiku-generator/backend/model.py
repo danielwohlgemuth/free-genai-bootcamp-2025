@@ -26,7 +26,7 @@ class Haiku(BaseModel):
     audio_link_3: Optional[str] = None
 
 class Chat(BaseModel):
-    chat_id: int
+    chat_id: str
     haiku_id: str
     role: str
     message: str

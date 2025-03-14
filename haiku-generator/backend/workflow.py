@@ -27,9 +27,9 @@ def initialize_haiku(state: State):
     haiku = retrieve_haiku(state["haiku_id"])
     set_status(state["haiku_id"], "in_progress", "")
     return {
-        "haiku_line_en_1": haiku["haiku_line_en_1"],
-        "haiku_line_en_2": haiku["haiku_line_en_2"],
-        "haiku_line_en_3": haiku["haiku_line_en_3"],
+        "haiku_line_en_1": haiku.haiku_line_en_1,
+        "haiku_line_en_2": haiku.haiku_line_en_2,
+        "haiku_line_en_3": haiku.haiku_line_en_3,
     }
 
 def generate_image_description_1(state: State):

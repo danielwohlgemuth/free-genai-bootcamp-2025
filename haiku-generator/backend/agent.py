@@ -46,7 +46,7 @@ Pass the haiku as a list of strings to the tool.
 def start_media_generation(haiku_id: str | int) -> str:
     """Start haiku media generation from haiku."""
     haiku = retrieve_haiku(str(haiku_id))
-    if not haiku.get('haiku_line_en_1') or not haiku.get('haiku_line_en_2') or not haiku.get('haiku_line_en_3'):
+    if not haiku.haiku_line_en_1 or not haiku.haiku_line_en_2 or not haiku.haiku_line_en_3:
         return f"Haiku not available for media generation. Please save a haiku first."    
     start_workflow(str(haiku_id))
     return f"Haiku media generation started"
@@ -85,7 +85,7 @@ def process_message(haiku_id: str, user_message: str):
     chats = retrieve_chats(haiku_id)
     messages = []
     for chat in chats:
-        messages.append((chat["role"], chat["message"]))
+        messages.append((chat.role, chat.message))
 
     inputs = {
         "messages": messages,
