@@ -1,17 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import LoadingIndicator from './LoadingIndicator';
+import ErrorMessage from './ErrorMessage';
 import { generateUUID } from '../utils/uuid';
 
 const HaikuList = () => {
   const [haikus, setHaikus] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchHaikus = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const response = await axios.get('/haiku');
         setHaikus(response.data.haikus);
       } catch (error) {
+        setError('Error fetching haikus');
         console.error('Error fetching haikus:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -23,6 +32,7 @@ const HaikuList = () => {
       await axios.delete(`/haiku/${haiku_id}`);
       setHaikus(haikus.filter(haiku => haiku.haiku_id !== haiku_id));
     } catch (error) {
+      setError('Error deleting haiku');
       console.error('Error deleting haiku:', error);
     }
   };
@@ -31,6 +41,9 @@ const HaikuList = () => {
     const newHaikuId = generateUUID();
     window.location.href = `/haiku/${newHaikuId}`;
   };
+
+  if (loading) return <LoadingIndicator />;
+  if (error) return <ErrorMessage message={error} />;
 
   return (
     <div>
