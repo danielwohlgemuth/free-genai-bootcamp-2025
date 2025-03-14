@@ -7,7 +7,7 @@ export const fetchHaikus = async () => {
   return response.data.haikus;
 };
 
-export const fetchHaikuById = async (haiku_id) => {
+export const fetchHaiku = async (haiku_id) => {
   const response = await axios.get(`${API_URL}/haiku/${haiku_id}`);
   return response.data.haiku;
 };

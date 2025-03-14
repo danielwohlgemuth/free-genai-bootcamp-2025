@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import { fetchHaiku, sendMessage } from '../api/haikuApi';
 import SummaryDisplay from './SummaryDisplay';
 import LoadingIndicator from './LoadingIndicator';
 import ErrorMessage from './ErrorMessage';
@@ -13,10 +13,10 @@ const HaikuGenerator = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchHaiku = async () => {
+    const getHaiku = async () => {
       try {
-        const response = await axios.get(`/haiku/${haiku_id}`);
-        setHaiku(response.data.haiku);
+        const fetchedHaiku = await fetchHaiku(haiku_id);
+        setHaiku(fetchedHaiku);
       } catch (error) {
         setError('Error fetching haiku');
         console.error('Error fetching haiku:', error);
@@ -25,15 +25,15 @@ const HaikuGenerator = () => {
       }
     };
 
-    fetchHaiku();
+    getHaiku();
   }, [haiku_id]);
 
   const handleSendMessage = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`/chat/${haiku_id}`, { message });
-      setHaiku(response.data.haiku);
+      const updatedHaiku = await sendMessage(haiku_id, message);
+      setHaiku(updatedHaiku);
       setMessage('');
     } catch (error) {
       setError('Error sending message');
