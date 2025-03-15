@@ -88,6 +88,13 @@ const HaikuList = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {haikus.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={3} align="center">
+                  No haikus found
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
