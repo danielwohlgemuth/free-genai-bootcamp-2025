@@ -40,4 +40,4 @@ The application will be available at `http://localhost:3000`.
 - [React](https://react.dev/) - The web framework used
 - [Axios](https://axios-http.com/) - For making HTTP requests
 - [UUID](https://www.npmjs.com/package/uuid) - For generating unique identifiers
-- [TailwindCSS](https://tailwindcss.com/) - For styling
+- [Material UI](https://mui.com/) - For styling

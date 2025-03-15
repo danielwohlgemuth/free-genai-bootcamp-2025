@@ -25,6 +25,28 @@ Whispers of the past
 - There aren't a lot of options when it comes to generating Japanese voice. I ended up using the `coqui-tts` library and the `XTTS-v2` model with reasonable results.
 - It helps creating small proof-of-concept projects to test new technologies and find the configuration that works best before including it in a larger project, where it gets more complex to debug.
 
+## Frontend
+
+[Frontend Tech Specs](Frontend-Tech-Specs.md)
+
+[Frontend Setup](frontend/README.md)
+
+Haiku Overview
+
+![haiku overview](assets/haiku-overview.png)
+
+Haiku Generator - New
+
+![haiku generator new](assets/haiku-generator-new.png)
+
+Haiku Generator - Completed
+
+![haiku generator completed](assets/haiku-generator-completed.png)
+
+Haiku Generator - Failed
+
+![haiku generator failed](assets/haiku-generator-failed.png)
+
 ## Backend
 
 [Backend Tech Specs](Backend-Tech-Specs.md)
