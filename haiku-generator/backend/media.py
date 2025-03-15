@@ -39,7 +39,7 @@ def generate_image(haiku_id: str, description: str, image_number: int):
     image_bytes_length = len(image_bytes.getvalue())
     image_bytes.seek(0)
     upload_file(image_bytes, image_bytes_length, file_path)
-    update_haiku_link(haiku_id, image_link=file_path, number=image_number)
+    update_haiku_link(haiku_id, image_number, image_link=file_path)
     return file_path
 
 def generate_audio(haiku_id: str, text: str, audio_number: int):
@@ -57,7 +57,7 @@ def generate_audio(haiku_id: str, text: str, audio_number: int):
             audio_content_length = len(audio_content.getvalue())
             audio_content.seek(0)
             upload_file(audio_content, audio_content_length, storage_file_path)
-            update_haiku_link(haiku_id, audio_link=storage_file_path, number=audio_number)
+            update_haiku_link(haiku_id, audio_number, audio_link=storage_file_path)
         return storage_file_path
     except Exception as e:
         print(f"Error generating audio: {e}")

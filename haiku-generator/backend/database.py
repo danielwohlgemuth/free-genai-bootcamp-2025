@@ -123,12 +123,12 @@ def update_translation(haiku_id: str, translated_haiku: str, line_number: int):
     conn.commit()
     conn.close()
 
-def update_haiku_link(haiku_id: str, image_link: str = None, audio_link: str = None, number: int = None):
+def update_haiku_link(haiku_id: str, number: int, image_link: str = None, audio_link: str = None):
     conn = get_db_connection()
     cursor = conn.cursor()
-    if number is not None:
+    if image_link is not None:
         cursor.execute(f'UPDATE haiku SET image_link_{number} = ? WHERE haiku_id = ?', (image_link, haiku_id))
-    if number is not None:
+    if audio_link is not None:
         cursor.execute(f'UPDATE haiku SET audio_link_{number} = ? WHERE haiku_id = ?', (audio_link, haiku_id))
     conn.commit()
     conn.close()
