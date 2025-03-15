@@ -34,22 +34,23 @@ A haiku is a traditional Japanese poem with the following format:
 
 The haiku should be in English.
 
-If the user provides a haiku or you generate one, save it in the database.
-Once the user confirms that the haiku is correct, start the media generation process.
+If the user provides a haiku or you generate one, save it to the database.
+Once the user confirms that the haiku is good, generate the media.
+Once media is generated, the interaction is complete. Don't ask for more input.
 
 Pass this haiku id to the tools: {haiku_id}. The haiku id is a string and is for internal use only. Don't expose it to the user.
-Pass the haiku as a list of strings to the tool.
+Pass the haiku as a list of three strings to the tool.
 """
 
 
 @tool
-def start_media_generation(haiku_id: str | int) -> str:
-    """Start haiku media generation from haiku."""
+def generate_media(haiku_id: str | int) -> str:
+    """Generate haiku media."""
     haiku = retrieve_haiku(str(haiku_id))
     if not haiku.haiku_line_en_1 or not haiku.haiku_line_en_2 or not haiku.haiku_line_en_3:
         return f"Haiku not available for media generation. Please save a haiku first."    
     start_workflow(str(haiku_id))
-    return f"Haiku media generation started"
+    return f"Media generated"
 
 @tool("update_haiku", args_schema=UpdateHaiku)
 def update_haiku(haiku: List[str], haiku_id: str | int) -> str:
@@ -60,7 +61,7 @@ def update_haiku(haiku: List[str], haiku_id: str | int) -> str:
     return "Haiku updated in database"
 
 def get_tools():
-    return [update_haiku, start_media_generation]
+    return [update_haiku, generate_media]
 
 def get_tool_names():
     return [tool.name for tool in get_tools()]
