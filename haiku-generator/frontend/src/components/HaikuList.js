@@ -81,7 +81,7 @@ const HaikuList = () => {
                   </Link>
                 </TableCell>
                 <TableCell align="center">
-                  <Chip label={haiku.status} variant="outlined" />
+                  <Chip label={haiku.status} variant="outlined" color={haiku.status === 'new' ? 'primary' : haiku.status === 'failed' ? 'error' : 'success'} />
                 </TableCell>
                 <TableCell align="center">
                   <Button onClick={() => handleDelete(haiku.haiku_id)}>🗑️</Button>
