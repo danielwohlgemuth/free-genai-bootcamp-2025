@@ -11,14 +11,18 @@ const AudioPlayer = ({ audioLink }) => {
   }, [audio]);
 
   const handlePlay = () => {
-    if (audio) {
+    if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
+    } else {
+      let currentAudio = audio;
+      if (!currentAudio) {
+        currentAudio = new Audio(audioLink);
+        setAudio(currentAudio);
+      }
+      currentAudio.play();
+      setIsPlaying(true);
     }
-    const newAudio = new Audio(audioLink);
-    newAudio.play();
-    setAudio(newAudio);
-    setIsPlaying(true);
   };
 
   return (
