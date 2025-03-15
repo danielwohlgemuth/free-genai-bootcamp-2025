@@ -5,6 +5,7 @@ import SummaryDisplay from './SummaryDisplay';
 import LoadingIndicator from './LoadingIndicator';
 import ErrorMessage from './ErrorMessage';
 import { generateUUID } from '../utils/uuid';
+import { Container, Paper, Button, Box, Typography, Breadcrumbs, Link, TextField, List, ListItem, ListItemText, ListItemIcon, Divider } from '@mui/material';
 
 const HaikuGenerator = () => {
   const { haiku_id } = useParams();
@@ -51,27 +52,53 @@ const HaikuGenerator = () => {
   if (error) return <ErrorMessage message={error} />;
 
   return (
-    <div>
-      <h1>Haiku Generator</h1>
+    <Container maxWidth="sm">
+      <Breadcrumbs aria-label="breadcrumb" sx={{ my: 2 }}>
+        <Link underline="hover" color="inherit" href="/">
+          Overview
+        </Link>
+        <Typography variant="h3" component="h2">
+          Haiku Generator
+        </Typography>
+      </Breadcrumbs>
+
       <SummaryDisplay haiku={haiku} />
-      <ul>
-        {chats.map(chat => (
-          <li key={chat.chat_id}>
-            <strong>{chat.role}</strong>: {chat.message}
-          </li>
-        ))}
-      </ul>
-      <input
-        type="text"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-        placeholder="Type your message here..."
-      />
-      <button onClick={handleSendMessage} disabled={loading}>
-        {loading ? 'Sending...' : 'Send'}
-      </button>
-    </div>
+
+      <Paper sx={{ my: 2 }}>
+        <List dense={true}>
+          {chats.map(chat => (
+            <div key={chat.chat_id}>
+              <ListItem>
+                {chat.role === 'ai' && <ListItemIcon>🤖</ListItemIcon>}
+                <ListItemText
+                  sx={{ textAlign: chat.role === 'human' ? 'right' : 'left' }}
+                  primary={chat.message}
+                />
+              </ListItem>
+              <Divider variant="inset" component="li" />
+            </div>
+          ))}
+        </List>
+
+        <Box sx={{ mx: 2, pb: 2, pt: 1, display: 'flex', gap: 2 }}>
+          <TextField
+            id="outlined-basic"
+            label="Message"
+            variant="outlined"
+            size="small"
+            fullWidth
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            placeholder="Type your message here..."
+          />
+
+          <Button onClick={handleSendMessage} variant="contained" disabled={loading}>
+            {loading ? 'Sending...' : 'Send '}
+          </Button>
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 
