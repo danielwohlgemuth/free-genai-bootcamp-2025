@@ -1,14 +1,19 @@
 import React from 'react';
 import AudioPlayer from './AudioPlayer';
-import { Chip, Paper, Grid2, Box, Divider } from '@mui/material';
+import { Chip, Paper, Grid2, Box, Divider, Button } from '@mui/material';
 
 const STORAGE_URL = process.env.REACT_APP_STORAGE_URL || 'http://localhost:9000/haiku';
 
-const SummaryDisplay = ({ haiku }) => {
+const SummaryDisplay = ({ haiku, loading, generateMedia }) => {
   return (
     <Paper>
       <Box sx={{ p: 2 }}>
-        <div>Status: <Chip label={haiku.status} variant="outlined" /></div>
+        <div>
+          Status: <Chip label={haiku.status} variant="outlined" />
+          {haiku.status === 'failed' && (
+            <Button variant="outlined" onClick={generateMedia} sx={{ ml: 1 }} disabled={loading}>Retry</Button>
+          )}
+        </div>
         {haiku.error_message && (
           <>
             <p>Error: {haiku.error_message}</p>

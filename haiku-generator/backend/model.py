@@ -46,6 +46,9 @@ class GetHaikuResponse(BaseModel):
     haiku: Haiku
     chats: List[Chat]
 
+class GenerateMediaResponse(BaseModel):
+    haiku: Haiku
+
 class DeleteHaikuResponse(BaseModel):
     message: str
 

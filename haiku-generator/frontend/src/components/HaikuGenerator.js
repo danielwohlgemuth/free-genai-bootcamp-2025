@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
-import { fetchHaiku, sendMessage } from '../api/haikuApi';
+import { fetchHaiku, sendMessage, generateMedia } from '../api/haikuApi';
 import SummaryDisplay from './SummaryDisplay';
 import LoadingIndicator from './LoadingIndicator';
 import ErrorMessage from './ErrorMessage';
@@ -49,6 +49,20 @@ const HaikuGenerator = () => {
     }
   };
 
+  const handleGenerateMedia = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedHaiku = await generateMedia(haiku_id);
+      setHaiku(updatedHaiku.haiku);
+    } catch (error) {
+      setError('Error generating media');
+      console.error('Error generating media:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loadingPage) return <LoadingIndicator />;
 
   return (
@@ -62,7 +76,7 @@ const HaikuGenerator = () => {
         </Typography>
       </Breadcrumbs>
 
-      <SummaryDisplay haiku={haiku} />
+      <SummaryDisplay haiku={haiku} loading={loading} generateMedia={handleGenerateMedia} />
 
       {error && <ErrorMessage message={error} />}
 

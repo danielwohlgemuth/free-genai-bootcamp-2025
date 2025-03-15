@@ -2,7 +2,8 @@ from agent import process_message
 from database import retrieve_chats, retrieve_haikus, retrieve_haiku, delete_haiku_db, retrieve_last_chat, insert_haiku
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from model import SendChatRequest, SendChatResponse, ListHaikusResponse, GetHaikuResponse, DeleteHaikuResponse
+from model import SendChatRequest, SendChatResponse, ListHaikusResponse, GetHaikuResponse, DeleteHaikuResponse, GenerateMediaResponse
+from workflow import start_workflow
 
 
 app = FastAPI()
@@ -37,6 +38,16 @@ async def get_haiku(haiku_id: str) -> GetHaikuResponse:
         haiku.error_message = ""
     chats = retrieve_chats(haiku_id)
     return GetHaikuResponse(haiku=haiku, chats=chats)
+
+@app.post('/haiku/{haiku_id}')
+async def generate_media(haiku_id: str) -> GenerateMediaResponse:
+    haiku = retrieve_haiku(haiku_id)
+    if haiku.error_message == "Haiku not found" or haiku.status != "failed":
+        haiku.error_message = ""
+    else:
+        start_workflow(haiku_id)
+        haiku = retrieve_haiku(haiku_id)
+    return GenerateMediaResponse(haiku=haiku)
 
 @app.delete('/haiku/{haiku_id}')
 async def delete_haiku(haiku_id: str) -> DeleteHaikuResponse:

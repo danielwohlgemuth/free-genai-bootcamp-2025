@@ -23,6 +23,10 @@ export interface Haiku {
   audio_link_3: string;
 }
 
+export interface GenerateMediaResponse {
+  haiku: Haiku;
+}
+
 export interface FetchHaikusResponse {
   haikus: Haiku[];
 }
@@ -57,6 +61,11 @@ export const fetchHaiku = async (haiku_id: string): Promise<FetchHaikuResponse> 
 
 export const sendMessage = async (haiku_id: string, message: string): Promise<SendMessageResponse> => {
   const response = await axios.post(`${API_URL}/chat/${haiku_id}`, { message });
+  return response.data;
+};
+
+export const generateMedia = async (haiku_id: string): Promise<GenerateMediaResponse> => {
+  const response = await axios.post(`${API_URL}/haiku/${haiku_id}`);
   return response.data;
 };
 
