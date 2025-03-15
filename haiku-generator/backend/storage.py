@@ -1,4 +1,5 @@
 import io
+import json
 import os
 from dotenv import load_dotenv
 from minio import Minio
@@ -18,6 +19,18 @@ def create_bucket_if_not_exists():
     found = minio_client.bucket_exists(BUCKET_NAME)
     if not found:
         minio_client.make_bucket(BUCKET_NAME)
+        policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Effect": "Allow",
+                    "Principal": {"AWS": "*"},
+                    "Action": "s3:GetObject",
+                    "Resource": f"arn:aws:s3:::{BUCKET_NAME}/*",
+                },
+            ],
+        }
+        minio_client.set_bucket_policy(BUCKET_NAME, json.dumps(policy))
 
 
 create_bucket_if_not_exists()
