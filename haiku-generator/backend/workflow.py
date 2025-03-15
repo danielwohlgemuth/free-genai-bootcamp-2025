@@ -27,24 +27,40 @@ class State(TypedDict):
 def initialize_haiku(state: State):
     haiku = retrieve_haiku(state["haiku_id"])
     set_status(state["haiku_id"], "in_progress", "")
-    return {
-        "haiku_line_en_1": haiku.haiku_line_en_1,
-        "haiku_line_en_2": haiku.haiku_line_en_2,
-        "haiku_line_en_3": haiku.haiku_line_en_3,
-        "topic": haiku.topic,
-        "image_description_1": haiku.image_description_1,
-        "image_description_2": haiku.image_description_2,
-        "image_description_3": haiku.image_description_3,
-        "image_link_1": haiku.image_link_1,
-        "image_link_2": haiku.image_link_2,
-        "image_link_3": haiku.image_link_3,
-        "haiku_line_ja_1": haiku.haiku_line_ja_1,
-        "haiku_line_ja_2": haiku.haiku_line_ja_2,
-        "haiku_line_ja_3": haiku.haiku_line_ja_3,
-        "audio_link_1": haiku.audio_link_1,
-        "audio_link_2": haiku.audio_link_2,
-        "audio_link_3": haiku.audio_link_3
-    }
+    new_state = {}
+    if haiku.haiku_line_en_1:
+        new_state["haiku_line_en_1"] = haiku.haiku_line_en_1
+    if haiku.haiku_line_en_2:
+        new_state["haiku_line_en_2"] = haiku.haiku_line_en_2
+    if haiku.haiku_line_en_3:
+        new_state["haiku_line_en_3"] = haiku.haiku_line_en_3
+    if haiku.topic:
+        new_state["topic"] = haiku.topic
+    if haiku.image_description_1:
+        new_state["image_description_1"] = haiku.image_description_1
+    if haiku.image_description_2:
+        new_state["image_description_2"] = haiku.image_description_2
+    if haiku.image_description_3:
+        new_state["image_description_3"] = haiku.image_description_3
+    if haiku.image_link_1:
+        new_state["image_link_1"] = haiku.image_link_1
+    if haiku.image_link_2:
+        new_state["image_link_2"] = haiku.image_link_2
+    if haiku.image_link_3:
+        new_state["image_link_3"] = haiku.image_link_3
+    if haiku.haiku_line_ja_1:
+        new_state["haiku_line_ja_1"] = haiku.haiku_line_ja_1
+    if haiku.haiku_line_ja_2:
+        new_state["haiku_line_ja_2"] = haiku.haiku_line_ja_2
+    if haiku.haiku_line_ja_3:
+        new_state["haiku_line_ja_3"] = haiku.haiku_line_ja_3
+    if haiku.audio_link_1:
+        new_state["audio_link_1"] = haiku.audio_link_1
+    if haiku.audio_link_2:
+        new_state["audio_link_2"] = haiku.audio_link_2
+    if haiku.audio_link_3:
+        new_state["audio_link_3"] = haiku.audio_link_3
+    return new_state
 
 def generate_image_description_1(state: State):
     if state.get("image_description_1"):
