@@ -14,12 +14,6 @@ const SummaryDisplay = ({ haiku, loading, generateMedia }) => {
             <Button variant="outlined" onClick={generateMedia} sx={{ ml: 1 }} disabled={loading}>Retry</Button>
           )}
         </div>
-        {haiku.error_message && (
-          <>
-            <p>Error: {haiku.error_message}</p>
-            <Divider />
-          </>
-        )}
 
         {haiku.topic && (
           <p>Topic: {haiku.topic}</p>
