@@ -57,7 +57,7 @@ export const fetchHaiku = async (haiku_id: string): Promise<FetchHaikuResponse> 
 };
 
 export const sendMessage = async (haiku_id: string, message: string): Promise<SendMessageResponse> => {
-  const response = await axios.post(`${API_URL}/chat/${haiku_id}`, { message }, { timeout: TIMEOUT, signal: AbortSignal.timeout(TIMEOUT) });
+  const response = await axios.post(`${API_URL}/chat/${haiku_id}`, { message }, { timeout: TIMEOUT });
   return response.data;
 };
 
