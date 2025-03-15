@@ -61,9 +61,11 @@ const HaikuGenerator = () => {
           </li>
         ))}
       </ul>
-      <textarea
+      <input
+        type="text"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
         placeholder="Type your message here..."
       />
       <button onClick={handleSendMessage} disabled={loading}>
