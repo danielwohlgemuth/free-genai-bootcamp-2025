@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
-const TIMEOUT = 10000;
 
 export interface Haiku {
   haiku_id: string;
@@ -57,7 +56,7 @@ export const fetchHaiku = async (haiku_id: string): Promise<FetchHaikuResponse> 
 };
 
 export const sendMessage = async (haiku_id: string, message: string): Promise<SendMessageResponse> => {
-  const response = await axios.post(`${API_URL}/chat/${haiku_id}`, { message }, { timeout: TIMEOUT });
+  const response = await axios.post(`${API_URL}/chat/${haiku_id}`, { message });
   return response.data;
 };
 
