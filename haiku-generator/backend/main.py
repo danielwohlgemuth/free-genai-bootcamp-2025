@@ -33,6 +33,8 @@ async def list_haikus() -> ListHaikusResponse:
 @app.get('/haiku/{haiku_id}')
 async def get_haiku(haiku_id: str) -> GetHaikuResponse:
     haiku = retrieve_haiku(haiku_id)
+    if haiku.error_message == "Haiku not found":
+        haiku.error_message = ""
     chats = retrieve_chats(haiku_id)
     return GetHaikuResponse(haiku=haiku, chats=chats)
 
