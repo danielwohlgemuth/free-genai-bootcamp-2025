@@ -23,6 +23,7 @@ def create_tables():
         haiku_id TEXT PRIMARY KEY,
         status TEXT DEFAULT "new",
         error_message TEXT,
+        topic TEXT,
         haiku_line_en_1 TEXT,
         haiku_line_en_2 TEXT,
         haiku_line_en_3 TEXT,
@@ -102,10 +103,10 @@ def insert_haiku(haiku_id: str):
     conn.commit()
     conn.close()
 
-def update_haiku_lines(haiku_id: str, haiku: List[str]):
+def update_haiku_lines(haiku_id: str, haiku: List[str], topic: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('UPDATE haiku SET haiku_line_en_1 = ?, haiku_line_en_2 = ?, haiku_line_en_3 = ? WHERE haiku_id = ?', (haiku[0], haiku[1], haiku[2], haiku_id))
+    cursor.execute('UPDATE haiku SET haiku_line_en_1 = ?, haiku_line_en_2 = ?, haiku_line_en_3 = ?, topic = ? WHERE haiku_id = ?', (haiku[0], haiku[1], haiku[2], topic, haiku_id))
     conn.commit()
     conn.close()
 

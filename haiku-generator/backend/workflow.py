@@ -9,6 +9,7 @@ class State(TypedDict):
     haiku_line_en_1: str
     haiku_line_en_2: str
     haiku_line_en_3: str
+    topic: str
     image_description_1: str
     image_description_2: str
     image_description_3: str
@@ -30,22 +31,23 @@ def initialize_haiku(state: State):
         "haiku_line_en_1": haiku.haiku_line_en_1,
         "haiku_line_en_2": haiku.haiku_line_en_2,
         "haiku_line_en_3": haiku.haiku_line_en_3,
+        "topic": haiku.topic
     }
 
 def generate_image_description_1(state: State):
-    description = generate_image_description(state["haiku_id"], state["haiku_line_en_1"], 1)
+    description = generate_image_description(state["haiku_id"], state["topic"], state["haiku_line_en_1"], 1)
     return {
         "image_description_1": description
     }
 
 def generate_image_description_2(state: State):
-    description = generate_image_description(state["haiku_id"], state["haiku_line_en_2"], 2)
+    description = generate_image_description(state["haiku_id"], state["topic"], state["haiku_line_en_2"], 2)
     return {
         "image_description_2": description
     }
 
 def generate_image_description_3(state: State):
-    description = generate_image_description(state["haiku_id"], state["haiku_line_en_3"], 3)
+    description = generate_image_description(state["haiku_id"], state["topic"], state["haiku_line_en_3"], 3)
     return {
         "image_description_3": description
     }
@@ -69,19 +71,19 @@ def generate_image_3(state: State):
     }
 
 def generate_translation_1(state: State):
-    translation = generate_translation(state["haiku_id"], state["haiku_line_en_1"], 1)
+    translation = generate_translation(state["haiku_id"], state["topic"], state["haiku_line_en_1"], 1)
     return {
         "haiku_line_ja_1": translation
     }
 
 def generate_translation_2(state: State):
-    translation = generate_translation(state["haiku_id"], state["haiku_line_en_2"], 2)
+    translation = generate_translation(state["haiku_id"], state["topic"], state["haiku_line_en_2"], 2)
     return {
         "haiku_line_ja_2": translation
     }
 
 def generate_translation_3(state: State):
-    translation = generate_translation(state["haiku_id"], state["haiku_line_en_3"], 3)
+    translation = generate_translation(state["haiku_id"], state["topic"], state["haiku_line_en_3"], 3)
     return {
         "haiku_line_ja_3": translation
     }

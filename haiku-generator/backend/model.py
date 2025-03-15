@@ -9,6 +9,7 @@ class Haiku(BaseModel):
     haiku_id: str
     status: str
     error_message: Optional[str] = None
+    topic: Optional[str] = None
     haiku_line_en_1: Optional[str] = None
     haiku_line_en_2: Optional[str] = None
     haiku_line_en_3: Optional[str] = None
@@ -51,3 +52,4 @@ class DeleteHaikuResponse(BaseModel):
 class UpdateHaiku(BaseModel):
     haiku: List[str] = Field(description="Haiku lines as list of strings")
     haiku_id: str | int = Field(description="Haiku ID as string")
+    topic: str = Field(description="Haiku topic as string")

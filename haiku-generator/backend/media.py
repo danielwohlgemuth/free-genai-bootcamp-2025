@@ -63,21 +63,23 @@ def generate_audio(haiku_id: str, text: str, audio_number: int):
         print(f"Error generating audio: {e}")
         return None
 
-def generate_image_description(haiku_id: str, haiku_line: str, line_number: int):
+def generate_image_description(haiku_id: str, topic: str, haiku_line: str, line_number: int):
     prompt = f"""Generate a high-contrast image with a plain background.
     The subject should be clear and well-defined, avoiding visual noise or excessive details.
     Colors should be bold and distinct to ensure strong visibility.
     Do not include any text in the image.
     Only provide the description needed to generate the image. No additional text.
+    Topic: {topic}
     Sentence: {haiku_line}"""
     description = model.invoke(prompt)
     update_image_description(haiku_id, description, line_number)
     return description
 
-def generate_translation(haiku_id: str, haiku_line: str, line_number: int):
+def generate_translation(haiku_id: str, topic: str, haiku_line: str, line_number: int):
     prompt = f"""Translate the sentence into Japanese
     If the sentence cannot be translated directly, provide the closest equivalent translation.
     Only return the Japanese translation. Do not add any additional text.
+    Topic: {topic}
     Sentence: {haiku_line}"""
     translation = model.invoke(prompt)
     update_translation(haiku_id, translation, line_number)

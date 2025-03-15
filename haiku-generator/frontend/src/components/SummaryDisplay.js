@@ -16,6 +16,10 @@ const SummaryDisplay = ({ haiku }) => {
           </>
         )}
 
+        {haiku.topic && (
+          <p>Topic: {haiku.topic}</p>
+        )}
+
         {haiku.haiku_line_en_1 && haiku.haiku_line_en_2 && haiku.haiku_line_en_3 && (
           <>
             <p style={{ textAlign: 'center' }}>{haiku.haiku_line_en_1}</p>
