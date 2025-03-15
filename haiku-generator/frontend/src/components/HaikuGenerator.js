@@ -12,7 +12,8 @@ const HaikuGenerator = () => {
   const [message, setMessage] = useState('');
   const [haiku, setHaiku] = useState({});
   const [chats, setChats] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingPage, setLoadingPage] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -25,7 +26,7 @@ const HaikuGenerator = () => {
         setError('Error fetching haiku');
         console.error('Error fetching haiku:', error);
       } finally {
-        setLoading(false);
+        setLoadingPage(false);
       }
     };
 
@@ -48,8 +49,7 @@ const HaikuGenerator = () => {
     }
   };
 
-  if (loading) return <LoadingIndicator />;
-  if (error) return <ErrorMessage message={error} />;
+  if (loadingPage) return <LoadingIndicator />;
 
   return (
     <Container maxWidth="sm">
@@ -63,6 +63,8 @@ const HaikuGenerator = () => {
       </Breadcrumbs>
 
       <SummaryDisplay haiku={haiku} />
+
+      {error && <ErrorMessage message={error} />}
 
       <Paper sx={{ my: 2 }}>
         <List dense={true}>
@@ -80,23 +82,32 @@ const HaikuGenerator = () => {
           ))}
         </List>
 
-        <Box sx={{ mx: 2, pb: 2, pt: 1, display: 'flex', gap: 2 }}>
-          <TextField
-            id="outlined-basic"
-            label="Message"
-            variant="outlined"
-            size="small"
-            fullWidth
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Type your message here..."
-          />
+        {haiku.status === 'new' && (
+          <Box sx={{ mx: 2, pb: 2, pt: 1, display: 'flex', gap: 2 }}>
+            <TextField
+              id="outlined-basic"
+              label="Message"
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder="Type your message here..."
+            />
 
-          <Button onClick={handleSendMessage} variant="contained" disabled={loading}>
-            {loading ? 'Sending...' : 'Send '}
-          </Button>
-        </Box>
+            <Button onClick={handleSendMessage} variant="contained" loading={loading}>
+              Send
+            </Button>
+          </Box>
+        )}
+        {haiku.status !== 'new' && (
+          <Box sx={{ mx: 2, pb: 2, pt: 1, display: 'flex', gap: 2, justifyContent: 'center' }}>
+            <Link underline="hover" color="inherit" href="/" sx={{ textAlign: 'center' }}>
+              Go to overview
+            </Link>
+          </Box>
+        )}
       </Paper>
     </Container>
   );
