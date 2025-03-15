@@ -15,7 +15,7 @@ const SummaryDisplay = ({ haiku }) => {
             <p>{haiku.haiku_line_en_3}</p>
           </>
         )}
-        <p>Status: {haiku.status}</p>
+        <p>Status: {haiku.status} {haiku.error_message && ` - Error: ${haiku.error_message}`}</p>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="japanese-haiku">
