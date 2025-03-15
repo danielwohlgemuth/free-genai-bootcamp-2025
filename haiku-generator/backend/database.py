@@ -67,7 +67,7 @@ def retrieve_haiku(haiku_id: str) -> Haiku:
     cursor.execute('SELECT * FROM haiku WHERE haiku_id = ?', (haiku_id,))
     haiku = cursor.fetchone()
     conn.close()
-    return Haiku(**dict(haiku)) if haiku else Haiku(haiku_id=haiku_id, status="new")
+    return Haiku(**dict(haiku)) if haiku else Haiku(haiku_id=haiku_id, status="new", error_message="Haiku not found")
 
 def retrieve_haiku_line(haiku_id: str, line_number: int) -> str:
     conn = get_db_connection()

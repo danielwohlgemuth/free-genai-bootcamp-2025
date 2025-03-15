@@ -18,7 +18,7 @@ app.add_middleware(
 
 @app.post('/chat/{haiku_id}')
 async def send_chat(haiku_id: str, chat_message: SendChatRequest) -> SendChatResponse:
-    if not retrieve_haiku(haiku_id):
+    if retrieve_haiku(haiku_id).error_message == "Haiku not found":
         insert_haiku(haiku_id)
     process_message(haiku_id, chat_message.message)
     chat = retrieve_last_chat(haiku_id)
