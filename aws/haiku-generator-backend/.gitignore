@@ -1,0 +1,5 @@
+venv
+haiku_generator.db
+__pycache__
+output.wav
+.env
