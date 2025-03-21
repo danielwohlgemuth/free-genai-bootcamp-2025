@@ -54,6 +54,10 @@ async def delete_haiku(haiku_id: str) -> DeleteHaikuResponse:
     delete_haiku_db(haiku_id)
     return DeleteHaikuResponse(message='Haiku and associated data deleted successfully')
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
