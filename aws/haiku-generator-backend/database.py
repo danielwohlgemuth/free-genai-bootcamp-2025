@@ -1,18 +1,19 @@
 import os
-import sqlite3
+import psycopg
 import uuid
 from dotenv import load_dotenv
 from model import Empty, Haiku, Chat
+from psycopg.rows import dict_row
 from typing import List
 
 
 load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL", "haiku_generator.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@hostname:5432/haiku")
 
 
 def get_db_connection():
-    conn = sqlite3.connect(DATABASE_URL)
-    conn.row_factory = sqlite3.Row
+    conn = psycopg.connect(DATABASE_URL)
+    conn.cursor_factory = dict_row
     return conn
 
 def create_tables():
