@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import delete
-from ..models.base import get_db, Base, engine
-from ..models.models import StudySession, WordReviewItem, Word, Group, WordGroup, StudyActivity
 import json
+from fastapi import APIRouter, Depends
 from pathlib import Path
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import AsyncSession
+from ..db import get_db, Base, engine
+from ..models import StudySession, WordReviewItem, Word, Group, WordGroup, StudyActivity
 
 router = APIRouter()
 

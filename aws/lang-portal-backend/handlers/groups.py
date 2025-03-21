@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 from datetime import timedelta
-from ..models.base import get_db
-from ..models.models import Group, Word, StudySession, WordReviewItem
+from ..db import get_db
+from ..models import Group, Word, StudySession, WordReviewItem
 
 router = APIRouter()
 

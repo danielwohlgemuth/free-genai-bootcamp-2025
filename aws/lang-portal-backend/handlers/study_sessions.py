@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func, select, and_
 from datetime import datetime, timedelta, UTC
 from sqlalchemy.orm import joinedload
-from ..models.base import get_db
-from ..models.models import StudySession, Word, WordReviewItem, StudyActivity, Group
+from ..db import get_db
+from ..models import StudySession, Word, WordReviewItem, StudyActivity, Group
 from pydantic import BaseModel
 
 router = APIRouter()
