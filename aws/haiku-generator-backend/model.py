@@ -1,6 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List
-from pydantic import Field, ConfigDict
 
 class Empty(BaseModel):
     model_config = ConfigDict(extra="forbid")

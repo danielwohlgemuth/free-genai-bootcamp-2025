@@ -7,7 +7,6 @@ from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from model import UpdateHaiku
-from pydantic import BaseModel, Field
 from typing import List
 from workflow import start_workflow
 

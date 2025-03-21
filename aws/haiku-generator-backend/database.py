@@ -1,9 +1,9 @@
 import os
 import sqlite3
 import uuid
-from typing import List
 from dotenv import load_dotenv
 from model import Empty, Haiku, Chat
+from typing import List
 
 
 load_dotenv()
