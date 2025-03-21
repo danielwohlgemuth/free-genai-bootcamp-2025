@@ -1,7 +1,7 @@
-from .base import Base
 from datetime import datetime, UTC
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
+from .base import Base
 
 class Word(Base):
     __tablename__ = "words"
