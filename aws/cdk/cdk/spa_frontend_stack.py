@@ -8,6 +8,7 @@ from aws_cdk import (
     aws_route53_targets as targets,
     aws_s3_deployment as s3deploy,
     CfnOutput,
+    Duration,
     RemovalPolicy
 )
 from constructs import Construct
@@ -47,7 +48,17 @@ class SPAFrontendStack(Stack):
             bucket_name=site_domain,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             removal_policy=RemovalPolicy.DESTROY,
-            auto_delete_objects=True
+            auto_delete_objects=True,
+            versioned=True,
+            lifecycle_rules=[
+                s3.LifecycleRule(
+                    noncurrent_version_expiration=Duration.days(7),
+                    abort_incomplete_multipart_upload_after=Duration.days(1),
+                    expiration=s3.Expiration(
+                        expired_object_delete_marker=True
+                    )
+                )
+            ]
         )
 
         # Create CloudFront Origin Access Identity
