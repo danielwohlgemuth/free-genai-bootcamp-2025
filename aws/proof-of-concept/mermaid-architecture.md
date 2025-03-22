@@ -13,5 +13,5 @@ architecture-beta
     frontend:R --> L:backend
     backend:B --> T:database
     backend:B --> R:storage
-    web:R --> L:storage
+    web:B --> L:storage
 ```
