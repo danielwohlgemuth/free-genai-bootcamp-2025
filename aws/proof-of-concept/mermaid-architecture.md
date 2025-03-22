@@ -1,3 +1,6 @@
+# Mermaid Diagrams
+
+## Architecture
 
 ```mermaid
 architecture-beta
@@ -10,8 +13,27 @@ architecture-beta
     service storage(disk)[Storage] in aws
 
     web:R --> L:frontend
-    frontend:R --> L:backend
+    frontend:B --> L:backend
     backend:B --> T:database
     backend:B --> R:storage
     web:B --> L:storage
+```
+
+## Flowchart
+
+```mermaid
+flowchart LR
+    user@{ label: "👤\nUser" }
+    frontend@{ label: "🖥️\nFrontend" }
+    backend@{ label: "🖥️\nBackend" }
+    database@{ label: "🗄️\nDatabase" }
+    storage@{ label: "📂\nStorage"}
+
+    user --> frontend
+    user --> storage
+    subgraph "☁️ AWS"
+        frontend --> backend
+        backend --> database
+        backend --> storage
+    end
 ```
