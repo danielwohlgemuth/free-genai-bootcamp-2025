@@ -94,11 +94,11 @@ class AuthStack(Stack):
                                cognito.OAuthScope.PROFILE],
                         callback_urls=[
                             f"https://{app_domain}/",
-                            "http://localhost:3000/"  # For local development
+                            f"http://localhost:{frontend_config.dev_port}/"  # App-specific dev port
                         ],
                         logout_urls=[
                             f"https://{app_domain}/",
-                            "http://localhost:3000/"  # For local development
+                            f"http://localhost:{frontend_config.dev_port}/"  # App-specific dev port
                         ]
                     ),
                     prevent_user_existence_errors=True

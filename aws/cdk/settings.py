@@ -9,6 +9,7 @@ class AppConfig(NamedTuple):
     type: AppType
     source_path: str
     subdomain: str
+    dev_port: int
     api_path: str = None  # Only for backend apps
 
 # Root domain configuration
@@ -21,7 +22,8 @@ APPLICATIONS = {
         "frontend": AppConfig(
             type=AppType.FRONTEND,
             source_path="aws/haiku-generator-frontend",
-            subdomain="haiku"
+            subdomain="haiku",
+            dev_port=3000
         ),
         "backend": AppConfig(
             type=AppType.BACKEND,
@@ -34,7 +36,8 @@ APPLICATIONS = {
         "frontend": AppConfig(
             type=AppType.FRONTEND,
             source_path="aws/lang-portal-frontend",
-            subdomain="lang-portal"
+            subdomain="lang-portal",
+            dev_port=3001
         ),
         "backend": AppConfig(
             type=AppType.BACKEND,
@@ -47,7 +50,8 @@ APPLICATIONS = {
         "frontend": AppConfig(
             type=AppType.FRONTEND,
             source_path="aws/vocab-generator-frontend",
-            subdomain="vocab"
+            subdomain="vocab",
+            dev_port=3002
         ),
         "backend": AppConfig(
             type=AppType.BACKEND,
@@ -60,7 +64,8 @@ APPLICATIONS = {
         "frontend": AppConfig(
             type=AppType.FRONTEND,
             source_path="aws/writing-practice-frontend",
-            subdomain="writing"
+            subdomain="writing",
+            dev_port=3003
         )
     }
 }
