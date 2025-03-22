@@ -44,9 +44,9 @@ def setup(ctx):
 @task
 def run_server(ctx):
     """Run the production server"""
-    ctx.run("python cmd/server/main.py")
+    ctx.run("python main.py")
 
 @task
 def dev_server(ctx):
     """Run the development server with auto-reload"""
-    ctx.run("uvicorn cmd.server.main:app --reload") 
+    ctx.run("uvicorn main:app --reload") 

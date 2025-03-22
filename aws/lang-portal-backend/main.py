@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Add the project root to the Python path
 # sys.path.append(os.path.abspath(__file__))
 
-from handlers import (
+from .handlers import (
     dashboard,
     words,
     groups,
