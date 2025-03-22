@@ -1,14 +1,17 @@
 
 ```mermaid
 architecture-beta
-    group api(cloud)[API]
+    group aws(cloud)[AWS]
 
-    service db(database)[Database] in api
-    service disk1(disk)[Storage] in api
-    service disk2(disk)[Storage] in api
-    service server(server)[Server] in api
+    service web(internet)[User]
+    service frontend(server)[Frontend] in aws
+    service backend(server)[Backend] in aws
+    service database(database)[Database] in aws
+    service storage(disk)[Storage] in aws
 
-    db:L -- R:server
-    disk1:T -- B:server
-    disk2:T -- B:db
+    web:L --> R:frontend
+    frontend:L --> R:backend
+    backend:T --> B:database
+    backend:T --> L:storage
+    web:L --> R:storage
 ```
