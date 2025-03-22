@@ -9,9 +9,9 @@ architecture-beta
     service database(database)[Database] in aws
     service storage(disk)[Storage] in aws
 
-    web:L --> R:frontend
-    frontend:L --> R:backend
-    backend:T --> B:database
-    backend:T --> L:storage
-    web:L --> R:storage
+    web:R --> L:frontend
+    frontend:R --> L:backend
+    backend:B --> T:database
+    backend:B --> R:storage
+    web:R --> L:storage
 ```
