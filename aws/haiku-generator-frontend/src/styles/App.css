@@ -1,0 +1,43 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f4;
+}
+
+h1, h2, h3 {
+  color: #333;
+}
+
+.summary-display {
+  border: 1px solid #ccc;
+  padding: 20px;
+  margin: 20px 0;
+  background-color: #fff;
+}
+
+.loading-indicator {
+  text-align: center;
+  font-size: 18px;
+  color: #555;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+}
+
+.images img {
+  max-width: 100%;
+  height: auto;
+  margin: 5px;
+}
+
+textarea {
+  width: 100%;
+  height: 100px;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
