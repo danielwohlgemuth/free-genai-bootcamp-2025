@@ -854,3 +854,990 @@ Artifacts:
 Testing:
   Unit Tests: Required
   Integration Tests: Required
+
+Monitoring and Logging Setup
+CloudWatch Log Groups Structure:
+Log Groups:
+  # Application Logs
+  /aws/ecs/lang-portal-frontend:
+    Retention: 30 days
+    Export: S3 (after 24h)
+  /aws/ecs/lang-portal-backend:
+    Retention: 30 days
+    Export: S3 (after 24h)
+  /aws/ecs/haiku-frontend:
+    Retention: 30 days
+    Export: S3 (after 24h)
+  /aws/ecs/haiku-backend:
+    Retention: 30 days
+    Export: S3 (after 24h)
+  /aws/ecs/vocab-frontend:
+    Retention: 30 days
+    Export: S3 (after 24h)
+  /aws/ecs/vocab-backend:
+    Retention: 30 days
+    Export: S3 (after 24h)
+  /aws/ecs/writing-practice:
+    Retention: 30 days
+    Export: S3 (after 24h)
+
+  # Infrastructure Logs
+  /aws/rds/lang-portal-aurora:
+    Retention: 30 days
+  /aws/rds/haiku-aurora:
+    Retention: 30 days
+  /aws/alb/access-logs:
+    Retention: 30 days
+
+CloudWatch Metrics and Dashboards:
+Dashboards:
+  Application Health:
+    Widgets:
+      - ECS Service Health:
+          - CPU Utilization
+          - Memory Utilization
+          - Running Task Count
+      - ALB Metrics:
+          - Request Count
+          - Target Response Time
+          - HTTP 5XX Error Rate
+          - HTTP 4XX Error Rate
+      - API Latency:
+          - p50, p90, p99 latencies
+      - Database Metrics:
+          - CPU Utilization
+          - Free Storage Space
+          - Database Connections
+          - Read/Write IOPS
+
+  Cost Dashboard:
+    Widgets:
+      - ECS Service Costs
+      - RDS Costs
+      - S3 Storage Costs
+      - Data Transfer Costs
+
+CloudWatch Alarms:
+Alarms:
+  High Priority:
+    Service Health:
+      - Metric: HTTP 5XX Error Rate
+        Threshold: >= 5% over 5 minutes
+        Action: SNS Topic
+      - Metric: API Latency p99
+        Threshold: >= 2 seconds over 5 minutes
+        Action: SNS Topic
+      - Metric: ECS Service Running Tasks
+        Threshold: < desired count for 5 minutes
+        Action: SNS Topic
+    
+    Database Health:
+      - Metric: Database CPU
+        Threshold: >= 80% for 15 minutes
+        Action: SNS Topic
+      - Metric: Free Storage Space
+        Threshold: <= 20% for 30 minutes
+        Action: SNS Topic
+
+  Medium Priority:
+    - Metric: HTTP 4XX Error Rate
+      Threshold: >= 10% over 15 minutes
+      Action: SNS Topic
+    - Metric: API Latency p90
+      Threshold: >= 1 second over 15 minutes
+      Action: SNS Topic
+
+X-Ray Tracing Configuration:
+X-Ray:
+  Sampling Rules:
+    Default:
+      Rate: 5%
+      ReservoirSize: 50
+    
+    HighPriority:
+      URLPath: "/api/v1/*"
+      Rate: 20%
+      ReservoirSize: 100
+
+  Groups:
+    - Name: API Calls
+      FilterExpression: "service(\"*/api/*\")"
+    - Name: Database Queries
+      FilterExpression: "service(\"*.rds.*\")"
+
+AWS Distro for OpenTelemetry (ADOT):
+ADOT Configuration:
+  Collectors:
+    ECS Tasks:
+      Receivers:
+        - otlp
+        - prometheus
+      Processors:
+        - batch
+        - memory_limiter
+      Exporters:
+        - awsxray
+        - awsemf
+      
+  Metrics Collection:
+    - JVM Metrics
+    - Node.js Metrics
+    - Python Runtime Metrics
+    - Custom Business Metrics
+
+  Trace Collection:
+    - HTTP Requests
+    - Database Queries
+    - External API Calls
+
+Log Insights Queries:
+Saved Queries:
+  Error Analysis:
+    Query: |
+      filter @message like /Error/
+      | stats count(*) as error_count by @logStream, error_type
+      | sort error_count desc
+  
+  Latency Analysis:
+    Query: |
+      filter @message like /duration/
+      | stats avg(duration) as avg_duration,
+              p90(duration) as p90_duration,
+              p99(duration) as p99_duration
+      by route
+  
+  API Usage:
+    Query: |
+      filter @type = "API_CALL"
+      | stats count(*) as call_count by endpoint, status_code
+      | sort call_count desc
+
+
+Database Infrastructure:
+Lang Portal Aurora PostgreSQL Configuration:
+Lang Portal DB Cluster:
+  Engine: Aurora PostgreSQL 15.4
+  Instance Configuration:
+    Primary:
+      Instance Class: db.t4g.medium
+      Multi-AZ: false
+    
+  Storage:
+    Allocated Storage: 100GB
+    Storage Type: Aurora Standard
+    Storage Encryption: true
+    KMS Key: aws/rds
+
+  Network:
+    Subnet Group: private-subnet-group
+    Security Group: lang-portal-aurora-sg
+    Port: 5432
+
+  Backup:
+    Automated Backups: 
+      Retention: 7 days
+      Preferred Window: 03:00-04:00 UTC
+    Snapshot:
+      Frequency: Daily
+      Retention: 30 days
+
+  RDS Proxy:
+    Name: lang-portal-proxy
+    Idle Connection Timeout: 1800
+    Connection Pool:
+      Max Connections: 100
+      Connection Borrow Timeout: 120
+    IAM Authentication: true
+    Security Group: lang-portal-rds-proxy-sg
+
+  Performance Insights:
+    Enabled: true
+    Retention: 7 days
+
+  Parameters:
+    shared_buffers: 1GB
+    max_connections: 200
+    effective_cache_size: 3GB
+    maintenance_work_mem: 128MB
+    checkpoint_timeout: 300
+    default_statistics_target: 100
+
+Haiku Generator Aurora PostgreSQL Configuration:
+Haiku DB Cluster:
+  Engine: Aurora PostgreSQL 15.4
+  Instance Configuration:
+    Primary:
+      Instance Class: db.t4g.medium
+      Multi-AZ: false
+    
+  Storage:
+    Allocated Storage: 100GB
+    Storage Type: Aurora Standard
+    Storage Encryption: true
+    KMS Key: aws/rds
+
+  Network:
+    Subnet Group: private-subnet-group
+    Security Group: haiku-aurora-sg
+    Port: 5432
+
+  Backup:
+    Automated Backups:
+      Retention: 7 days
+      Preferred Window: 04:00-05:00 UTC
+    Snapshot:
+      Frequency: Daily
+      Retention: 30 days
+
+  RDS Proxy:
+    Name: haiku-proxy
+    Idle Connection Timeout: 1800
+    Connection Pool:
+      Max Connections: 100
+      Connection Borrow Timeout: 120
+    IAM Authentication: true
+    Security Group: haiku-rds-proxy-sg
+
+  Performance Insights:
+    Enabled: true
+    Retention: 7 days
+
+  Parameters:
+    shared_buffers: 1GB
+    max_connections: 200
+    effective_cache_size: 3GB
+    maintenance_work_mem: 128MB
+    checkpoint_timeout: 300
+    default_statistics_target: 100
+
+Common Database Management Configurations:
+Maintenance:
+  Auto Minor Version Upgrade: true
+  Maintenance Window: sun:05:00-sun:06:00 UTC
+
+Monitoring:
+  Enhanced Monitoring: 
+    Enabled: true
+    Granularity: 60 seconds
+  
+  CloudWatch Logs:
+    Export: 
+      - PostgreSQL logs
+      - Upgrade logs
+      - Error logs
+
+Connection Management:
+  SSL: Required
+  IAM Database Authentication: Enabled
+
+Backup Strategy:
+Backup Configuration:
+  Point-in-Time Recovery:
+    Enabled: true
+    Transaction Logs Retention: 7 days
+
+  Cross-Region Backup:
+    Enabled: false  # Can enable if needed
+
+  Snapshot Strategy:
+    Automated:
+      Time: 03:00 UTC
+      Retention: 7 days
+    Manual:
+      Pre-deployment: true
+      Retention: 30 days
+
+Database Access Pattern:
+Connection Pattern:
+  Applications:
+    - Connect through RDS Proxy
+    - Use IAM authentication
+    - Connection pooling at application level
+    - Retry with exponential backoff
+    - Circuit breaker pattern
+
+  Maintenance:
+    - Direct access restricted to specific security groups
+    - Session timeout: 600 seconds
+    - Max concurrent maintenance connections: 3
+
+Monitoring and Alerts:
+Database Specific Metrics:
+  Performance:
+    - CPU Utilization
+    - Free Memory
+    - Free Storage Space
+    - Read/Write IOPS
+    - Buffer Cache Hit Ratio
+    - Connection Count
+
+  Alerts:
+    High Priority:
+      - Storage Space < 20%
+      - CPU > 80% for 15 minutes
+      - Connection Count > 180
+    Medium Priority:
+      - Long Running Queries > 30 seconds
+      - Buffer Cache Hit Ratio < 90%
+
+Authentication & Authorization:
+Cognito User Pool Configuration:
+User Pool:
+  Name: genai-bootcamp-users
+  Policies:
+    Password:
+      Minimum Length: 8
+      Require Numbers: true
+      Require Symbols: true
+      Require Uppercase: true
+      Require Lowercase: true
+    
+  MFA:
+    Enabled: false  # Keeping it simple for bootcamp
+    
+  Account Recovery:
+    Mechanisms:
+      - Email (preferred)
+    
+  User Attributes:
+    Required:
+      - email
+      - given_name
+      - family_name
+    Optional:
+      - preferred_language
+      - timezone
+
+  App Clients:
+    Web Client:
+      Name: web-client
+      Generate Secret: false
+      Auth Flows:
+        - USER_PASSWORD_AUTH
+        - REFRESH_TOKEN_AUTH
+      OAuth:
+        Flows:
+          - Authorization Code Grant
+        Scopes:
+          - openid
+          - email
+          - profile
+        Callbacks:
+          - https://app.genaibootcamp.com/callback
+        Logout URLs:
+          - https://app.genaibootcamp.com/logout
+
+  Domain:
+    Type: Cognito Domain
+    Prefix: genai-bootcamp
+
+Identity Pool Configuration:
+Identity Pool:
+  Name: genai-bootcamp-identity
+  
+  Auth Providers:
+    Cognito:
+      User Pool ID: ${UserPoolId}
+      App Client ID: ${AppClientId}
+  
+  IAM Roles:
+    Authenticated:
+      Role Name: genai-bootcamp-authenticated
+      Policies:
+        - Effect: Allow
+          Actions:
+            - execute-api:Invoke
+          Resources:
+            - arn:aws:execute-api:${Region}:${AccountId}:*/*/GET/*
+            - arn:aws:execute-api:${Region}:${AccountId}:*/*/POST/*
+    
+    Unauthenticated:
+      Role Name: genai-bootcamp-unauthenticated
+      Policies:
+        - Effect: Deny
+          Actions:
+            - execute-api:Invoke
+          Resources:
+            - arn:aws:execute-api:${Region}:${AccountId}:*/*/*/*
+
+API Authorization:
+API Gateway:
+  Authorizers:
+    Cognito:
+      Type: COGNITO_USER_POOLS
+      User Pool ARN: ${UserPoolArn}
+      Token Source: Authorization header
+      Claims to forward: 
+        - email
+        - cognito:groups
+
+  Routes:
+    Public:
+      - Path: /api/v1/public/*
+        Methods: [GET]
+        Authorization: NONE
+    
+    Protected:
+      - Path: /api/v1/lang-portal/*
+        Methods: [GET, POST, PUT, DELETE]
+        Authorization: COGNITO
+      - Path: /api/v1/haiku/*
+        Methods: [GET, POST, PUT, DELETE]
+        Authorization: COGNITO
+      - Path: /api/v1/vocab/*
+        Methods: [GET, POST, PUT, DELETE]
+        Authorization: COGNITO
+      - Path: /api/v1/writing/*
+        Methods: [GET, POST, PUT, DELETE]
+        Authorization: COGNITO
+
+Token Handling:
+Token Configuration:
+  Access Token:
+    Expiration: 1 hour
+    
+  ID Token:
+    Expiration: 1 hour
+    
+  Refresh Token:
+    Expiration: 30 days
+    
+  Token Revocation:
+    Enabled: true
+
+
+Session Management:
+Session Configuration:
+  Cookie Settings:
+    Secure: true
+    HttpOnly: true
+    SameSite: Strict
+    
+  Session Duration:
+    Maximum: 24 hours
+    Idle Timeout: 1 hour
+
+Frontend Auth Integration:
+
+Frontend Auth:
+  Storage:
+    Token Storage: Memory (not localStorage)
+    Refresh Token: Secure HTTP-only cookie
+  
+  Auto Refresh:
+    Enabled: true
+    Buffer Time: 5 minutes
+  
+  Route Protection:
+    Public Routes:
+      - /
+      - /login
+      - /register
+      - /forgot-password
+    
+    Protected Routes:
+      - /dashboard
+      - /profile
+      - /lang-portal/*
+      - /haiku/*
+      - /vocab/*
+      - /writing/*
+
+Backend Auth Validation:
+
+Backend Auth:
+  Token Validation:
+    Verify:
+      - Signature
+      - Expiration
+      - Issuer
+      - Audience
+      - Token Use
+    
+  Cache:
+    JWKS Cache:
+      TTL: 1 hour
+    
+  Error Handling:
+    Invalid Token:
+      Status: 401
+      Cache-Control: no-store
+    Expired Token:
+      Status: 401
+      Cache-Control: no-store
+
+LLM Security & Guardrails:
+Bedrock Access Configuration:
+Bedrock Configuration:
+  Models:
+    Primary:
+      Name: anthropic.claude-v2
+      Purpose: General text generation, analysis
+    Backup:
+      Name: amazon.titan-text-express-v1
+      Purpose: Fallback for high traffic
+
+  Access Control:
+    IAM:
+      Role: bedrock-execution-role
+      Policies:
+        - Action: bedrock:InvokeModel
+          Resource: 
+            - arn:aws:bedrock:${Region}::foundation-model/anthropic.claude-v2
+            - arn:aws:bedrock:${Region}::foundation-model/amazon.titan-text-express-v1
+        - Action: bedrock:GetModelInvocationLogging
+          Resource: "*"
+
+  Rate Limiting:
+    Tokens:
+      MaxPerRequest: 4000
+      MaxPerMinute: 100000
+    Requests:
+      MaxPerSecond: 10
+      MaxConcurrent: 5
+
+Prompt Security:
+
+Prompt Guards:
+  Input Validation:
+    MaxLength: 2000
+    AllowedCharacterSets:
+      - UTF-8 Standard Characters
+      - Common Punctuation
+    BlockedPatterns:
+      - SQL Injection Patterns
+      - Command Injection Patterns
+      - Prompt Injection Markers
+      
+  Sanitization:
+    - Strip HTML Tags
+    - Normalize Whitespace
+    - Remove Control Characters
+    - Escape Special Characters
+
+  Context Protection:
+    SystemPrompt:
+      Storage: AWS Secrets Manager
+      Immutable: true
+      VersionTracking: enabled
+
+Content Filtering:
+
+Content Safety:
+  PreProcessing:
+    - Profanity Filter
+    - PII Detection
+    - Sensitive Data Detection
+    
+  PostProcessing:
+    - Output Sanitization
+    - Response Validation
+    - Safety Classification
+
+  BlockLists:
+    Topics:
+      - Violence
+      - Explicit Content
+      - Harmful Instructions
+    Commands:
+      - System Commands
+      - Network Operations
+      - File Operations
+
+Guardrails Implementation:
+
+Guardrails:
+  AntiPromptInjection:
+    Enabled: true
+    Rules:
+      - DetectSystemPromptLeaks
+      - PreventRoleOverride
+      - BlockDelimiterManipulation
+    Actions:
+      - LogAttempt
+      - ReturnError
+      - BlacklistTemporarily
+
+  TokenSmuggling:
+    Prevention:
+      - ValidateTokenBoundaries
+      - CheckCharacterEncoding
+      - DetectUnicodeManipulation
+    
+  PayloadSplitting:
+    Detection:
+      - TrackConversationContext
+      - AnalyzeMessagePatterns
+      - PreventMessageCombination
+
+  JailbreakPrevention:
+    Patterns:
+      - IgnoreInstructions
+      - RoleOverride
+      - SystemPromptLeak
+    Actions:
+      - TerminateConversation
+      - LogIncident
+      - NotifyAdmin
+
+Monitoring and Logging:
+
+LLM Monitoring:
+  Metrics:
+    - TokenUsage
+    - PromptLength
+    - ResponseLength
+    - ProcessingTime
+    - ErrorRates
+    - GuardrailViolations
+
+  Logging:
+    Required:
+      - Timestamp
+      - RequestId
+      - UserIdentifier
+      - PromptHash
+      - ModelVersion
+      - GuardrailChecks
+    
+    Alerts:
+      HighPriority:
+        - GuardrailViolation
+        - TokenLimitExceeded
+        - SecurityBreach
+      MediumPriority:
+        - HighLatency
+        - TokenUsageSpike
+
+Cost Controls:
+
+Cost Management:
+  Budgets:
+    Daily:
+      MaxTokens: 1000000
+      AlertThreshold: 80%
+    
+    Monthly:
+      MaxCost: 100 USD
+      AlertThreshold: 70%
+
+  Throttling:
+    UserLevel:
+      RequestsPerMinute: 10
+      TokensPerHour: 10000
+    
+    ApplicationLevel:
+      RequestsPerMinute: 100
+      TokensPerHour: 100000
+
+Error Handling:
+
+Error Management:
+  RetryStrategy:
+    MaxAttempts: 3
+    BackoffRate: 2
+    InitialDelay: 1000ms
+    
+  Fallbacks:
+    - SwitchModel
+    - UseCache
+    - GracefulDegradation
+
+  ResponseValidation:
+    Checks:
+      - ContentSafety
+      - ResponseLength
+      - Coherence
+    Actions:
+      - FilterUnsafe
+      - TruncateIfNeeded
+      - RegenerateIfInvalid
+
+Network Infrastructure:
+
+VPC Configuration:
+  NAT Gateway:
+    - Subnet: Public-1a
+      EIP: true
+
+VPC EndpointsVPC Endpoints:
+  Interface Endpoints:
+    - Service: ecr.api
+      Subnets: Private Application
+      Security Group: vpce-ecr-sg
+    
+    - Service: ecr.dkr
+      Subnets: Private Application
+      Security Group: vpce-ecr-sg
+    
+    - Service: logs
+      Subnets: Private Application
+      Security Group: vpce-logs-sg
+    
+    - Service: secretsmanager
+      Subnets: Private Application
+      Security Group: vpce-secrets-sg
+    
+    - Service: bedrock-runtime
+      Subnets: Private Application
+      Security Group: vpce-bedrock-sg
+
+  Gateway Endpoints:
+    - Service: s3
+      Route Tables: 
+        - private-rt-1a
+        - private-rt-1b
+
+Route Tables:
+
+Route Tables:
+  Public:
+    Name: public-rt
+    Routes:
+      - Destination: 0.0.0.0/0
+        Target: Internet Gateway
+      - Destination: 10.0.0.0/16
+        Target: local
+    
+  Private:
+    Name: private-rt
+    Routes:
+      - Destination: 0.0.0.0/0
+        Target: NAT Gateway
+      - Destination: 10.0.0.0/16
+        Target: local
+
+DNS Configuration:
+DNS:
+  Private Hosted Zone:
+    Name: internal.app-dw.net
+    VPC: genai-bootcamp-vpc
+    Records:
+      - Name: lang-portal.internal
+        Type: A
+        Target: ALB DNS
+      - Name: haiku.internal
+        Type: A
+        Target: ALB DNS
+      - Name: vocab.internal
+        Type: A
+        Target: ALB DNS
+      - Name: writing.internal
+        Type: A
+        Target: ALB DNS
+
+  Route 53:
+    Domain: app-dw.net
+    Records:
+      - Name: lang-portal
+        Type: A
+        Target: ALB DNS
+        Alias: true
+      - Name: haiku
+        Type: A
+        Target: ALB DNS
+        Alias: true
+      - Name: vocab
+        Type: A
+        Target: ALB DNS
+        Alias: true
+      - Name: writing
+        Type: A
+        Target: CloudFront
+        Alias: true
+
+Storage Configuration:
+
+Frontend Static Assets:
+
+S3 Buckets:
+  Frontend Assets:
+    Name: genai-bootcamp-frontend-assets
+    Versioning: Enabled
+    Encryption: SSE-KMS
+    Public Access: Blocked
+    
+    CORS:
+      AllowedOrigins:
+        - https://app.genaibootcamp.com
+      AllowedMethods:
+        - GET
+      AllowedHeaders:
+        - Authorization
+        - Content-Type
+    
+    Lifecycle Rules:
+      - Name: old-versions
+        Prefix: ""
+        Status: Enabled
+        NonCurrentVersionExpiration: 30 days
+      
+    CloudFront OAI: Enabled
+
+Application Data Storage:
+
+Application Storage:
+  User Generated Content:
+    Name: genai-bootcamp-user-content
+    Versioning: Enabled
+    Encryption: SSE-KMS
+    Public Access: Blocked
+    
+    Lifecycle Rules:
+      - Name: archive-old-content
+        Prefix: "archive/"
+        Status: Enabled
+        Transitions:
+          - Days: 90
+            StorageClass: INTELLIGENT_TIERING
+    
+    Event Notifications:
+      - Event: s3:ObjectCreated:*
+        Function: content-processor-lambda
+        
+    Folders:
+      - writing-submissions/
+      - generated-content/
+      - user-uploads/
+
+Application Logs:
+
+Logs Storage:
+  Name: genai-bootcamp-logs
+  Versioning: Enabled
+  Encryption: SSE-KMS
+  Public Access: Blocked
+  
+  Lifecycle Rules:
+    - Name: log-retention
+      Status: Enabled
+      Transitions:
+        - Days: 30
+          StorageClass: INTELLIGENT_TIERING
+        - Days: 90
+          StorageClass: GLACIER
+      Expiration:
+        Days: 365
+  
+  Folders:
+    - application-logs/
+    - cloudwatch-logs/
+    - alb-logs/
+    - vpc-flow-logs/
+
+Backup Storage:
+Backup Storage:
+  Name: genai-bootcamp-backups
+  Versioning: Enabled
+  Encryption: SSE-KMS
+  Public Access: Blocked
+  
+  Lifecycle Rules:
+    - Name: backup-retention
+      Status: Enabled
+      Transitions:
+        - Days: 30
+          StorageClass: GLACIER
+      Expiration:
+        Days: 730
+  
+  Folders:
+    - database-backups/
+    - application-state/
+    - configuration-backups/
+
+Common Security Settings:
+
+Security Configuration:
+  Bucket Policies:
+    Default:
+      - Effect: Deny
+        Principal: "*"
+        Action: s3:*
+        Condition:
+          Bool:
+            aws:SecureTransport: false
+      - Effect: Deny
+        Principal: "*"
+        Action: s3:PutObject
+        Condition:
+          StringNotEquals:
+            s3:x-amz-server-side-encryption: aws:kms
+
+  KMS Configuration:
+    Key Policy:
+      - Effect: Allow
+        Principal:
+          AWS: 
+            - arn:aws:iam::${Account}:role/application-role
+            - arn:aws:iam::${Account}:role/backup-role
+        Action:
+          - kms:Decrypt
+          - kms:GenerateDataKey
+
+Access Patterns:
+
+Access Configuration:
+  IAM Roles:
+    Application:
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+          - s3:PutObject
+          - s3:ListBucket
+        Resource:
+          - arn:aws:s3:::genai-bootcamp-user-content
+          - arn:aws:s3:::genai-bootcamp-user-content/*
+    
+    Backup:
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+          - s3:PutObject
+          - s3:ListBucket
+        Resource:
+          - arn:aws:s3:::genai-bootcamp-backups
+          - arn:aws:s3:::genai-bootcamp-backups/*
+
+Monitoring and Logging:
+
+Storage Monitoring:
+  Metrics:
+    - BucketSizeBytes
+    - NumberOfObjects
+    - StorageTypes
+    
+  Server Access Logging:
+    Enabled: true
+    Target Bucket: genai-bootcamp-logs
+    Target Prefix: s3-access-logs/
+    
+  CloudWatch Alarms:
+    - Name: high-error-rate
+      Metric: 4xxErrors
+      Threshold: 100
+      Period: 5 minutes
+    - Name: storage-growth
+      Metric: BucketSizeBytes
+      Threshold: 1TB
+      Period: 1 day
+
+Data Protection:
+
+Data Protection:
+  Object Lock: No
+
+  Versioning:
+    MFA Delete: Disabled
+    
+  Replication:
+    Enabled: false  # Can enable if needed
+    
+  Inventory:
+    Enabled: true
+    Frequency: Weekly
+    OptionalFields:
+      - Size
+      - LastModifiedDate
+      - StorageClass
+      - EncryptionStatus
