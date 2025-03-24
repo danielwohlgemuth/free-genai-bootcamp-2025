@@ -19,10 +19,10 @@ Domain & Authentication Architecture:
 Root Domain: app-dw.net
 Subdomains:
 - auth.app-dw.net (Cognito hosted UI)
-- lang-portal.app-dw.net
-- haiku.app-dw.net
-- vocab.app-dw.net
-- writing.app-dw.net
+- lang-portal.app-dw.net (CloudFront + S3/ALB)
+- haiku.app-dw.net (CloudFront + S3/ALB)
+- vocab.app-dw.net (ALB + ECS Streamlit)
+- writing.app-dw.net (ALB + ECS Gradio)
 
 Infrastructure as Code (CDK): Should include stacks for:
 - Network Stack (VPC, subnets, security groups)
@@ -30,9 +30,12 @@ Infrastructure as Code (CDK): Should include stacks for:
 - Database Stack (RDS)
 - Storage Stack (S3 buckets)
 - Frontend Stack (per project)
+  - CloudFront + S3 for React apps
+  - ECS for Streamlit/Gradio apps
 - Backend Stack (per project)
 - CI/CD Stack (per project)
 - Monitoring Stack
+
 
 Project-Specific Components:
 
@@ -41,8 +44,8 @@ A. Lang Portal:
 ```mermaid
 graph LR
     CloudFront[🌐 CloudFront] --> S3_Frontend[📦 S3 Frontend]
-    CloudFront --> API_Gateway[🚪 API Gateway]
-    API_Gateway --> ECS_FastAPI[🐳 ECS FastAPI]
+    CloudFront --> ALB[🌐 ALB]
+    ALB --> ECS_FastAPI[🐳 ECS FastAPI]
     ECS_FastAPI --> Bedrock[🤖 Bedrock]
     ECS_FastAPI --> RDS_Postgres[💾 RDS Postgres]
     ECS_FastAPI --> Polly[🗣️ Polly]
@@ -55,8 +58,8 @@ B. Haiku Generator:
 graph LR
     CloudFront[🌐 CloudFront] --> S3_Frontend[📦 S3 Frontend]
     CloudFront[🌐 CloudFront] --> S3_Media[📦 S3 Media]
-    CloudFront --> API_Gateway[🚪 API Gateway]
-    API_Gateway --> ECS_FastAPI[🐳 ECS FastAPI]
+    CloudFront --> ALB[🌐 ALB]
+    ALB --> ECS_FastAPI[🐳 ECS FastAPI]
     ECS_FastAPI --> Bedrock[🤖 Bedrock]
     ECS_FastAPI --> RDS_Postgres[💾 RDS Postgres]
     ECS_FastAPI --> S3_Media
@@ -85,24 +88,24 @@ graph LR
 Service Selection Options:
 
 A. Frontend Hosting:
-- S3 + CloudFront (recommended for React apps)
-- App Runner (alternative for Streamlit/Gradio)
-- ECS Fargate (for Streamlit/Gradio with more control)
+- S3 + CloudFront (recommended for React apps: Lang Portal, Haiku) (Yes)
+- ECS Fargate (for Streamlit/Gradio apps: Vocab, Writing) (Yes)
+- App Runner (alternative for Streamlit/Gradio) (No)
 
 B. Backend API:
-- API Gateway + Lambda
-- Application Load Balancer + ECS
-- App Runner (for simpler deployments)
+- API Gateway + Lambda (No)
+- Application Load Balancer + ECS (Yes)
+- App Runner (for simpler deployments) (No)
 
 C. Database:
-- Amazon RDS for PostgreSQL
-- Amazon Aurora PostgreSQL (for higher scalability)
-- Amazon RDS Proxy (for connection pooling)
+- Amazon RDS for PostgreSQL (No)
+- Amazon Aurora PostgreSQL (for higher scalability) (Yes)
+- Amazon RDS Proxy (for connection pooling) (Yes)
 
 D. Image Generation:
-- Stable Diffusion on SageMaker
-- Bedrock with Stable Diffusion models
-- Third-party APIs through API Gateway
+- Stable Diffusion on SageMaker (No)
+- Bedrock with Stable Diffusion models (Yes)
+- Third-party APIs through API Gateway (No)
 
 Security Considerations:
 - WAF rules for CloudFront
@@ -141,11 +144,10 @@ VPC Configuration:
   - Public subnets (10.0.0.0/24, 10.0.1.0/24, 10.0.2.0/24)
   - Private subnets (10.0.3.0/24, 10.0.4.0/24, 10.0.5.0/24)
   - Database subnets (10.0.6.0/24, 10.0.7.0/24, 10.0.8.0/24)
-- Single NAT Gateway (cost-optimized for development)
+- Single NAT Gateway in public subnet of first AZ (cost-optimized)
 - Public subnets (for ALB and NAT Gateways)
 - Private subnets (for ECS Fargate and Aurora)
 - Database subnets (isolated)
-- NAT Gateways in each AZ
 - VPC endpoints for:
   - ECR (docker pulls)
   - S3
@@ -166,15 +168,27 @@ ECS Fargate Configuration:
   - Target tracking scaling
   - CPU utilization target: 70%
   - Memory utilization target: 70%
-  - Min capacity: 1
-  - Max capacity: 3
   - Scale-in cooldown: 300 seconds
   - Scale-out cooldown: 60 seconds
-   - CPU: 1 vCPU
-   - Memory: 2GB
    - Essential containers:
      - app
      - aws-otel-collector (sidecar)
+
+# React Apps Backend
+API Services:
+  CPU: 1 vCPU
+  Memory: 2GB
+  Auto-scaling:
+    Min: 1
+    Max: 3
+
+# Streamlit/Gradio Apps
+Frontend Services:
+  CPU: 2 vCPU    # Higher resources for UI rendering
+  Memory: 4GB
+  Auto-scaling:
+    Min: 1
+    Max: 2
 
 Task Definition per application:
 - Lang Portal
@@ -193,8 +207,8 @@ Recommended Aurora Configuration:
 Aurora PostgreSQL Setup:
 - Multi-AZ deployment
 - Instance classes: 
-  - Primary: db.r6g.large (minimum)
-  - Reader: db.r6g.large (if needed)
+  - Primary: db.t4g.medium (minimum)
+  - Reader: db.t4g.medium (if needed)
 - Auto-scaling for storage
 - Backup retention: 7 days minimum
 - Performance Insights enabled
@@ -290,18 +304,6 @@ Primary ALB:
 
 Target Groups Configuration:
 Lang Portal:
-- Frontend:
-  - Protocol: HTTP
-  - Port: 80
-  - Target type: IP
-  - Health check:
-    - Path: /health
-    - Interval: 30 seconds
-    - Timeout: 5 seconds
-    - Healthy threshold: 2
-    - Unhealthy threshold: 3
-    - Success codes: 200-299
-
 - API:
   - Protocol: HTTP
   - Port: 8000
@@ -312,9 +314,34 @@ Lang Portal:
     - Timeout: 5 seconds
     - Healthy threshold: 2
     - Unhealthy threshold: 3
-    - Success codes: 200-299
+    - Success codes: 200
+
+Haiku Generator:
+- API:
+  - Protocol: HTTP
+  - Port: 8000
+  - Target type: IP
+  - Health check:
+    - Path: /api/health
+    - Interval: 30 seconds
+    - Timeout: 5 seconds
+    - Healthy threshold: 2
+    - Unhealthy threshold: 3
+    - Success codes: 200
 
 Vocab Generator:
+- API:
+  - Protocol: HTTP
+  - Port: 8000
+  - Target type: IP
+  - Health check:
+    - Path: /api/health
+    - Interval: 30 seconds
+    - Timeout: 5 seconds
+    - Healthy threshold: 2
+    - Unhealthy threshold: 3
+    - Success codes: 200
+
 - Frontend (Streamlit):
   - Protocol: HTTP
   - Port: 8501
@@ -333,7 +360,7 @@ Writing Practice:
   - Port: 7860
   - Target type: IP
   - Health check:
-    - Path: /healthz
+    - Path: /view_api
     - Interval: 30 seconds
     - Timeout: 5 seconds
     - Healthy threshold: 2
@@ -360,10 +387,10 @@ HTTP:80
 - Redirect to HTTPS:443
 
 DNS Records (Route 53):
-- lang-portal.app-dw.net -> Primary ALB
+- lang-portal.app-dw.net -> CloudFront Distribution
 - vocab.app-dw.net -> Primary ALB
 - writing.app-dw.net -> Primary ALB
-- haiku.app-dw.net -> Primary ALB
+- haiku.app-dw.net -> CloudFront Distribution
 
 Container Deployment Strategy:
 ECS Fargate Configuration:
@@ -377,8 +404,6 @@ Capacity Providers:
   - Max capacity: 3
   - Scale-in cooldown: 300 seconds
   - Scale-out cooldown: 60 seconds
-   - CPU: 1 vCPU
-   - Memory: 2GB
    - Essential containers:
      - app
      - aws-otel-collector (sidecar)
@@ -480,7 +505,7 @@ Writing Practice:
         - Name: LANG_PORTAL_API_KEY
           ValueFrom: arn:aws:secretsmanager:region:account:secret:lang-portal-api-key
       HealthCheck:
-        Command: ["CMD-SHELL", "curl -f http://localhost:7860/healthz || exit 1"]
+        Command: ["CMD-SHELL", "curl -f http://localhost:7860/view_api || exit 1"]
         Interval: 30
         Timeout: 5
         Retries: 3
@@ -491,10 +516,7 @@ Cloud Map Configuration:
   Namespace: app-dw.internal
   Services:
     - lang-portal-api
-    - haiku-api
-    - vocab-generator-frontend
     - vocab-generator-backend
-    - writing-practice
 
 Deployment Configuration:
 Deployment Strategy:
@@ -523,12 +545,17 @@ Load Balancer Security Groups:
 ALB Security Group:
   Name: alb-sg
   Inbound Rules:
-    - Type: HTTPS (443)
-      Source: 0.0.0.0/0
-      Description: "Allow HTTPS from internet"
     - Type: HTTP (80)
       Source: 0.0.0.0/0
       Description: "Allow HTTP for redirect"
+    # For Streamlit/Gradio apps (direct access)
+    - Type: HTTPS (443)
+      Source: 0.0.0.0/0
+      Description: "Allow HTTPS from internet for Streamlit/Gradio apps"
+    # For React apps (CloudFront access)
+    - Type: HTTPS (443)
+      Source: CloudFront Managed Prefix List
+      Description: "Allow HTTPS from CloudFront for React apps"
   Outbound Rules:
     - Type: All Traffic
       Destination: VPC CIDR
@@ -683,7 +710,7 @@ Lang Portal Frontend Pipeline:
       Action: S3/CloudFront Deploy
       Input: BuildArtifact
       Commands:
-        - aws s3 sync build/ s3://lang-portal-frontend
+        - aws s3 sync build/ s3://lang-portal-frontend-dw
         - aws cloudfront create-invalidation
 
 Lang Portal Backend Pipeline:
@@ -737,7 +764,7 @@ Haiku Frontend Pipeline:
       Action: S3/CloudFront Deploy
       Input: BuildArtifact
       Commands:
-        - aws s3 sync build/ s3://haiku-frontend
+        - aws s3 sync build/ s3://haiku-frontend-dw
         - aws cloudfront create-invalidation
 
 Haiku Backend Pipeline:
@@ -858,40 +885,66 @@ Testing:
 Monitoring and Logging Setup
 CloudWatch Log Groups Structure:
 Log Groups:
-  # Application Logs
-  /aws/ecs/lang-portal-frontend:
-    Retention: 30 days
-    Export: S3 (after 24h)
-  /aws/ecs/lang-portal-backend:
-    Retention: 30 days
-    Export: S3 (after 24h)
-  /aws/ecs/haiku-frontend:
-    Retention: 30 days
-    Export: S3 (after 24h)
-  /aws/ecs/haiku-backend:
-    Retention: 30 days
-    Export: S3 (after 24h)
+  # React Apps
+  /aws/cloudfront/lang-portal:
+    Retention: 7 days
+  /aws/cloudfront/haiku:
+    Retention: 7 days
+  /aws/s3/lang-portal-access:
+    Retention: 7 days
+  /aws/s3/haiku-access:
+    Retention: 7 days
+  
+  # Streamlit/Gradio Apps
   /aws/ecs/vocab-frontend:
-    Retention: 30 days
-    Export: S3 (after 24h)
+    Retention: 7 days
+  /aws/ecs/writing-frontend:
+    Retention: 7 days
+
+  # Backend Services
+  /aws/ecs/lang-portal-backend:
+    Retention: 7 days
+  /aws/ecs/haiku-backend:
+    Retention: 7 days
   /aws/ecs/vocab-backend:
-    Retention: 30 days
-    Export: S3 (after 24h)
-  /aws/ecs/writing-practice:
-    Retention: 30 days
-    Export: S3 (after 24h)
+    Retention: 7 days
 
   # Infrastructure Logs
   /aws/rds/lang-portal-aurora:
-    Retention: 30 days
+    Retention: 7 days
   /aws/rds/haiku-aurora:
-    Retention: 30 days
+    Retention: 7 days
   /aws/alb/access-logs:
-    Retention: 30 days
+    Retention: 7 days
 
 CloudWatch Metrics and Dashboards:
 Dashboards:
-  Application Health:
+  React Apps Health:
+    Widgets:
+      - CloudFront Metrics:
+          - Request Count
+          - Error Rate
+          - Cache Hit/Miss
+      - S3 Metrics:
+          - Request Count
+          - Error Count
+      - ALB API Metrics:
+          - Request Count
+          - Target Response Time
+          - 5XX Error Rate
+
+  Streamlit/Gradio Apps Health:
+    Widgets:
+      - ALB Metrics:
+          - Request Count
+          - Target Response Time
+          - HTTP 5XX Error Rate
+      - ECS Service Health:
+          - CPU Utilization
+          - Memory Utilization
+          - Running Task Count
+
+  API Health:
     Widgets:
       - ECS Service Health:
           - CPU Utilization
@@ -901,7 +954,6 @@ Dashboards:
           - Request Count
           - Target Response Time
           - HTTP 5XX Error Rate
-          - HTTP 4XX Error Rate
       - API Latency:
           - p50, p90, p99 latencies
       - Database Metrics:
@@ -912,9 +964,15 @@ Dashboards:
 
   Cost Dashboard:
     Widgets:
+      # React Apps
+      - CloudFront Costs
+      - S3 Storage Costs
+      - S3 Request Costs
+
+      # Common Infrastructure
       - ECS Service Costs
       - RDS Costs
-      - S3 Storage Costs
+      - ALB Costs
       - Data Transfer Costs
 
 CloudWatch Alarms:
@@ -1020,7 +1078,7 @@ Lang Portal DB Cluster:
   Instance Configuration:
     Primary:
       Instance Class: db.t4g.medium
-      Multi-AZ: false
+      Multi-AZ: true
     
   Storage:
     Allocated Storage: 100GB
@@ -1039,7 +1097,7 @@ Lang Portal DB Cluster:
       Preferred Window: 03:00-04:00 UTC
     Snapshot:
       Frequency: Daily
-      Retention: 30 days
+      Retention: 7 days
 
   RDS Proxy:
     Name: lang-portal-proxy
@@ -1087,7 +1145,7 @@ Haiku DB Cluster:
       Preferred Window: 04:00-05:00 UTC
     Snapshot:
       Frequency: Daily
-      Retention: 30 days
+      Retention: 7 days
 
   RDS Proxy:
     Name: haiku-proxy
@@ -1145,7 +1203,7 @@ Backup Configuration:
       Retention: 7 days
     Manual:
       Pre-deployment: true
-      Retention: 30 days
+      Retention: 7 days
 
 Database Access Pattern:
 Connection Pattern:
@@ -1223,9 +1281,27 @@ User Pool:
           - email
           - profile
         Callbacks:
-          - https://app.genaibootcamp.com/callback
+          # Production URLs
+          - https://lang-portal.app-dw.net/callback
+          - https://haiku.app-dw.net/callback
+          - https://vocab.app-dw.net/callback
+          - https://writing.app-dw.net/callback
+          # Local development URLs
+          - http://localhost:3000/callback
+          - http://localhost:3001/callback
+          - http://localhost:3002/callback
+          - http://localhost:3003/callback
         Logout URLs:
-          - https://app.genaibootcamp.com/logout
+          # Production URLs
+          - https://lang-portal.app-dw.net/logout
+          - https://haiku.app-dw.net/logout
+          - https://vocab.app-dw.net/logout
+          - https://writing.app-dw.net/logout
+          # Local development URLs
+          - http://localhost:3000/logout
+          - http://localhost:3001/logout
+          - http://localhost:3002/logout
+          - http://localhost:3003/logout
 
   Domain:
     Type: Cognito Domain
@@ -1305,6 +1381,11 @@ Token Configuration:
   Token Revocation:
     Enabled: true
 
+Note that for local development, this port mapping will be used for the frontends:
+- Port 3000 for lang-portal
+- Port 3001 for haiku
+- Port 3002 for vocab
+- Port 3003 for writing
 
 Session Management:
 Session Configuration:
@@ -1646,6 +1727,49 @@ DNS:
         Target: CloudFront
         Alias: true
 
+CloudFront Configurations:
+Lang Portal Distribution:
+  Origins:
+    - S3 Origin (Frontend):
+        Domain: lang-portal.app-dw.net
+        Origin Path: /
+        S3 Access: Origin Access Control
+    - ALB Origin (API):
+        Domain: alb.internal
+        Path: /api
+        Custom Headers: Yes
+  
+  Behaviors:
+    - Path Pattern: /api/*
+      Origin: ALB Origin
+      Cache Policy: CachingDisabled
+      Origin Request Policy: AllViewerExceptHostHeader
+    - Path Pattern: /*
+      Origin: S3 Origin
+      Cache Policy: CachingOptimized
+      Origin Request Policy: CORS-S3Origin
+
+Haiku Generator Distribution:
+  Origins:
+    - S3 Origin (Frontend):
+        Domain: haiku.app-dw.net
+        Origin Path: /
+        S3 Access: Origin Access Control
+    - ALB Origin (API):
+        Domain: alb.internal
+        Path: /api
+        Custom Headers: Yes
+  
+  Behaviors:
+    - Path Pattern: /api/*
+      Origin: ALB Origin
+      Cache Policy: CachingDisabled
+      Origin Request Policy: AllViewerExceptHostHeader
+    - Path Pattern: /*
+      Origin: S3 Origin
+      Cache Policy: CachingOptimized
+      Origin Request Policy: CORS-S3Origin
+
 Storage Configuration:
 
 Frontend Static Assets:
@@ -1659,7 +1783,14 @@ S3 Buckets:
     
     CORS:
       AllowedOrigins:
-        - https://app.genaibootcamp.com
+        - https://lang-portal.app-dw.net
+        - https://haiku.app-dw.net
+        - https://vocab.app-dw.net
+        - https://writing.app-dw.net
+        - http://localhost:3000
+        - http://localhost:3001
+        - http://localhost:3002
+        - http://localhost:3003
       AllowedMethods:
         - GET
       AllowedHeaders:
@@ -1670,7 +1801,7 @@ S3 Buckets:
       - Name: old-versions
         Prefix: ""
         Status: Enabled
-        NonCurrentVersionExpiration: 30 days
+        NonCurrentVersionExpiration: 7 days
       
     CloudFront OAI: Enabled
 
