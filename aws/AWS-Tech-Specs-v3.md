@@ -1,30 +1,481 @@
 # AWS Technical Specifications v3
 
+## System Overview
+```mermaid
+graph TB
+    subgraph FrontendApplications[Frontend Applications]
+        LP[Lang Portal Frontend]
+        HG[Haiku Generator Frontend]
+        style LP fill:#f9f,stroke:#333,stroke-width:2px,color:#333
+        style HG fill:#f9f,stroke:#333,stroke-width:2px,color:#333
+    end
+    
+    subgraph AWSCloudInfrastructure[AWS Cloud Infrastructure]
+        subgraph FrontendDistribution[Frontend Distribution]
+            CF[CloudFront CDN]
+            S3[S3 Static Assets]
+            style CF fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style S3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+
+        subgraph ECS[ECS Cluster]
+            LPB[Lang Portal Backend]
+            HGB[Haiku Generator Backend]
+            VG[Vocab Generator Frontend]
+            VGB[Vocab Generator Backend]
+            WP[Writing Practice Frontend]
+            style LPB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style HGB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style VG fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style VGB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style WP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+
+        subgraph BackendServices[Backend Services]
+            ALB[Application Load Balancer]
+            ECS
+            RDS[(RDS Database)]
+            PROXY[RDS Proxy]
+            style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style RDS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style PROXY fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph Security
+            COG[Cognito]
+            WAF[WAF]
+            style COG fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style WAF fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph Monitoring
+            CW[CloudWatch]
+            XR[X-Ray]
+            style CW fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style XR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph CICD[CI/CD]
+            CP[CodePipeline]
+            CB[CodeBuild]
+            style CP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style CB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+    end
+    
+    GitHub -->|Source| CP
+    FrontendApplications -->|Static Content| CF
+    CF -->|Origin| S3
+    FrontendApplications -->|API Calls| ALB
+    ALB -->|Route| ECS
+    ECS -->|Connection Pool| PROXY
+    PROXY -->|Connect| RDS
+    FrontendApplications -->|Auth| COG
+    WAF -->|Protect| CF
+    WAF -->|Protect| ALB
+    ECS -->|Logs| CW
+    ECS -->|Traces| XR
+    CP -->|Build| CB
+    CB -->|Deploy| ECS
+    CB -->|Deploy| S3
+```
+
 ## Lang Portal
-### Frontend (React)
-### Backend (API)
+### Frontend Stack
+```mermaid
+graph TB
+    subgraph LangPortalFrontendStack[Lang Portal Frontend Stack]
+        subgraph AWSResources[AWS Resources]
+            CF[CloudFront Distribution]
+            S3[S3 Bucket]
+            R53[Route 53]
+            ACM[Certificate Manager]
+            style CF fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style S3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style R53 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ACM fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph CICDPipeline[CI/CD Pipeline]
+            GH[GitHub]
+            CP[CodePipeline]
+            CB[CodeBuild]
+            style GH fill:#333,stroke:#fff,stroke-width:2px
+            style CP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style CB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+    end
+    
+    GH -->|Source| CP
+    CP -->|Build| CB
+    CB -->|Deploy| S3
+    R53 -->|DNS| CF
+    CF -->|Origin| S3
+    CF -->|SSL| ACM
+```
+
+### Backend Stack
+```mermaid
+graph TB
+    subgraph LangPortalBackendStack[Lang Portal Backend Stack]
+        subgraph AWSResources[AWS Resources]
+            ECS[ECS Cluster]
+            ALB[Application Load Balancer]
+            PROXY[RDS Proxy]
+            RDS[(RDS Database)]
+            style ECS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style PROXY fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style RDS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph CICDPipeline[CI/CD Pipeline]
+            GH[GitHub]
+            CP[CodePipeline]
+            CB[CodeBuild]
+            ECR[ECR Repository]
+            style GH fill:#333,stroke:#fff,stroke-width:2px
+            style CP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style CB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ECR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+    end
+    
+    GH -->|Source| CP
+    CP -->|Build| CB
+    CB -->|Push| ECR
+    ECR -->|Deploy| ECS
+    ECS -->|Connect| PROXY
+    ALB -->|Route| ECS
+    PROXY -->|Pool| RDS
+```
 
 ## Haiku Generator
-### Frontend (React)
-### Backend (API)
+### Frontend Stack
+```mermaid
+graph TB
+    subgraph HaikuGeneratorFrontendStack[Haiku Generator Frontend Stack]
+        subgraph AWSResources[AWS Resources]
+            CF[CloudFront Distribution]
+            S3[S3 Bucket]
+            R53[Route 53]
+            ACM[Certificate Manager]
+            style CF fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style S3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style R53 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ACM fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph CICDPipeline[CI/CD Pipeline]
+            GH[GitHub]
+            CP[CodePipeline]
+            CB[CodeBuild]
+            style GH fill:#333,stroke:#fff,stroke-width:2px
+            style CP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style CB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+    end
+    
+    GH -->|Source| CP
+    CP -->|Build| CB
+    CB -->|Deploy| S3
+    R53 -->|DNS| CF
+    CF -->|Origin| S3
+    CF -->|SSL| ACM
+```
+
+### Backend Stack
+```mermaid
+graph TB
+    subgraph HaikuGeneratorBackendStack[Haiku Generator Backend Stack]
+        subgraph AWSResources[AWS Resources]
+            ECS[ECS Cluster]
+            ALB[Application Load Balancer]
+            S3[S3 Storage]
+            PROXY[RDS Proxy]
+            RDS[(RDS Database)]
+            style ECS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style S3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style PROXY fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style RDS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph CICDPipeline[CI/CD Pipeline]
+            GH[GitHub]
+            CP[CodePipeline]
+            CB[CodeBuild]
+            ECR[ECR Repository]
+            style GH fill:#333,stroke:#fff,stroke-width:2px
+            style CP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style CB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ECR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+    end
+    
+    ECS -->|Store| S3
+    GH -->|Source| CP
+    CP -->|Build| CB
+    CB -->|Push| ECR
+    ECR -->|Deploy| ECS
+    ECS -->|Connect| PROXY
+    ALB -->|Route| ECS
+    PROXY -->|Pool| RDS
+```
 
 ## Vocab Generator
-### Frontend (Streamlit)
-### Backend (API)
+### Frontend Stack
+```mermaid
+graph TB
+    subgraph VocabGeneratorFrontendStack[Vocab Generator Frontend Stack]
+        subgraph AWSResources[AWS Resources]
+            ECS[ECS Cluster]
+            ALB[Application Load Balancer]
+            style ECS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph CICDPipeline[CI/CD Pipeline]
+            GH[GitHub]
+            CP[CodePipeline]
+            CB[CodeBuild]
+            ECR[ECR Repository]
+            style GH fill:#333,stroke:#fff,stroke-width:2px
+            style CP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style CB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ECR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+    end
+    
+    GH -->|Source| CP
+    CP -->|Build| CB
+    CB -->|Push| ECR
+    ECR -->|Deploy| ECS
+    ALB -->|Route| ECS
+```
+
+### Backend Stack
+```mermaid
+graph TB
+    subgraph VocabGeneratorBackendStack[Vocab Generator Backend Stack]
+        subgraph AWSResources[AWS Resources]
+            ECS[ECS Cluster]
+            ALB[Application Load Balancer]
+            style ECS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph CICDPipeline[CI/CD Pipeline]
+            GH[GitHub]
+            CP[CodePipeline]
+            CB[CodeBuild]
+            ECR[ECR Repository]
+            style GH fill:#333,stroke:#fff,stroke-width:2px
+            style CP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style CB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ECR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+    end
+    
+    GH -->|Source| CP
+    CP -->|Build| CB
+    CB -->|Push| ECR
+    ECR -->|Deploy| ECS
+    ALB -->|Route| ECS
+```
 
 ## Writing Practice
-### Frontend (Streamlit)
+### Frontend Stack
+```mermaid
+graph TB
+    subgraph WritingPracticeFrontendStack[Writing Practice Frontend Stack]
+        subgraph AWSResources[AWS Resources]
+            ECS[ECS Cluster]
+            ALB[Application Load Balancer]
+            style ECS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph CICDPipeline[CI/CD Pipeline]
+            GH[GitHub]
+            CP[CodePipeline]
+            CB[CodeBuild]
+            ECR[ECR Repository]
+            style GH fill:#333,stroke:#fff,stroke-width:2px
+            style CP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style CB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ECR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+    end
+    
+    GH -->|Source| CP
+    CP -->|Build| CB
+    CB -->|Push| ECR
+    ECR -->|Deploy| ECS
+    ALB -->|Route| ECS
+```
 
 ## Authentication & Authorization
-### Cognito
-### API Authorization
+```mermaid
+graph TB
+    subgraph AuthenticationInfrastructure[Authentication Infrastructure]
+        subgraph Cognito
+            UP[User Pool]
+            UI[Hosted UI]
+            CL[App Clients]
+            style UP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style UI fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style CL fill:#85C1E9,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph APIAuthorization[API Authorization]
+            JWT[JWT Authorizer]
+            IAM[IAM Roles]
+            POL[IAM Policies]
+            style JWT fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style IAM fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style POL fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph ProtectedResources[Protected Resources]
+            ALB[Load Balancer]
+            API[API Services]
+            S3[S3 Buckets]
+            style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style API fill:#85C1E9,stroke:#333,stroke-width:2px,color:#333
+            style S3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+    end
+    
+    UP -->|Auth Flow| UI
+    UI -->|Token| CL
+    CL -->|JWT| JWT
+    JWT -->|Validate| API
+    IAM -->|Assign| POL
+    POL -->|Access| S3
+    POL -->|Access| ALB
+    ALB -->|Forward| API
+```
 
 ## Monitoring & Observability
-### CloudWatch
-### X-Ray
-### Logging
+```mermaid
+graph TB
+    subgraph MonitoringInfrastructure[Monitoring Infrastructure]
+        subgraph CloudWatch
+            LOG[Log Groups]
+            MET[Metrics]
+            ALM[Alarms]
+            DSH[Dashboards]
+            style LOG fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style MET fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ALM fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style DSH fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph XRay[X-Ray]
+            TR[Traces]
+            SEG[Segments]
+            MAP[Service Map]
+            style TR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style SEG fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style MAP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph MonitoredResources[Monitored Resources]
+            ECS[ECS Services]
+            RDS[RDS Database]
+            ALB[Load Balancer]
+            API[API Services]
+            style ECS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style RDS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style API fill:#85C1E9,stroke:#333,stroke-width:2px,color:#333
+        end
+    end
+    
+    ECS -->|Container Logs| LOG
+    RDS -->|DB Logs| LOG
+    ALB -->|Access Logs| LOG
+    API -->|App Logs| LOG
+    
+    API -->|Traces| TR
+    TR -->|Build| SEG
+    SEG -->|Visualize| MAP
+    
+    LOG -->|Generate| MET
+    MET -->|Trigger| ALM
+    MET -->|Display| DSH
+    
+    ALM -->|Alert| SNS[SNS Topic]
+    style SNS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+```
 
 ## Network Infrastructure
-### VPC
-### Security Groups
-### Load Balancers
+```mermaid
+graph TB
+    subgraph NetworkInfrastructure[Network Infrastructure]
+        subgraph VPC
+            subgraph PublicSubnets[Public Subnets]
+                PUB1[Public Subnet 1]
+                PUB2[Public Subnet 2]
+                PUB3[Public Subnet 3]
+                style PUB1 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+                style PUB2 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+                style PUB3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            end
+            
+            subgraph PrivateSubnets[Private Subnets]
+                PRV1[Private Subnet 1]
+                PRV2[Private Subnet 2]
+                PRV3[Private Subnet 3]
+                style PRV1 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+                style PRV2 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+                style PRV3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            end
+            
+            IGW[Internet Gateway]
+            NAT[NAT Gateway]
+            RT1[Public Route Table]
+            RT2[Private Route Table]
+            style IGW fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style NAT fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style RT1 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style RT2 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph Security
+            ALB-SG[ALB Security Group]
+            ECS-SG[ECS Security Group]
+            RDS-SG[RDS Security Group]
+            style ALB-SG fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ECS-SG fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style RDS-SG fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph LoadBalancing[Load Balancing]
+            ALB[Application Load Balancer]
+            TG1[Target Group 1]
+            TG2[Target Group 2]
+            style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style TG1 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style TG2 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+    end
+    
+    IGW -->|Internet Traffic| PUB1
+    IGW -->|Internet Traffic| PUB2
+    IGW -->|Internet Traffic| PUB3
+    
+    PUB1 -->|NAT Traffic| NAT
+    NAT -->|Outbound| PRV1
+    NAT -->|Outbound| PRV2
+    NAT -->|Outbound| PRV3
+    
+    ALB -->|Forward| TG1
+    ALB -->|Forward| TG2
+    
+    ALB-SG -->|Allow 443| ALB
+    ECS-SG -->|Allow Traffic| TG1
+    ECS-SG -->|Allow Traffic| TG2
+    RDS-SG -->|Allow 5432| ECS-SG
+```
