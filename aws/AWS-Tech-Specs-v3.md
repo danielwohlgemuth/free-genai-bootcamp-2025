@@ -55,11 +55,13 @@ graph TB
             style XR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
         end
         
-        subgraph CICD[CI/CD]
+        subgraph CICD[CI/CD Pipeline]
             CP[CodePipeline]
             CB[CodeBuild]
+            ECR[ECR Repository]
             style CP fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style CB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style ECR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
         end
     end
     
@@ -76,8 +78,9 @@ graph TB
     ECS -->|Logs| CW
     ECS -->|Traces| XR
     CP -->|Build| CB
-    CB -->|Deploy| ECS
     CB -->|Deploy| S3
+    CB -->|Push| ECR
+    ECR -->|Deploy| ECS
 ```
 
 ## Lang Portal
