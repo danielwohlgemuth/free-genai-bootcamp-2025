@@ -1,5 +1,7 @@
 # AWS Technical Specifications v3
 
+This document provides a comprehensive technical overview of the cloud infrastructure and application stacks. It serves as a high-level implementation guide for each component of the system, describing the AWS services, architecture patterns, and key configurations while maintaining a balance between clarity and technical detail.
+
 ## System Overview
 ```mermaid
 graph TB
@@ -126,6 +128,20 @@ graph TB
     CF -->|SSL| ACM
 ```
 
+#### Stack Specification
+- **Hosting**: CloudFront + S3
+  - S3 bucket for static assets
+  - CloudFront distribution with HTTPS
+  - Custom domain: lang-portal.app-dw.net
+- **Infrastructure**:
+  - React SPA deployment
+  - Cache policies for optimal performance
+  - WAF integration for security
+- **CI/CD**:
+  - CodePipeline with GitHub source
+  - Build and deploy stages
+  - Automated invalidation
+
 ### Backend Stack
 ```mermaid
 graph TB
@@ -196,6 +212,24 @@ graph TB
     CF -->|SSL| ACM
 ```
 
+#### Stack Specification
+- **Compute**: ECS Fargate
+  - Gradio UI deployment
+  - FARGATE_SPOT for cost optimization
+  - Auto-scaling configuration
+- **Load Balancing**:
+  - ALB with target groups
+  - Path-based routing
+  - Health checks
+- **Security**:
+  - WAF protection
+  - SSL/TLS encryption
+  - Security group rules
+- **CI/CD**:
+  - CodePipeline with ECR
+  - Container builds
+  - Automated deployment
+
 ### Backend Stack
 ```mermaid
 graph TB
@@ -241,6 +275,28 @@ graph TB
     PROXY -->|Pool| RDS
 ```
 
+#### Stack Specification
+- **Compute**: ECS Fargate
+  - API containers
+  - FARGATE_SPOT capacity provider
+  - Auto-scaling policies
+- **Database**:
+  - Aurora PostgreSQL
+  - RDS Proxy
+  - Automated backups
+- **AI Integration**:
+  - Amazon Bedrock
+  - Prompt management
+  - Response filtering
+- **Security**:
+  - VPC endpoints
+  - Security groups
+  - IAM roles
+- **CI/CD**:
+  - CodePipeline with ECR
+  - Container image builds
+  - Blue/green deployment
+
 ## Vocab Generator
 ### Frontend Stack
 ```mermaid
@@ -271,6 +327,24 @@ graph TB
     ECR -->|Deploy| ECS
     ALB -->|Route| ECS
 ```
+
+#### Stack Specification
+- **Compute**: ECS Fargate
+  - Streamlit app deployment
+  - FARGATE_SPOT instances
+  - Container definitions
+- **Network**:
+  - ALB for load balancing
+  - Target group configuration
+  - Health check endpoints
+- **Monitoring**:
+  - CloudWatch logs
+  - Container insights
+  - Custom metrics
+- **CI/CD**:
+  - CodePipeline with ECR
+  - Container builds
+  - Automated deployment
 
 ### Backend Stack
 ```mermaid
@@ -304,6 +378,28 @@ graph TB
     ECS -->|Inference| BDR
     ALB -->|Route| ECS
 ```
+
+#### Stack Specification
+- **Compute**: ECS Fargate
+  - API containers
+  - Auto-scaling configuration
+  - Health monitoring
+- **Database**:
+  - Aurora PostgreSQL
+  - RDS Proxy for pooling
+  - Backup strategy
+- **Networking**:
+  - ALB integration
+  - Route configurations
+  - SSL termination
+- **Security**:
+  - VPC security
+  - IAM roles and policies
+  - Encryption at rest
+- **CI/CD**:
+  - CodePipeline automation
+  - Container registry
+  - Blue/green deployments
 
 ## Writing Practice
 ### Frontend Stack
@@ -341,6 +437,24 @@ graph TB
     ECS -->|Inference| BDR
     ECS -->|Speech| PLY
 ```
+
+#### Stack Specification
+- **Compute**: ECS Fargate
+  - Streamlit app container
+  - FARGATE_SPOT for cost savings
+  - Auto-scaling rules
+- **Network**:
+  - ALB integration
+  - Path-based routing
+  - Health monitoring
+- **Security**:
+  - WAF protection
+  - Security groups
+  - HTTPS enabled
+- **CI/CD**:
+  - CodePipeline workflow
+  - Container builds
+  - Automated deployment
 
 ## Authentication & Authorization
 ```mermaid
@@ -383,6 +497,24 @@ graph TB
     POL -->|Access| ALB
     ALB -->|Forward| API
 ```
+
+#### Stack Specification
+- **User Management**: Cognito User Pools
+  - Email authentication
+  - Custom attributes
+  - Token configuration
+- **App Integration**:
+  - Multiple app clients
+  - OAuth 2.0 flows
+  - Hosted UI customization
+- **Access Control**:
+  - Identity pools
+  - IAM role mapping
+  - Fine-grained permissions
+- **Security**:
+  - MFA capability
+  - Password policies
+  - Session management
 
 ## Monitoring & Observability
 ```mermaid
@@ -437,6 +569,24 @@ graph TB
     style SNS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
 ```
 
+#### Stack Specification
+- **Monitoring**:
+  - CloudWatch metrics and logs
+  - X-Ray tracing
+  - OpenTelemetry integration
+- **Visualization**:
+  - Custom dashboards
+  - Service health views
+  - Cost analysis
+- **Alerting**:
+  - CloudWatch alarms
+  - SNS notifications
+  - Incident response
+- **Logging**:
+  - Log groups per service
+  - Log retention policies
+  - Log insights queries
+
 ## Network Infrastructure
 ### Load Balancing
 ```mermaid
@@ -469,6 +619,24 @@ graph TB
     ECS-SG -->|Allow Traffic| TG2
     RDS-SG -->|Allow 5432| ECS-SG
 ```
+
+#### Stack Specification
+- **Load Balancers**:
+  - Application Load Balancer
+  - Target groups per service
+  - Health check configuration
+- **Networking**:
+  - VPC with public/private subnets
+  - NAT Gateways for outbound
+  - VPC endpoints for services
+- **Routing**:
+  - Route tables configuration 
+  - Internet Gateway
+  - Security group rules
+- **DNS**:
+  - Route 53 hosted zones
+  - A records for services
+  - Health checks
 
 ### VPC
 ```mermaid
