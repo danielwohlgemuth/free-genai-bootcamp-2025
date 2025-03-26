@@ -414,38 +414,10 @@ graph TB
 ```
 
 ## Network Infrastructure
+### Load Balancing
 ```mermaid
 graph TB
-    subgraph NetworkInfrastructure[Network Infrastructure]
-        subgraph VPC
-            subgraph PublicSubnets[Public Subnets]
-                PUB1[Public Subnet 1]
-                PUB2[Public Subnet 2]
-                PUB3[Public Subnet 3]
-                style PUB1 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
-                style PUB2 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
-                style PUB3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
-            end
-            
-            subgraph PrivateSubnets[Private Subnets]
-                PRV1[Private Subnet 1]
-                PRV2[Private Subnet 2]
-                PRV3[Private Subnet 3]
-                style PRV1 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
-                style PRV2 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
-                style PRV3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
-            end
-            
-            IGW[Internet Gateway]
-            NAT[NAT Gateway]
-            RT1[Public Route Table]
-            RT2[Private Route Table]
-            style IGW fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
-            style NAT fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
-            style RT1 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
-            style RT2 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
-        end
-        
+    subgraph NetworkInfrastructure[Network Infrastructure - Load Balancing]
         subgraph Security
             ALB-SG[ALB Security Group]
             ECS-SG[ECS Security Group]
@@ -465,6 +437,47 @@ graph TB
         end
     end
     
+    ALB -->|Forward| TG1
+    ALB -->|Forward| TG2
+    
+    ALB-SG -->|Allow 443| ALB
+    ECS-SG -->|Allow Traffic| TG1
+    ECS-SG -->|Allow Traffic| TG2
+    RDS-SG -->|Allow 5432| ECS-SG
+```
+
+### VPC
+```mermaid
+graph TB
+    subgraph NetworkInfrastructure[Network Infrastructure - VPC]
+        subgraph PublicSubnets[Public Subnets]
+            PUB1[Public Subnet 1]
+            PUB2[Public Subnet 2]
+            PUB3[Public Subnet 3]
+            style PUB1 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style PUB2 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style PUB3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        subgraph PrivateSubnets[Private Subnets]
+            PRV1[Private Subnet 1]
+            PRV2[Private Subnet 2]
+            PRV3[Private Subnet 3]
+            style PRV1 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style PRV2 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style PRV3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        end
+        
+        IGW[Internet Gateway]
+        NAT[NAT Gateway]
+        RT1[Public Route Table]
+        RT2[Private Route Table]
+        style IGW fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        style NAT fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        style RT1 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+        style RT2 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+    end
+    
     IGW -->|Internet Traffic| PUB1
     IGW -->|Internet Traffic| PUB2
     IGW -->|Internet Traffic| PUB3
@@ -473,12 +486,4 @@ graph TB
     NAT -->|Outbound| PRV1
     NAT -->|Outbound| PRV2
     NAT -->|Outbound| PRV3
-    
-    ALB -->|Forward| TG1
-    ALB -->|Forward| TG2
-    
-    ALB-SG -->|Allow 443| ALB
-    ECS-SG -->|Allow Traffic| TG1
-    ECS-SG -->|Allow Traffic| TG2
-    RDS-SG -->|Allow 5432| ECS-SG
 ```
