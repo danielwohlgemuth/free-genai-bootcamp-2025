@@ -36,9 +36,15 @@ graph TB
             ECS
             RDS[(RDS Database)]
             PROXY[RDS Proxy]
+            BDR[Bedrock]
+            PLY[Polly]
+            IMG[Image Generation]
             style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style RDS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style PROXY fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style BDR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style PLY fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style IMG fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
         end
         
         subgraph Security
@@ -71,6 +77,9 @@ graph TB
     FrontendApplications -->|API Calls| ALB
     ALB -->|Route| ECS
     ECS -->|Connection Pool| PROXY
+    ECS -->|Inference| BDR
+    ECS -->|Speech| PLY
+    ECS -->|Generate| IMG
     PROXY -->|Connect| RDS
     FrontendApplications -->|Auth| COG
     WAF -->|Protect| CF
@@ -197,11 +206,15 @@ graph TB
             S3[S3 Storage]
             PROXY[RDS Proxy]
             RDS[(RDS Database)]
+            BDR[Bedrock]
+            IMG[Image Generation]
             style ECS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style S3 fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style PROXY fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style RDS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style BDR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style IMG fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
         end
         
         subgraph CICDPipeline[CI/CD Pipeline]
@@ -221,6 +234,8 @@ graph TB
     CP -->|Build| CB
     CB -->|Push| ECR
     ECR -->|Deploy| ECS
+    ECS -->|Generate| IMG
+    ECS -->|Inference| BDR
     ECS -->|Connect| PROXY
     ALB -->|Route| ECS
     PROXY -->|Pool| RDS
@@ -264,8 +279,10 @@ graph TB
         subgraph AWSResources[AWS Resources]
             ECS[ECS Cluster]
             ALB[Application Load Balancer]
+            BDR[Bedrock]
             style ECS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style BDR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
         end
         
         subgraph CICDPipeline[CI/CD Pipeline]
@@ -284,6 +301,7 @@ graph TB
     CP -->|Build| CB
     CB -->|Push| ECR
     ECR -->|Deploy| ECS
+    ECS -->|Inference| BDR
     ALB -->|Route| ECS
 ```
 
@@ -295,8 +313,12 @@ graph TB
         subgraph AWSResources[AWS Resources]
             ECS[ECS Cluster]
             ALB[Application Load Balancer]
+            BDR[Bedrock]
+            PLY[Polly]
             style ECS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style BDR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style PLY fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
         end
         
         subgraph CICDPipeline[CI/CD Pipeline]
@@ -316,6 +338,8 @@ graph TB
     CB -->|Push| ECR
     ECR -->|Deploy| ECS
     ALB -->|Route| ECS
+    ECS -->|Inference| BDR
+    ECS -->|Speech| PLY
 ```
 
 ## Authentication & Authorization
