@@ -241,6 +241,7 @@ graph TB
             PROXY[RDS Proxy]
             RDS[(RDS Database)]
             BDR[Bedrock]
+            PLY[Polly]
             IMG[Image Generation]
             style ECS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style ALB fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
@@ -248,6 +249,7 @@ graph TB
             style PROXY fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style RDS fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style BDR fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
+            style PLY fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
             style IMG fill:#FF9900,stroke:#333,stroke-width:2px,color:#333
         end
         
@@ -269,6 +271,7 @@ graph TB
     CB -->|Push| ECR
     ECR -->|Deploy| ECS
     ECS -->|Generate| IMG
+    ECS -->|Speech| PLY
     ECS -->|Inference| BDR
     ECS -->|Connect| PROXY
     ALB -->|Route| ECS
