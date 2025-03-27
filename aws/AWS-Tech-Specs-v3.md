@@ -94,6 +94,10 @@ graph TB
     ECR -->|Deploy| ECS
 ```
 
+- Multi-project monorepo architecture
+- Single-region deployment (us-east-1)
+- Cost-optimized infrastructure
+
 ## Lang Portal
 ### Frontend Stack
 ```mermaid
@@ -132,7 +136,7 @@ graph TB
 - **Hosting**: CloudFront + S3
   - S3 bucket for static assets
   - CloudFront distribution with HTTPS
-  - Custom domain: lang-portal.app-dw.net
+- **Domain**: lang-portal.app-dw.net
 - **Infrastructure**:
   - React SPA deployment
   - Cache policies for optimal performance
@@ -178,6 +182,32 @@ graph TB
     PROXY -->|Pool| RDS
 ```
 
+#### Stack Specification
+- **Compute**: ECS Fargate
+  - FARGATE_SPOT for cost optimization
+  - Target tracking scaling policy
+    - CPU utilization target: 70%
+    - Memory utilization target: 80%
+  - Min capacity: 1
+  - Max capacity: 4
+- **Database**: Aurora PostgreSQL
+  - Instance class: db.t4g.medium
+  - Multi-AZ deployment for production
+  - Automated backups with 7-day retention
+    - Snapshot frequency: Daily
+    - Transaction logs: 5-minute intervals
+  - RDS Proxy with connection pooling
+  - Auto-scaling storage: 20GB - 100GB
+- **Storage**: S3
+  - Lifecycle rules for cost optimization
+  - Intelligent-Tiering for infrequent access
+- **API Gateway**: REST API
+  - Integrated with main domain (lang-portal.app-dw.net)
+  - All API requests processed through /api/* path
+- **CI/CD**: CodePipeline with GitHub source
+- **Monitoring**: CloudWatch with 7-day log retention
+- **Domain**: lang-portal.app-dw.internal
+
 ## Haiku Generator
 ### Frontend Stack
 ```mermaid
@@ -213,22 +243,18 @@ graph TB
 ```
 
 #### Stack Specification
-- **Compute**: ECS Fargate
-  - Gradio UI deployment
-  - FARGATE_SPOT for cost optimization
-  - Auto-scaling configuration
-- **Load Balancing**:
-  - ALB with target groups
-  - Path-based routing
-  - Health checks
-- **Security**:
-  - WAF protection
-  - SSL/TLS encryption
-  - Security group rules
+- **Hosting**: CloudFront + S3
+  - S3 bucket for static assets
+  - CloudFront distribution with HTTPS
+- **Domain**: haiku.app-dw.net
+- **Infrastructure**:
+  - React SPA deployment
+  - Cache policies for optimal performance
+  - WAF integration for security
 - **CI/CD**:
-  - CodePipeline with ECR
-  - Container builds
-  - Automated deployment
+  - CodePipeline with GitHub source
+  - Build and deploy stages
+  - Automated invalidation
 
 ### Backend Stack
 ```mermaid
@@ -280,25 +306,33 @@ graph TB
 
 #### Stack Specification
 - **Compute**: ECS Fargate
-  - API containers
-  - FARGATE_SPOT capacity provider
-  - Auto-scaling policies
-- **Database**:
-  - Aurora PostgreSQL
-  - RDS Proxy
-  - Automated backups
-- **AI Integration**:
-  - Amazon Bedrock
-  - Prompt management
-  - Response filtering
-- **Security**:
-  - VPC endpoints
-  - Security groups
-  - IAM roles
+  - FARGATE_SPOT for cost optimization
+  - Target tracking scaling policy
+    - CPU utilization target: 70%
+    - Memory utilization target: 80%
+  - Min capacity: 1
+  - Max capacity: 4
+- **Database**: Aurora PostgreSQL
+  - Instance class: db.t4g.medium
+  - Multi-AZ deployment for production
+  - Automated backups with 7-day retention
+    - Snapshot frequency: Daily
+    - Transaction logs: 5-minute intervals
+  - RDS Proxy with connection pooling
+- **Storage**: S3
+  - Image storage with lifecycle rules
+  - Intelligent-Tiering enabled
+- **AI Services**:
+  - Amazon Polly for text-to-speech
+  - Stable Diffusion on Bedrock for image generation
+  - Amazon Bedrock for LLM capabilities
+- **API Integration**: 
+  - Integrated with main domain (haiku.app-dw.net)
+  - All API requests processed through /api/* path
 - **CI/CD**:
-  - CodePipeline with ECR
-  - Container image builds
-  - Blue/green deployment
+  - CodePipeline automation
+  - Container builds
+  - Automated deployment
 
 ## Vocab Generator
 ### Frontend Stack
@@ -336,6 +370,7 @@ graph TB
   - Streamlit app deployment
   - FARGATE_SPOT instances
   - Container definitions
+- **Domain**: vocab.app-dw.net
 - **Network**:
   - ALB for load balancing
   - Target group configuration
@@ -384,25 +419,35 @@ graph TB
 
 #### Stack Specification
 - **Compute**: ECS Fargate
-  - API containers
-  - Auto-scaling configuration
+  - FARGATE_SPOT for cost optimization
+  - Target tracking scaling policy
+    - CPU utilization target: 70%
+    - Memory utilization target: 80%
+  - Min capacity: 1
+  - Max capacity: 4
   - Health monitoring
-- **Database**:
-  - Aurora PostgreSQL
-  - RDS Proxy for pooling
-  - Backup strategy
-- **Networking**:
-  - ALB integration
-  - Route configurations
-  - SSL termination
+- **Database**: Aurora PostgreSQL
+  - Instance class: db.t4g.medium
+  - Multi-AZ deployment for production
+  - Automated backups with 7-day retention
+    - Snapshot frequency: Daily
+    - Transaction logs: 5-minute intervals
+  - RDS Proxy with connection pooling
+- **AI Services**:
+  - Amazon Bedrock for LLM capabilities
 - **Security**:
   - VPC security
   - IAM roles and policies
   - Encryption at rest
+- **Domain**: vocab.app-dw.internal
+- **Networking**:
+  - ALB integration
+  - Route configurations
+  - SSL termination
 - **CI/CD**:
   - CodePipeline automation
-  - Container registry
-  - Blue/green deployments
+  - Container builds
+  - Automated deployment
 
 ## Writing Practice
 ### Frontend Stack
@@ -443,9 +488,16 @@ graph TB
 
 #### Stack Specification
 - **Compute**: ECS Fargate
-  - Streamlit app container
-  - FARGATE_SPOT for cost savings
-  - Auto-scaling rules
+  - FARGATE_SPOT for cost optimization
+  - Target tracking scaling policy
+    - CPU utilization target: 70%
+    - Memory utilization target: 80%
+  - Min capacity: 1
+  - Max capacity: 4
+- **AI Services**:
+  - Amazon Polly for text-to-speech
+  - Amazon Bedrock for LLM capabilities
+- **Domain**: writing.app-dw.net
 - **Network**:
   - ALB integration
   - Path-based routing
@@ -585,6 +637,11 @@ graph TB
   - CloudWatch alarms
   - SNS notifications
   - Incident response
+  - Automated alerts for:
+    - 5xx errors > 5% in 5 minutes
+    - CPU/Memory utilization > 85%
+    - Database connection spikes
+    - API latency thresholds
 - **Logging**:
   - Log groups per service
   - Log retention policies
