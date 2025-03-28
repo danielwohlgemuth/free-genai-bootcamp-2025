@@ -1,13 +1,13 @@
 from aws_cdk import (
-    Stack,
     aws_ec2 as ec2,
     aws_ecs as ecs,
     aws_ecs_patterns as ecs_patterns,
     aws_elasticloadbalancingv2 as elbv2,
-    aws_logs as logs,
     aws_iam as iam,
+    aws_logs as logs,
+    CfnOutput,
     Duration,
-    CfnOutput
+    Stack
 )
 from constructs import Construct
 
@@ -55,7 +55,7 @@ class LangPortalBackendStack(Stack):
             cpu=256,
             logging=ecs.LogDriver.aws_logs(
                 stream_prefix="LangPortalBackend",
-                log_retention=logs.RetentionDays.SEVEN_DAYS
+                log_retention=logs.RetentionDays.ONE_WEEK
             ),
             environment={
                 "COGNITO_USER_POOL_ID": user_pool.user_pool_id,
@@ -93,13 +93,12 @@ class LangPortalBackendStack(Stack):
             ),
             listener_port=80,
             target_protocol=elbv2.ApplicationProtocol.HTTP,
-            health_check=elbv2.HealthCheck(
-                path="/api/health",
+            health_check=ecs.HealthCheck(
+                command=["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"],
                 interval=Duration.seconds(30),
-                timeout=Duration.seconds(3),
-                healthy_http_codes="200",
-                healthy_threshold_count=2,
-                unhealthy_threshold_count=3
+                timeout=Duration.seconds(5),
+                retries=3,
+                start_period=Duration.seconds(60)
             ),
             capacity_provider_strategies=[
                 ecs.CapacityProviderStrategy(
@@ -116,6 +115,15 @@ class LangPortalBackendStack(Stack):
         scaling = self.service.service.auto_scale_task_count(
             max_capacity=10,
             min_capacity=2
+        )
+
+        self.service.target_group.configure_health_check(
+            path="/api/health",
+            healthy_http_codes="200",
+            interval=Duration.seconds(30),
+            timeout=Duration.seconds(3),
+            healthy_threshold_count=2,
+            unhealthy_threshold_count=3
         )
 
         scaling.scale_on_cpu_utilization(

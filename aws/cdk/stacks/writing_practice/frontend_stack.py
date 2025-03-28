@@ -1,22 +1,24 @@
 from aws_cdk import (
     Stack,
+    aws_certificatemanager as acm,
     aws_ec2 as ec2,
     aws_ecs as ecs,
     aws_ecs_patterns as ecs_patterns,
     aws_elasticloadbalancingv2 as elbv2,
+    aws_iam as iam,
+    aws_logs as logs,
     aws_route53 as route53,
     aws_route53_targets as targets,
-    aws_certificatemanager as acm,
-    aws_logs as logs,
-    aws_iam as iam,
+    aws_secretsmanager as secretsmanager,
     Duration,
     CfnOutput
 )
 from constructs import Construct
+from ..auth_stack import AuthStack
 
 class WritingPracticeFrontendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
-                 vpc: ec2.Vpc, user_pool, **kwargs) -> None:
+                 vpc: ec2.Vpc, auth_stack: AuthStack, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # Create ECS Cluster
@@ -71,11 +73,11 @@ class WritingPracticeFrontendStack(Stack):
             cpu=1024,
             logging=ecs.LogDriver.aws_logs(
                 stream_prefix="WritingPractice",
-                log_retention=logs.RetentionDays.SEVEN_DAYS
+                log_retention=logs.RetentionDays.ONE_WEEK
             ),
             environment={
-                "COGNITO_USER_POOL_ID": user_pool.user_pool_id,
-                "COGNITO_APP_CLIENT_ID": user_pool.writing_practice_client.user_pool_client_id,
+                "COGNITO_USER_POOL_ID": auth_stack.user_pool.user_pool_id,
+                "COGNITO_APP_CLIENT_ID": auth_stack.writing_practice_client.user_pool_client_id,
                 "AWS_DEFAULT_REGION": Stack.of(self).region
             },
             secrets={
@@ -114,13 +116,12 @@ class WritingPracticeFrontendStack(Stack):
             ),
             listener_port=443,
             target_protocol=elbv2.ApplicationProtocol.HTTP,
-            health_check=elbv2.HealthCheck(
-                path="/healthz",
+            health_check=ecs.HealthCheck(
+                command=["CMD-SHELL", "curl -f http://localhost:8000/healthz || exit 1"],
                 interval=Duration.seconds(30),
-                timeout=Duration.seconds(3),
-                healthy_http_codes="200",
-                healthy_threshold_count=2,
-                unhealthy_threshold_count=3
+                timeout=Duration.seconds(5),
+                retries=3,
+                start_period=Duration.seconds(60)
             ),
             capacity_provider_strategies=[
                 ecs.CapacityProviderStrategy(
@@ -137,6 +138,15 @@ class WritingPracticeFrontendStack(Stack):
         scaling = self.service.service.auto_scale_task_count(
             max_capacity=4,
             min_capacity=2
+        )
+
+        self.service.target_group.configure_health_check(
+            path="/healthz",
+            healthy_http_codes="200",
+            interval=Duration.seconds(30),
+            timeout=Duration.seconds(3),
+            healthy_threshold_count=2,
+            unhealthy_threshold_count=3
         )
 
         scaling.scale_on_cpu_utilization(

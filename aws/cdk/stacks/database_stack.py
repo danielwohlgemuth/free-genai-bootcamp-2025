@@ -1,11 +1,12 @@
 from aws_cdk import (
-    Stack,
     aws_ec2 as ec2,
+    aws_logs as logs,
     aws_rds as rds,
     aws_secretsmanager as secretsmanager,
     CfnOutput,
     Duration,
-    RemovalPolicy
+    RemovalPolicy,
+    Stack
 )
 from constructs import Construct
 
@@ -69,7 +70,7 @@ class DatabaseStack(Stack):
                 parameter_group_name="default.aurora-postgresql13"
             ),
             removal_policy=RemovalPolicy.SNAPSHOT,
-            cloudwatch_logs_retention=Duration.days(7)
+            cloudwatch_logs_retention=logs.RetentionDays.ONE_WEEK
         )
 
         # Create Haiku Aurora cluster
@@ -100,14 +101,14 @@ class DatabaseStack(Stack):
                 parameter_group_name="default.aurora-postgresql13"
             ),
             removal_policy=RemovalPolicy.SNAPSHOT,
-            cloudwatch_logs_retention=Duration.days(7)
+            cloudwatch_logs_retention=logs.RetentionDays.ONE_WEEK
         )
 
         # Create RDS Proxy for Lang Portal
         self.lang_portal_proxy = rds.DatabaseProxy(
             self, "LangPortalDBProxy",
             proxy_target=rds.ProxyTarget.from_cluster(self.lang_portal_db),
-            secrets=[self.lang_portal_credentials.secret],
+            secrets=[self.lang_portal_db.secret],
             debug_logging=True,
             vpc=vpc,
             security_groups=[self.lang_portal_security_group],
@@ -118,7 +119,7 @@ class DatabaseStack(Stack):
         self.haiku_proxy = rds.DatabaseProxy(
             self, "HaikuDBProxy",
             proxy_target=rds.ProxyTarget.from_cluster(self.haiku_db),
-            secrets=[self.haiku_credentials.secret],
+            secrets=[self.haiku_db.secret],
             debug_logging=True,
             vpc=vpc,
             security_groups=[self.haiku_security_group],

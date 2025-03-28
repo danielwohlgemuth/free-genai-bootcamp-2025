@@ -1,12 +1,13 @@
 from aws_cdk import (
-    Stack,
     aws_cloudwatch as cloudwatch,
     aws_cloudwatch_actions as actions,
     aws_logs as logs,
     aws_sns as sns,
     aws_sns_subscriptions as subscriptions,
+    CfnOutput,
     Duration,
-    CfnOutput
+    RemovalPolicy,
+    Stack
 )
 from constructs import Construct
 
@@ -25,14 +26,14 @@ class MonitoringStack(Stack):
         self.lang_portal_cf_logs = logs.LogGroup(
             self, "LangPortalCFLogs",
             log_group_name="/aws/cloudfront/lang-portal",
-            retention=logs.RetentionDays.SEVEN_DAYS,
+            retention=logs.RetentionDays.ONE_WEEK,
             removal_policy=RemovalPolicy.DESTROY
         )
 
         self.haiku_cf_logs = logs.LogGroup(
             self, "HaikuCFLogs",
             log_group_name="/aws/cloudfront/haiku",
-            retention=logs.RetentionDays.SEVEN_DAYS,
+            retention=logs.RetentionDays.ONE_WEEK,
             removal_policy=RemovalPolicy.DESTROY
         )
 
@@ -40,14 +41,14 @@ class MonitoringStack(Stack):
         self.vocab_frontend_logs = logs.LogGroup(
             self, "VocabFrontendLogs",
             log_group_name="/aws/ecs/vocab-frontend",
-            retention=logs.RetentionDays.SEVEN_DAYS,
+            retention=logs.RetentionDays.ONE_WEEK,
             removal_policy=RemovalPolicy.DESTROY
         )
 
         self.writing_practice_logs = logs.LogGroup(
             self, "WritingPracticeLogs",
             log_group_name="/aws/ecs/writing-practice",
-            retention=logs.RetentionDays.SEVEN_DAYS,
+            retention=logs.RetentionDays.ONE_WEEK,
             removal_policy=RemovalPolicy.DESTROY
         )
 
@@ -55,21 +56,21 @@ class MonitoringStack(Stack):
         self.lang_portal_backend_logs = logs.LogGroup(
             self, "LangPortalBackendLogs",
             log_group_name="/aws/ecs/lang-portal-backend",
-            retention=logs.RetentionDays.SEVEN_DAYS,
+            retention=logs.RetentionDays.ONE_WEEK,
             removal_policy=RemovalPolicy.DESTROY
         )
 
         self.haiku_backend_logs = logs.LogGroup(
             self, "HaikuBackendLogs",
             log_group_name="/aws/ecs/haiku-backend",
-            retention=logs.RetentionDays.SEVEN_DAYS,
+            retention=logs.RetentionDays.ONE_WEEK,
             removal_policy=RemovalPolicy.DESTROY
         )
 
         self.vocab_backend_logs = logs.LogGroup(
             self, "VocabBackendLogs",
             log_group_name="/aws/ecs/vocab-backend",
-            retention=logs.RetentionDays.SEVEN_DAYS,
+            retention=logs.RetentionDays.ONE_WEEK,
             removal_policy=RemovalPolicy.DESTROY
         )
 
@@ -77,7 +78,7 @@ class MonitoringStack(Stack):
         self.aurora_logs = logs.LogGroup(
             self, "AuroraLogs",
             log_group_name="/aws/rds/aurora",
-            retention=logs.RetentionDays.SEVEN_DAYS,
+            retention=logs.RetentionDays.ONE_WEEK,
             removal_policy=RemovalPolicy.DESTROY
         )
 

@@ -1,11 +1,11 @@
 from aws_cdk import (
-    Stack,
-    aws_s3 as s3,
+    aws_certificatemanager as acm,
     aws_cloudfront as cloudfront,
     aws_route53 as route53,
     aws_route53_targets as targets,
-    aws_certificatemanager as acm,
-    CfnOutput
+    aws_s3 as s3,
+    CfnOutput,
+    Stack
 )
 from constructs import Construct
 

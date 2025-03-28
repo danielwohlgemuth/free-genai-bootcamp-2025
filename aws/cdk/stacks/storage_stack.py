@@ -1,15 +1,16 @@
 from aws_cdk import (
-    Stack,
-    aws_s3 as s3,
+    aws_certificatemanager as acm,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as origins,
     aws_iam as iam,
-    aws_certificatemanager as acm,
+    aws_logs as logs,
     aws_route53 as route53,
     aws_route53_targets as targets,
+    aws_s3 as s3,
+    CfnOutput,
     Duration,
     RemovalPolicy,
-    CfnOutput
+    Stack
 )
 from constructs import Construct
 
@@ -20,7 +21,7 @@ class StorageStack(Stack):
         # Create S3 bucket for access logging
         self.logging_bucket = s3.Bucket(
             self, "LoggingBucket",
-            bucket_name=f"{construct_id}-logs",
+            bucket_name=f"{construct_id.lower()}-logs",
             encryption=s3.BucketEncryption.S3_MANAGED,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             removal_policy=RemovalPolicy.RETAIN,
@@ -40,7 +41,7 @@ class StorageStack(Stack):
         # Create S3 bucket for Lang Portal frontend
         self.lang_portal_bucket = s3.Bucket(
             self, "LangPortalBucket",
-            bucket_name=f"{construct_id}-lang-portal",
+            bucket_name=f"{construct_id.lower()}-lang-portal",
             website_index_document="index.html",
             website_error_document="index.html",
             encryption=s3.BucketEncryption.S3_MANAGED,
@@ -53,7 +54,7 @@ class StorageStack(Stack):
                     allowed_methods=[s3.HttpMethods.GET],
                     allowed_origins=["https://lang-portal.app-dw.net"],
                     allowed_headers=["*"],
-                    max_age=Duration.days(1)
+                    max_age=86400
                 )
             ]
         )
@@ -61,7 +62,7 @@ class StorageStack(Stack):
         # Create S3 bucket for Haiku Generator frontend
         self.haiku_bucket = s3.Bucket(
             self, "HaikuBucket",
-            bucket_name=f"{construct_id}-haiku",
+            bucket_name=f"{construct_id.lower()}-haiku",
             website_index_document="index.html",
             website_error_document="index.html",
             encryption=s3.BucketEncryption.S3_MANAGED,
@@ -74,7 +75,7 @@ class StorageStack(Stack):
                     allowed_methods=[s3.HttpMethods.GET],
                     allowed_origins=["https://haiku.app-dw.net"],
                     allowed_headers=["*"],
-                    max_age=Duration.days(1)
+                    max_age=86400
                 )
             ]
         )

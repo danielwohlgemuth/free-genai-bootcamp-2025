@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 import os
 from aws_cdk import App, Environment
-from stacks.network_stack import NetworkStack
-from stacks.database_stack import DatabaseStack
 from stacks.auth_stack import AuthStack
-from stacks.monitoring_stack import MonitoringStack
-from stacks.storage_stack import StorageStack
-from stacks.lang_portal.frontend_stack import LangPortalFrontendStack
-from stacks.lang_portal.backend_stack import LangPortalBackendStack
-from stacks.haiku_generator.frontend_stack import HaikuGeneratorFrontendStack
+from stacks.database_stack import DatabaseStack
 from stacks.haiku_generator.backend_stack import HaikuGeneratorBackendStack
-from stacks.vocab_generator.frontend_stack import VocabGeneratorFrontendStack
+from stacks.haiku_generator.frontend_stack import HaikuGeneratorFrontendStack
+from stacks.lang_portal.backend_stack import LangPortalBackendStack
+from stacks.lang_portal.frontend_stack import LangPortalFrontendStack
+from stacks.monitoring_stack import MonitoringStack
+from stacks.network_stack import NetworkStack
+from stacks.storage_stack import StorageStack
 from stacks.vocab_generator.backend_stack import VocabGeneratorBackendStack
+from stacks.vocab_generator.frontend_stack import VocabGeneratorFrontendStack
 from stacks.writing_practice.frontend_stack import WritingPracticeFrontendStack
 
 app = App()
@@ -59,7 +59,7 @@ haiku_backend = HaikuGeneratorBackendStack(app, "HaikuGeneratorBackendStack",
 # Vocab Generator stacks
 vocab_frontend = VocabGeneratorFrontendStack(app, "VocabGeneratorFrontendStack",
     vpc=network_stack.vpc,
-    user_pool=auth_stack.user_pool,
+    auth_stack=auth_stack,
     env=env
 )
 
@@ -73,7 +73,7 @@ vocab_backend = VocabGeneratorBackendStack(app, "VocabGeneratorBackendStack",
 # Writing Practice stack
 writing_practice = WritingPracticeFrontendStack(app, "WritingPracticeFrontendStack",
     vpc=network_stack.vpc,
-    user_pool=auth_stack.user_pool,
+    auth_stack=auth_stack,
     env=env
 )
 

@@ -1,11 +1,12 @@
 from aws_cdk import (
-    Stack,
-    aws_cognito as cognito,
     aws_certificatemanager as acm,
+    aws_cognito as cognito,
     aws_route53 as route53,
     aws_route53_targets as targets,
+    CfnOutput,
     Duration,
-    CfnOutput
+    RemovalPolicy,
+    Stack
 )
 from constructs import Construct
 
@@ -44,7 +45,7 @@ class AuthStack(Stack):
         self.user_pool.add_domain(
             "CognitoDomain",
             cognito_domain=cognito.CognitoDomainOptions(
-                domain_prefix=f"{construct_id}-auth"
+                domain_prefix=f"auth"
             )
         )
 

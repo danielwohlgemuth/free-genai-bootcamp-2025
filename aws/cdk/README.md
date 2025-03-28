@@ -26,7 +26,7 @@ This directory contains the AWS CDK infrastructure code for deploying the applic
 
 1. Create and activate a virtual environment:
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
