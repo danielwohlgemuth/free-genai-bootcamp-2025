@@ -30,8 +30,7 @@ storage_stack = StorageStack(app, "StorageStack", env=env)
 
 # Lang Portal stacks
 lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",
-    user_pool=auth_stack.user_pool,
-    storage_bucket=storage_stack.lang_portal_bucket,
+    distribution=storage_stack.lang_portal_distribution,
     env=env
 )
 
@@ -44,8 +43,7 @@ lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
 
 # Haiku Generator stacks
 haiku_frontend = HaikuGeneratorFrontendStack(app, "HaikuGeneratorFrontendStack",
-    user_pool=auth_stack.user_pool,
-    storage_bucket=storage_stack.haiku_bucket,
+    distribution=storage_stack.haiku_distribution,
     env=env
 )
 
@@ -59,7 +57,8 @@ haiku_backend = HaikuGeneratorBackendStack(app, "HaikuGeneratorBackendStack",
 # Vocab Generator stacks
 vocab_frontend = VocabGeneratorFrontendStack(app, "VocabGeneratorFrontendStack",
     vpc=network_stack.vpc,
-    auth_stack=auth_stack,
+    user_pool=auth_stack.user_pool,
+    user_pool_client=auth_stack.vocab_client,
     env=env
 )
 
@@ -73,7 +72,8 @@ vocab_backend = VocabGeneratorBackendStack(app, "VocabGeneratorBackendStack",
 # Writing Practice stack
 writing_practice = WritingPracticeFrontendStack(app, "WritingPracticeFrontendStack",
     vpc=network_stack.vpc,
-    auth_stack=auth_stack,
+    user_pool=auth_stack.user_pool,
+    user_pool_client=auth_stack.vocab_client,
     env=env
 )
 

@@ -1,9 +1,7 @@
 from aws_cdk import (
     aws_certificatemanager as acm,
-    aws_cloudfront as cloudfront,
     aws_route53 as route53,
     aws_route53_targets as targets,
-    aws_s3 as s3,
     CfnOutput,
     Stack
 )
@@ -11,12 +9,8 @@ from constructs import Construct
 
 class LangPortalFrontendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, 
-                 user_pool, storage_bucket, **kwargs) -> None:
+                 distribution, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
-
-        # Store references
-        self.user_pool = user_pool
-        self.storage_bucket = storage_bucket
 
         # Import hosted zone
         self.hosted_zone = route53.HostedZone.from_lookup(
@@ -36,7 +30,7 @@ class LangPortalFrontendStack(Stack):
             self, "SiteAliasRecord",
             zone=self.hosted_zone,
             target=route53.RecordTarget.from_alias(
-                targets.CloudFrontTarget(self.storage_bucket)
+                targets.CloudFrontTarget(distribution)
             ),
             record_name="lang-portal.app-dw.net"
         )

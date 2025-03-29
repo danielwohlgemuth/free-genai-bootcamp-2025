@@ -1,8 +1,5 @@
 from aws_cdk import (
-    aws_certificatemanager as acm,
     aws_cognito as cognito,
-    aws_route53 as route53,
-    aws_route53_targets as targets,
     CfnOutput,
     Duration,
     RemovalPolicy,

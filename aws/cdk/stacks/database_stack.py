@@ -2,7 +2,6 @@ from aws_cdk import (
     aws_ec2 as ec2,
     aws_logs as logs,
     aws_rds as rds,
-    aws_secretsmanager as secretsmanager,
     CfnOutput,
     Duration,
     RemovalPolicy,
@@ -49,18 +48,21 @@ class DatabaseStack(Stack):
                 version=rds.AuroraPostgresEngineVersion.VER_13_9
             ),
             credentials=self.lang_portal_credentials,
-            instance_props=rds.InstanceProps(
-                vpc=vpc,
-                vpc_subnets=ec2.SubnetSelection(
-                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
-                ),
+            writer=rds.ClusterInstance.provisioned("writer",
+                publicly_accessible=False,
                 instance_type=ec2.InstanceType.of(
                     ec2.InstanceClass.T4G,
                     ec2.InstanceSize.MEDIUM
                 ),
-                security_groups=[self.lang_portal_security_group]
             ),
-            instances=2,  # Multi-AZ deployment
+            readers=[
+                rds.ClusterInstance.serverless_v2("reader", scale_with_writer=True)
+            ],
+            vpc_subnets=ec2.SubnetSelection(
+                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+            ),
+            vpc=vpc,
+            security_groups=[self.lang_portal_security_group],
             backup=rds.BackupProps(
                 retention=Duration.days(7),
                 preferred_window="03:00-04:00"  # UTC
@@ -80,18 +82,21 @@ class DatabaseStack(Stack):
                 version=rds.AuroraPostgresEngineVersion.VER_13_9
             ),
             credentials=self.haiku_credentials,
-            instance_props=rds.InstanceProps(
-                vpc=vpc,
-                vpc_subnets=ec2.SubnetSelection(
-                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
-                ),
+            writer=rds.ClusterInstance.provisioned("writer",
+                publicly_accessible=False,
                 instance_type=ec2.InstanceType.of(
                     ec2.InstanceClass.T4G,
                     ec2.InstanceSize.MEDIUM
                 ),
-                security_groups=[self.haiku_security_group]
             ),
-            instances=2,  # Multi-AZ deployment
+            readers=[
+                rds.ClusterInstance.serverless_v2("reader", scale_with_writer=True)
+            ],
+            vpc_subnets=ec2.SubnetSelection(
+                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+            ),
+            vpc=vpc,
+            security_groups=[self.haiku_security_group],
             backup=rds.BackupProps(
                 retention=Duration.days(7),
                 preferred_window="03:00-04:00"  # UTC

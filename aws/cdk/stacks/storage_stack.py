@@ -1,11 +1,6 @@
 from aws_cdk import (
-    aws_certificatemanager as acm,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as origins,
-    aws_iam as iam,
-    aws_logs as logs,
-    aws_route53 as route53,
-    aws_route53_targets as targets,
     aws_s3 as s3,
     CfnOutput,
     Duration,
@@ -84,7 +79,7 @@ class StorageStack(Stack):
         self.lang_portal_distribution = cloudfront.Distribution(
             self, "LangPortalDistribution",
             default_behavior=cloudfront.BehaviorOptions(
-                origin=origins.S3Origin(self.lang_portal_bucket),
+                origin=origins.S3BucketOrigin(self.lang_portal_bucket),
                 viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 allowed_methods=cloudfront.AllowedMethods.ALLOW_GET_HEAD,
                 cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED,
@@ -112,7 +107,7 @@ class StorageStack(Stack):
         self.haiku_distribution = cloudfront.Distribution(
             self, "HaikuDistribution",
             default_behavior=cloudfront.BehaviorOptions(
-                origin=origins.S3Origin(self.haiku_bucket),
+                origin=origins.S3BucketOrigin(self.haiku_bucket),
                 viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 allowed_methods=cloudfront.AllowedMethods.ALLOW_GET_HEAD,
                 cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED,

@@ -6,17 +6,15 @@ from aws_cdk import (
     aws_elasticloadbalancingv2 as elbv2,
     aws_logs as logs,
     aws_route53 as route53,
-    aws_route53_targets as targets,
     CfnOutput,
     Duration,
     Stack
 )
 from constructs import Construct
-from ..auth_stack import AuthStack
 
 class VocabGeneratorFrontendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
-                 vpc: ec2.Vpc, auth_stack: AuthStack, **kwargs) -> None:
+                 vpc: ec2.Vpc, user_pool, user_pool_client, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # Create ECS Cluster
@@ -24,7 +22,7 @@ class VocabGeneratorFrontendStack(Stack):
             self, "Cluster",
             vpc=vpc,
             cluster_name=f"{construct_id}-cluster",
-            container_insights=True
+            container_insights_v2=ecs.ContainerInsights.ENABLED
         )
 
         # Import hosted zone
@@ -74,8 +72,8 @@ class VocabGeneratorFrontendStack(Stack):
                 log_retention=logs.RetentionDays.ONE_WEEK
             ),
             environment={
-                "COGNITO_USER_POOL_ID": auth_stack.user_pool.user_pool_id,
-                "COGNITO_APP_CLIENT_ID": auth_stack.vocab_client.user_pool_client_id,
+                "COGNITO_USER_POOL_ID": user_pool.user_pool_id,
+                "COGNITO_APP_CLIENT_ID": user_pool_client.user_pool_client_id,
                 "AWS_DEFAULT_REGION": Stack.of(self).region
             }
         )
@@ -120,13 +118,14 @@ class VocabGeneratorFrontendStack(Stack):
             ],
             circuit_breaker=ecs.DeploymentCircuitBreaker(
                 rollback=True
-            )
+            ),
+            min_healthy_percent=100
         )
 
         # Auto Scaling configuration
         scaling = self.service.service.auto_scale_task_count(
             max_capacity=4,
-            min_capacity=2
+            min_capacity=1
         )
 
         self.service.target_group.configure_health_check(

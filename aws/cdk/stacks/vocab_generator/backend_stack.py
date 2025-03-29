@@ -22,7 +22,7 @@ class VocabGeneratorBackendStack(Stack):
             self, "Cluster",
             vpc=vpc,
             cluster_name=f"{construct_id}-cluster",
-            container_insights=True
+            container_insights_v2=ecs.ContainerInsights.ENABLED
         )
 
         # Create security group for the service
@@ -116,13 +116,14 @@ class VocabGeneratorBackendStack(Stack):
             ],
             circuit_breaker=ecs.DeploymentCircuitBreaker(
                 rollback=True
-            )
+            ),
+            min_healthy_percent=100
         )
 
         # Auto Scaling configuration
         scaling = self.service.service.auto_scale_task_count(
-            max_capacity=6,
-            min_capacity=2
+            max_capacity=4,
+            min_capacity=1
         )
 
         self.service.target_group.configure_health_check(
