@@ -1,17 +1,18 @@
+import os
 from constructs import Construct
 from aws_cdk import (
     Stack,
     aws_codebuild as codebuild,
-    aws_codecommit as codecommit,
     aws_codepipeline as codepipeline,
     aws_codepipeline_actions as codepipeline_actions,
-    aws_iam as iam,
-    SecretValue,
     aws_ecs as ecs
 )
 
 class VocabGeneratorPipelineStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str,
+                 frontend_cluster: ecs.Cluster,
+                 backend_cluster: ecs.Cluster,
+                 **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # Frontend Pipeline
@@ -25,17 +26,32 @@ class VocabGeneratorPipelineStack(Stack):
         frontend_pipeline.add_stage(
             stage_name="Source",
             actions=[
-                codepipeline_actions.GitHubSourceAction(
+                codepipeline_actions.CodeStarConnectionsSourceAction(
                     action_name="GitHub_Source",
-                    owner="your-github-org",  # Replace with your GitHub org/user
+                    owner="danielwohlgemuth",
                     repo="free-genai-bootcamp-2025",
                     branch="main",
-                    oauth_token=SecretValue.secrets_manager("github-token"),
                     output=source_output,
-                    trigger=codepipeline_actions.GitHubTrigger.PUSH,
-                    trigger_paths=["aws/vocab-generator-frontend/**/*"]
+                    connection_arn=os.getenv("GITHUB_CONNECTION_ARN")
                 )
             ]
+        )
+
+        # Trigger for frontend
+        frontend_pipeline.add_trigger(
+            provider_type=codepipeline.ProviderType.CODE_STAR_SOURCE_CONNECTION,
+            git_configuration=codepipeline.GitConfiguration(
+                source_action=frontend_pipeline.stages[0].actions[0],
+                push_filter=[
+                    codepipeline.GitPushFilter(
+                        branches_includes=["main"],
+                        file_paths_includes=[
+                            "aws/vocab-generator-frontend/*",
+                            "aws/vocab-generator-frontend/**/*"
+                        ]
+                    )
+                ]
+            )
         )
 
         # Build stage for frontend
@@ -80,10 +96,7 @@ class VocabGeneratorPipelineStack(Stack):
                     service=ecs.FargateService.from_fargate_service_attributes(
                         self, "VocabGeneratorFrontendService",
                         service_name="vocab-frontend",  # Must match service name in ECS
-                        cluster=ecs.Cluster.from_cluster_attributes(
-                            self, "ECSCluster",
-                            cluster_name="your-cluster-name"  # Replace with your cluster name
-                        )
+                        cluster=frontend_cluster
                     ),
                     input=build_output
                 )
@@ -101,17 +114,32 @@ class VocabGeneratorPipelineStack(Stack):
         backend_pipeline.add_stage(
             stage_name="Source",
             actions=[
-                codepipeline_actions.GitHubSourceAction(
+                codepipeline_actions.CodeStarConnectionsSourceAction(
                     action_name="GitHub_Source",
-                    owner="your-github-org",  # Replace with your GitHub org/user
+                    owner="danielwohlgemuth",
                     repo="free-genai-bootcamp-2025",
                     branch="main",
-                    oauth_token=SecretValue.secrets_manager("github-token"),
                     output=backend_source_output,
-                    trigger=codepipeline_actions.GitHubTrigger.PUSH,
-                    trigger_paths=["aws/vocab-generator-backend/**/*"]
+                    connection_arn=os.getenv("GITHUB_CONNECTION_ARN")
                 )
             ]
+        )
+
+        # Trigger for backend
+        backend_pipeline.add_trigger(
+            provider_type=codepipeline.ProviderType.CODE_STAR_SOURCE_CONNECTION,
+            git_configuration=codepipeline.GitConfiguration(
+                source_action=backend_pipeline.stages[0].actions[0],
+                push_filter=[
+                    codepipeline.GitPushFilter(
+                        branches_includes=["main"],
+                        file_paths_includes=[
+                            "aws/vocab-generator-backend/*",
+                            "aws/vocab-generator-backend/**/*"
+                        ]
+                    )
+                ]
+            )
         )
 
         # Build stage for backend
@@ -156,10 +184,7 @@ class VocabGeneratorPipelineStack(Stack):
                     service=ecs.FargateService.from_fargate_service_attributes(
                         self, "VocabGeneratorBackendService",
                         service_name="vocab-backend",  # Must match service name in ECS
-                        cluster=ecs.Cluster.from_cluster_attributes(
-                            self, "ECSCluster",
-                            cluster_name="your-cluster-name"  # Replace with your cluster name
-                        )
+                        cluster=backend_cluster
                     ),
                     input=backend_build_output
                 )

@@ -16,7 +16,6 @@ class StorageStack(Stack):
         # Create S3 bucket for access logging
         self.logging_bucket = s3.Bucket(
             self, "LoggingBucket",
-            bucket_name=f"{construct_id.lower()}-logs",
             encryption=s3.BucketEncryption.S3_MANAGED,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             removal_policy=RemovalPolicy.RETAIN,
@@ -36,7 +35,6 @@ class StorageStack(Stack):
         # Create S3 bucket for Lang Portal frontend
         self.lang_portal_bucket = s3.Bucket(
             self, "LangPortalBucket",
-            bucket_name=f"{construct_id.lower()}-lang-portal",
             website_index_document="index.html",
             website_error_document="index.html",
             encryption=s3.BucketEncryption.S3_MANAGED,
@@ -47,7 +45,10 @@ class StorageStack(Stack):
             cors=[
                 s3.CorsRule(
                     allowed_methods=[s3.HttpMethods.GET],
-                    allowed_origins=["https://lang-portal.app-dw.net"],
+                    allowed_origins=[
+                        "https://lang-portal.app-dw.net",
+                        "http://localhost:3000"
+                    ],
                     allowed_headers=["*"],
                     max_age=86400
                 )
@@ -57,7 +58,6 @@ class StorageStack(Stack):
         # Create S3 bucket for Haiku Generator frontend
         self.haiku_bucket = s3.Bucket(
             self, "HaikuBucket",
-            bucket_name=f"{construct_id.lower()}-haiku",
             website_index_document="index.html",
             website_error_document="index.html",
             encryption=s3.BucketEncryption.S3_MANAGED,
@@ -68,7 +68,10 @@ class StorageStack(Stack):
             cors=[
                 s3.CorsRule(
                     allowed_methods=[s3.HttpMethods.GET],
-                    allowed_origins=["https://haiku.app-dw.net"],
+                    allowed_origins=[
+                        "https://haiku.app-dw.net",
+                        "http://localhost:3001"
+                    ],
                     allowed_headers=["*"],
                     max_age=86400
                 )
