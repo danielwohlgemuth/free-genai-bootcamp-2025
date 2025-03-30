@@ -1,5 +1,8 @@
 from aws_cdk import (
+    aws_certificatemanager as acm,
     aws_cognito as cognito,
+    aws_route53 as route53,
+    aws_route53_targets as targets,
     CfnOutput,
     Duration,
     RemovalPolicy,
@@ -17,8 +20,7 @@ class AuthStack(Stack):
             user_pool_name=f"{construct_id}-user-pool",
             self_sign_up_enabled=True,
             sign_in_aliases=cognito.SignInAliases(
-                email=True,
-                username=True
+                email=True
             ),
             standard_attributes=cognito.StandardAttributes(
                 email=cognito.StandardAttribute(
@@ -38,12 +40,47 @@ class AuthStack(Stack):
             removal_policy=RemovalPolicy.RETAIN
         )
 
-        # Add domain prefix for Cognito hosted UI
-        self.user_pool.add_domain(
+        # Import hosted zone
+        self.hosted_zone = route53.HostedZone.from_lookup(
+            self, "HostedZone",
+            domain_name="app-dw.net"
+        )
+
+        # Create certificate for Cognito
+        self.certificate = acm.Certificate(
+            self, "Certificate",
+            domain_name="auth.app-dw.net",
+            validation=acm.CertificateValidation.from_dns(self.hosted_zone)
+        )
+
+        # Add Root DNS record to use cognito custom domain
+        route53.ARecord(
+            self, "RootDomainARecord",
+            zone=self.hosted_zone,
+            target=route53.RecordTarget.from_ip_addresses(
+                "1.1.1.1"
+            ),
+            record_name="app-dw.net"
+        )
+
+        # Add domain for Cognito
+        self.domain = self.user_pool.add_domain(
             "CognitoDomain",
-            cognito_domain=cognito.CognitoDomainOptions(
-                domain_prefix=f"auth"
-            )
+            custom_domain=cognito.CustomDomainOptions(
+                domain_name="auth.app-dw.net",
+                certificate=self.certificate
+            ),
+            managed_login_version=cognito.ManagedLoginVersion.NEWER_MANAGED_LOGIN
+        )
+
+        # Add DNS record for the custom domain
+        self.record = route53.ARecord(
+            self, "CognitoDomainARecord",
+            zone=self.hosted_zone,
+            target=route53.RecordTarget.from_alias(
+                targets.UserPoolDomainTarget(self.domain)
+            ),
+            record_name="auth.app-dw.net"
         )
 
         # Create app clients
@@ -89,11 +126,11 @@ class AuthStack(Stack):
                     cognito.OAuthScope.PROFILE
                 ],
                 callback_urls=[
-                    "http://localhost:3000/auth/callback",
+                    "http://localhost:3001/auth/callback",
                     "https://haiku.app-dw.net/auth/callback"
                 ],
                 logout_urls=[
-                    "http://localhost:3000/",
+                    "http://localhost:3001/",
                     "https://haiku.app-dw.net/"
                 ]
             ),
@@ -117,11 +154,11 @@ class AuthStack(Stack):
                     cognito.OAuthScope.PROFILE
                 ],
                 callback_urls=[
-                    "http://localhost:8501/auth/callback",
+                    "http://localhost:3002/auth/callback",
                     "https://vocab.app-dw.net/auth/callback"
                 ],
                 logout_urls=[
-                    "http://localhost:8501/",
+                    "http://localhost:3002/",
                     "https://vocab.app-dw.net/"
                 ]
             ),
@@ -145,11 +182,11 @@ class AuthStack(Stack):
                     cognito.OAuthScope.PROFILE
                 ],
                 callback_urls=[
-                    "http://localhost:8501/auth/callback",
+                    "http://localhost:3003/auth/callback",
                     "https://writing.app-dw.net/auth/callback"
                 ],
                 logout_urls=[
-                    "http://localhost:8501/",
+                    "http://localhost:3003/",
                     "https://writing.app-dw.net/"
                 ]
             ),
@@ -159,21 +196,21 @@ class AuthStack(Stack):
             prevent_user_existence_errors=True
         )
 
-        # Add resource server for protected APIs
-        self.user_pool.add_resource_server(
-            "ResourceServer",
-            identifier="api.app-dw.net",
-            scopes=[
-                cognito.ResourceServerScope(
-                    scope_name="read",
-                    scope_description="Read access to API"
-                ),
-                cognito.ResourceServerScope(
-                    scope_name="write",
-                    scope_description="Write access to API"
-                )
-            ]
-        )
+        # # Add resource server for protected APIs
+        # self.user_pool.add_resource_server(
+        #     "ResourceServer",
+        #     identifier="api.app-dw.net",
+        #     scopes=[
+        #         cognito.ResourceServerScope(
+        #             scope_name="read",
+        #             scope_description="Read access to API"
+        #         ),
+        #         cognito.ResourceServerScope(
+        #             scope_name="write",
+        #             scope_description="Write access to API"
+        #         )
+        #     ]
+        # )
 
         # Outputs
         CfnOutput(self, "UserPoolId",
