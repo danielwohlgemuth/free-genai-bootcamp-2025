@@ -1,6 +1,7 @@
 from aws_cdk import (
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as origins,
+    aws_iam as iam,
     aws_s3 as s3,
     CfnOutput,
     Duration,
@@ -19,6 +20,7 @@ class StorageStack(Stack):
             encryption=s3.BucketEncryption.S3_MANAGED,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             removal_policy=RemovalPolicy.RETAIN,
+            object_ownership=s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,  
             lifecycle_rules=[
                 s3.LifecycleRule(
                     transitions=[
@@ -30,6 +32,16 @@ class StorageStack(Stack):
                     expiration=Duration.days(365)
                 )
             ]
+        )
+
+        # Grant CloudFront permission to write logs
+        self.logging_bucket.add_to_resource_policy(
+            iam.PolicyStatement(
+                sid="AllowCloudFrontLogDelivery",
+                actions=["s3:PutObject"],
+                principals=[iam.ServicePrincipal("delivery.logs.amazonaws.com")],
+                resources=[f"{self.logging_bucket.bucket_arn}/*"]
+            )
         )
 
         # Create S3 bucket for Lang Portal frontend
@@ -103,7 +115,8 @@ class StorageStack(Stack):
             price_class=cloudfront.PriceClass.PRICE_CLASS_100,
             enable_logging=True,
             log_bucket=self.logging_bucket,
-            log_file_prefix="lang-portal-cf-logs/"
+            log_file_prefix="lang-portal-cf-logs/",
+            log_includes_cookies=False
         )
 
         # Create CloudFront distribution for Haiku Generator
@@ -131,7 +144,8 @@ class StorageStack(Stack):
             price_class=cloudfront.PriceClass.PRICE_CLASS_100,
             enable_logging=True,
             log_bucket=self.logging_bucket,
-            log_file_prefix="haiku-cf-logs/"
+            log_file_prefix="haiku-cf-logs/",
+            log_includes_cookies=False
         )
 
         # Outputs
