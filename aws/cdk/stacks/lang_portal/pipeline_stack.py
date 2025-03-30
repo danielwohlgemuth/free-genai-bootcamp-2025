@@ -17,7 +17,8 @@ class LangPortalPipelineStack(Stack):
         # Frontend Pipeline
         frontend_pipeline = codepipeline.Pipeline(
             self, "LangPortalFrontendPipeline",
-            pipeline_name="lang-portal-frontend-pipeline"
+            pipeline_name="lang-portal-frontend-pipeline",
+            pipeline_type=codepipeline.PipelineType.V2
         )
 
         # Source stage for frontend
@@ -104,7 +105,8 @@ class LangPortalPipelineStack(Stack):
         # Backend Pipeline
         backend_pipeline = codepipeline.Pipeline(
             self, "LangPortalBackendPipeline",
-            pipeline_name="lang-portal-backend-pipeline"
+            pipeline_name="lang-portal-backend-pipeline",
+            pipeline_type=codepipeline.PipelineType.V2
         )
 
         # Source stage for backend

@@ -17,7 +17,8 @@ class HaikuGeneratorPipelineStack(Stack):
         # Frontend Pipeline
         frontend_pipeline = codepipeline.Pipeline(
             self, "HaikuGeneratorFrontendPipeline",
-            pipeline_name="haiku-generator-frontend-pipeline"
+            pipeline_name="haiku-generator-frontend-pipeline",
+            pipeline_type=codepipeline.PipelineType.V2
         )
 
         # Source stage for frontend
@@ -104,7 +105,8 @@ class HaikuGeneratorPipelineStack(Stack):
         # Backend Pipeline
         backend_pipeline = codepipeline.Pipeline(
             self, "HaikuGeneratorBackendPipeline",
-            pipeline_name="haiku-generator-backend-pipeline"
+            pipeline_name="haiku-generator-backend-pipeline",
+            pipeline_type=codepipeline.PipelineType.V2
         )
 
         # Source stage for backend

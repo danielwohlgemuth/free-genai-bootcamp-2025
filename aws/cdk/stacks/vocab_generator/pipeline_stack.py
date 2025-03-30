@@ -18,7 +18,8 @@ class VocabGeneratorPipelineStack(Stack):
         # Frontend Pipeline
         frontend_pipeline = codepipeline.Pipeline(
             self, "VocabGeneratorFrontendPipeline",
-            pipeline_name="vocab-generator-frontend-pipeline"
+            pipeline_name="vocab-generator-frontend-pipeline",
+            pipeline_type=codepipeline.PipelineType.V2
         )
 
         # Source stage for frontend
@@ -106,7 +107,8 @@ class VocabGeneratorPipelineStack(Stack):
         # Backend Pipeline
         backend_pipeline = codepipeline.Pipeline(
             self, "VocabGeneratorBackendPipeline",
-            pipeline_name="vocab-generator-backend-pipeline"
+            pipeline_name="vocab-generator-backend-pipeline",
+            pipeline_type=codepipeline.PipelineType.V2
         )
 
         # Source stage for backend

@@ -49,7 +49,8 @@ lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
 
 lang_portal_pipeline = LangPortalPipelineStack(app, "LangPortalPipelineStack",
     bucket=storage_stack.lang_portal_bucket,
-    cluster=lang_portal_backend.cluster
+    cluster=lang_portal_backend.cluster,
+    env=env
 )
 
 # Haiku Generator stacks
@@ -67,7 +68,8 @@ haiku_backend = HaikuGeneratorBackendStack(app, "HaikuGeneratorBackendStack",
 
 haiku_pipeline = HaikuGeneratorPipelineStack(app, "HaikuGeneratorPipelineStack",
     bucket=storage_stack.haiku_bucket,
-    cluster=haiku_backend.cluster
+    cluster=haiku_backend.cluster,
+    env=env
 )
 
 # Vocab Generator stacks
@@ -87,7 +89,8 @@ vocab_backend = VocabGeneratorBackendStack(app, "VocabGeneratorBackendStack",
 
 vocab_pipeline = VocabGeneratorPipelineStack(app, "VocabGeneratorPipelineStack",
     frontend_cluster=vocab_frontend.cluster,
-    backend_cluster=vocab_backend.cluster
+    backend_cluster=vocab_backend.cluster,
+    env=env
 )
 
 # Writing Practice stack
@@ -99,7 +102,8 @@ writing_practice = WritingPracticeFrontendStack(app, "WritingPracticeFrontendSta
 )
 
 writing_practice_pipeline = WritingPracticePipelineStack(app, "WritingPracticePipelineStack",
-    cluster=writing_practice.cluster
+    cluster=writing_practice.cluster,
+    env=env
 )
 
 app.synth()

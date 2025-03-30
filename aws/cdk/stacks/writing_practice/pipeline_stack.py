@@ -15,7 +15,8 @@ class WritingPracticePipelineStack(Stack):
         # Frontend Pipeline
         frontend_pipeline = codepipeline.Pipeline(
             self, "WritingPracticePipeline",
-            pipeline_name="writing-practice-pipeline"
+            pipeline_name="writing-practice-pipeline",
+            pipeline_type=codepipeline.PipelineType.V2
         )
 
         # Source stage for frontend
