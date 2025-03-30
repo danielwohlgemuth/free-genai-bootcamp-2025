@@ -58,7 +58,29 @@ pip install -r requirements.txt
 cdk synth
 ```
 
-4. Deploy stacks:
+4. Bootstrap the CDK:
 ```bash
-cdk deploy
+cdk bootstrap
 ```
+
+5. Deploy stacks:
+```bash
+cdk deploy --all --no-rollback
+```
+
+### Cleanup
+
+1. Destroy stacks:
+```bash
+cdk destroy
+```
+
+2. Remove GitHub connection:
+
+  1. Go to the AWS Console
+  2. Navigate to CodeBuild
+  3. Go to Settings and then Connections
+  4. Select the "free-genai-bootcamp-2025" connection
+  5. Click "Delete"
+  6. Confirm the deletion
+  
