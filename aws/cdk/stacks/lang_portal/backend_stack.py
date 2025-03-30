@@ -2,10 +2,12 @@ from aws_cdk import (
     aws_ec2 as ec2,
     aws_ecs as ecs,
     aws_ecs_patterns as ecs_patterns,
+    aws_ecr as ecr,
     aws_elasticloadbalancingv2 as elbv2,
     aws_logs as logs,
     CfnOutput,
     Duration,
+    RemovalPolicy,
     Stack
 )
 from constructs import Construct
@@ -14,6 +16,20 @@ class LangPortalBackendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
                  vpc: ec2.Vpc, database, user_pool, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        # Create ECR Repository
+        self.repository = ecr.Repository(
+            self, "Repository",
+            repository_name=f"{construct_id}-repo".lower(),
+            removal_policy=RemovalPolicy.DESTROY,
+            lifecycle_rules=[
+                ecr.LifecycleRule(
+                    max_image_count=5,
+                    rule_priority=1,
+                    description="Keep only the last 5 images"
+                )
+            ]
+        )
 
         # Create ECS Cluster
         self.cluster = ecs.Cluster(
@@ -49,7 +65,10 @@ class LangPortalBackendStack(Stack):
         # Add container to task definition
         container = task_definition.add_container(
             "ApiContainer",
-            image=ecs.ContainerImage.from_asset("../lang-portal-backend"),
+            image=ecs.ContainerImage.from_ecr_repository(
+                repository=self.repository,
+                tag="latest"
+            ),
             memory_limit_mib=512,
             cpu=256,
             logging=ecs.LogDriver.aws_logs(
@@ -157,4 +176,10 @@ class LangPortalBackendStack(Stack):
             value=self.cluster.cluster_name,
             description="ECS Cluster Name",
             export_name=f"{construct_id}-cluster-name"
+        )
+
+        CfnOutput(self, "RepositoryUri",
+            value=self.repository.repository_uri,
+            description="ECR Repository URI",
+            export_name=f"{construct_id}-repo-uri"
         )

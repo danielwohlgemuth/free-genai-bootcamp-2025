@@ -5,13 +5,17 @@ from aws_cdk import (
     aws_codebuild as codebuild,
     aws_codepipeline as codepipeline,
     aws_codepipeline_actions as codepipeline_actions,
+    aws_ecr as ecr,
     aws_ecs as ecs,
     aws_s3 as s3
 )
 
 class LangPortalPipelineStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
-                 bucket: s3.Bucket, cluster: ecs.Cluster, **kwargs) -> None:
+                 bucket: s3.Bucket,
+                 cluster: ecs.Cluster,
+                 repository: ecr.Repository,
+                 **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # Frontend Pipeline
@@ -151,6 +155,17 @@ class LangPortalPipelineStack(Stack):
                     action_name="Build",
                     project=codebuild.PipelineProject(
                         self, "LangPortalBackendBuild",
+                        environment=codebuild.BuildEnvironment(
+                            privileged=True
+                        ),
+                        environment_variables={
+                            "ECR_REPOSITORY_URI": codebuild.BuildEnvironmentVariable(
+                                value=repository.repository_uri
+                            ),
+                            "AWS_DEFAULT_REGION": codebuild.BuildEnvironmentVariable(
+                                value=Stack.of(self).region
+                            )
+                        },
                         build_spec=codebuild.BuildSpec.from_object({
                             "version": "0.2",
                             "phases": {
@@ -189,7 +204,7 @@ class LangPortalPipelineStack(Stack):
                     action_name="Deploy",
                     service=ecs.FargateService.from_fargate_service_attributes(
                         self, "LangPortalBackendService",
-                        service_name="lang-portal-backend",  # Replace with your service name
+                        service_name="lang-portal-backend",
                         cluster=cluster
                     ),
                     input=backend_build_output
