@@ -141,17 +141,6 @@ class HaikuGeneratorBackendStack(Stack):
             scale_out_cooldown=Duration.seconds(60)
         )
 
-        # Grant permissions to call OpenAI API
-        task_definition.add_to_task_role_policy(
-            iam.PolicyStatement(
-                actions=[
-                    "secretsmanager:GetSecretValue"
-                ],
-                resources=[
-                    f"arn:aws:secretsmanager:{Stack.of(self).region}:{Stack.of(self).account}:secret:openai-api-key-*"
-                ]
-            )
-        )
 
         # Outputs
         CfnOutput(self, "ServiceURL",
