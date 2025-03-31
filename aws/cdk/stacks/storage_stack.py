@@ -115,6 +115,7 @@ class StorageStack(Stack):
                     response_page_path="/index.html"
                 )
             ],
+            default_root_object="index.html",
             price_class=cloudfront.PriceClass.PRICE_CLASS_100,
             enable_logging=True,
             log_bucket=self.logging_bucket,
@@ -147,6 +148,7 @@ class StorageStack(Stack):
                     response_page_path="/index.html"
                 )
             ],
+            default_root_object="index.html",
             price_class=cloudfront.PriceClass.PRICE_CLASS_100,
             enable_logging=True,
             log_bucket=self.logging_bucket,
