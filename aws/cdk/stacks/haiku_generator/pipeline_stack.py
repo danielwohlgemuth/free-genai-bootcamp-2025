@@ -1,17 +1,22 @@
 import os
 from constructs import Construct
 from aws_cdk import (
-    Stack,
     aws_codebuild as codebuild,
     aws_codepipeline as codepipeline,
     aws_codepipeline_actions as codepipeline_actions,
+    aws_iam as iam,
+    aws_ecr as ecr,
     aws_ecs as ecs,
-    aws_s3 as s3
+    aws_s3 as s3,
+    Stack
 )
 
 class HaikuGeneratorPipelineStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
-                 bucket: s3.Bucket, cluster: ecs.Cluster, **kwargs) -> None:
+                 bucket: s3.Bucket,
+                 cluster: ecs.Cluster,
+                 repository: ecr.Repository,
+                 **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # Frontend Pipeline
@@ -79,7 +84,7 @@ class HaikuGeneratorPipelineStack(Stack):
                                 }
                             },
                             "artifacts": {
-                                "base-directory": "build",
+                                "base-directory": "aws/haiku-generator-frontend/build",
                                 "files": ["**/*"]
                             }
                         })
@@ -142,6 +147,32 @@ class HaikuGeneratorPipelineStack(Stack):
             )
         )
 
+        # Create the build role
+        build_role = iam.Role(
+            self, "HaikuGeneratorBackendBuildRole",
+            assumed_by=iam.ServicePrincipal("codebuild.amazonaws.com"),
+            description="Role for Haiku Generator Backend CodeBuild project"
+        )
+
+        # Attach the managed policy
+        build_role.add_managed_policy(
+            iam.ManagedPolicy.from_aws_managed_policy_name("AmazonEC2ContainerRegistryReadOnly")
+        )
+
+        # Add additional write permissions for your specific repository
+        build_role.add_to_policy(
+            iam.PolicyStatement(
+                effect=iam.Effect.ALLOW,
+                actions=[
+                    "ecr:InitiateLayerUpload",
+                    "ecr:UploadLayerPart",
+                    "ecr:CompleteLayerUpload",
+                    "ecr:PutImage"
+                ],
+                resources=[repository.repository_arn]
+            )
+        )
+
         # Build stage for backend
         backend_build_output = codepipeline.Artifact()
         backend_pipeline.add_stage(
@@ -151,6 +182,18 @@ class HaikuGeneratorPipelineStack(Stack):
                     action_name="Build",
                     project=codebuild.PipelineProject(
                         self, "HaikuGeneratorBackendBuild",
+                        role=build_role,
+                        environment=codebuild.BuildEnvironment(
+                            privileged=True
+                        ),
+                        environment_variables={
+                            "ECR_REPOSITORY_URI": codebuild.BuildEnvironmentVariable(
+                                value=repository.repository_uri
+                            ),
+                            "AWS_DEFAULT_REGION": codebuild.BuildEnvironmentVariable(
+                                value=Stack.of(self).region
+                            )
+                        },
                         build_spec=codebuild.BuildSpec.from_object({
                             "version": "0.2",
                             "phases": {

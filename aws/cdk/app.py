@@ -29,9 +29,9 @@ env = Environment(
 
 # Core infrastructure stacks
 network_stack = NetworkStack(app, "NetworkStack", env=env)
+monitoring_stack = MonitoringStack(app, "MonitoringStack", env=env)
 database_stack = DatabaseStack(app, "DatabaseStack", vpc=network_stack.vpc, env=env)
 auth_stack = AuthStack(app, "AuthStack", env=env)
-monitoring_stack = MonitoringStack(app, "MonitoringStack", env=env)
 storage_stack = StorageStack(app, "StorageStack", env=env)
 
 # Lang Portal stacks
@@ -50,6 +50,7 @@ lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
 lang_portal_pipeline = LangPortalPipelineStack(app, "LangPortalPipelineStack",
     bucket=storage_stack.lang_portal_bucket,
     cluster=lang_portal_backend.cluster,
+    repository=lang_portal_backend.repository,
     env=env
 )
 
@@ -69,6 +70,7 @@ haiku_backend = HaikuGeneratorBackendStack(app, "HaikuGeneratorBackendStack",
 haiku_pipeline = HaikuGeneratorPipelineStack(app, "HaikuGeneratorPipelineStack",
     bucket=storage_stack.haiku_bucket,
     cluster=haiku_backend.cluster,
+    repository=haiku_backend.repository,
     env=env
 )
 
@@ -90,6 +92,8 @@ vocab_backend = VocabGeneratorBackendStack(app, "VocabGeneratorBackendStack",
 vocab_pipeline = VocabGeneratorPipelineStack(app, "VocabGeneratorPipelineStack",
     frontend_cluster=vocab_frontend.cluster,
     backend_cluster=vocab_backend.cluster,
+    frontend_repository=vocab_frontend.repository,
+    backend_repository=vocab_backend.repository,
     env=env
 )
 
@@ -103,6 +107,7 @@ writing_practice = WritingPracticeFrontendStack(app, "WritingPracticeFrontendSta
 
 writing_practice_pipeline = WritingPracticePipelineStack(app, "WritingPracticePipelineStack",
     cluster=writing_practice.cluster,
+    repository=writing_practice.repository,
     env=env
 )
 
