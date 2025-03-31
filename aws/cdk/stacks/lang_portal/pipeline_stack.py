@@ -84,7 +84,7 @@ class LangPortalPipelineStack(Stack):
                                 }
                             },
                             "artifacts": {
-                                "base-directory": "aws/lang-portal-frontend/build",
+                                "base-directory": "aws/lang-portal-frontend/dist",
                                 "files": ["**/*"]
                             }
                         })
