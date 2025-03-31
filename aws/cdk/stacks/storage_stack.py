@@ -94,7 +94,10 @@ class StorageStack(Stack):
         self.lang_portal_distribution = cloudfront.Distribution(
             self, "LangPortalDistribution",
             default_behavior=cloudfront.BehaviorOptions(
-                origin=origins.S3BucketOrigin(self.lang_portal_bucket),
+                origin=origins.S3BucketOrigin.with_origin_access_control(
+                    self.lang_portal_bucket,
+                    origin_access_levels=[cloudfront.AccessLevel.READ, cloudfront.AccessLevel.LIST]
+                ),
                 viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 allowed_methods=cloudfront.AllowedMethods.ALLOW_GET_HEAD,
                 cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED,
@@ -123,7 +126,10 @@ class StorageStack(Stack):
         self.haiku_distribution = cloudfront.Distribution(
             self, "HaikuDistribution",
             default_behavior=cloudfront.BehaviorOptions(
-                origin=origins.S3BucketOrigin(self.haiku_bucket),
+                origin=origins.S3BucketOrigin.with_origin_access_control(
+                    self.haiku_bucket,
+                    origin_access_levels=[cloudfront.AccessLevel.READ, cloudfront.AccessLevel.LIST]
+                ),
                 viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                 allowed_methods=cloudfront.AllowedMethods.ALLOW_GET_HEAD,
                 cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED,
