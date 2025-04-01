@@ -112,6 +112,14 @@ class AuthStack(Stack):
             prevent_user_existence_errors=True
         )
 
+        cognito.CfnManagedLoginBranding(
+            self, "LangPortalManagedLoginBranding",
+            user_pool_id=self.user_pool.user_pool_id,
+            client_id=self.lang_portal_client.user_pool_client_id,
+            return_merged_resources=True,
+            use_cognito_provided_values=True
+        )
+
         # Haiku Generator app client
         self.haiku_client = self.user_pool.add_client(
             "HaikuClient",
@@ -138,6 +146,14 @@ class AuthStack(Stack):
             id_token_validity=Duration.hours(1),
             refresh_token_validity=Duration.days(30),
             prevent_user_existence_errors=True
+        )
+
+        cognito.CfnManagedLoginBranding(
+            self, "HaikuManagedLoginBranding",
+            user_pool_id=self.user_pool.user_pool_id,
+            client_id=self.haiku_client.user_pool_client_id,
+            return_merged_resources=True,
+            use_cognito_provided_values=True
         )
 
         # Vocab Generator app client
@@ -168,6 +184,14 @@ class AuthStack(Stack):
             prevent_user_existence_errors=True
         )
 
+        cognito.CfnManagedLoginBranding(
+            self, "VocabManagedLoginBranding",
+            user_pool_id=self.user_pool.user_pool_id,
+            client_id=self.vocab_client.user_pool_client_id,
+            return_merged_resources=True,
+            use_cognito_provided_values=True
+        )
+
         # Writing Practice app client
         self.writing_practice_client = self.user_pool.add_client(
             "WritingPracticeClient",
@@ -194,6 +218,14 @@ class AuthStack(Stack):
             id_token_validity=Duration.hours(1),
             refresh_token_validity=Duration.days(30),
             prevent_user_existence_errors=True
+        )
+
+        cognito.CfnManagedLoginBranding(
+            self, "WritingPracticeManagedLoginBranding",
+            user_pool_id=self.user_pool.user_pool_id,
+            client_id=self.writing_practice_client.user_pool_client_id,
+            return_merged_resources=True,
+            use_cognito_provided_values=True
         )
 
         # # Add resource server for protected APIs
