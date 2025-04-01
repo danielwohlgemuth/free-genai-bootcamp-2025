@@ -109,7 +109,7 @@ class VocabGeneratorBackendStack(Stack):
         #     self, "Service",
         #     cluster=self.cluster,
         #     task_definition=task_definition,
-        #     desired_count=2,
+        #     desired_count=1,
         #     certificate=None,  # Internal service
         #     protocol=elbv2.ApplicationProtocol.HTTP,
         #     public_load_balancer=True,

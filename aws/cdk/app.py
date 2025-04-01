@@ -12,7 +12,6 @@ from stacks.lang_portal.frontend_stack import LangPortalFrontendStack
 from stacks.lang_portal.pipeline_stack import LangPortalPipelineStack
 from stacks.monitoring_stack import MonitoringStack
 from stacks.network_stack import NetworkStack
-from stacks.storage_stack import StorageStack
 from stacks.vocab_generator.backend_stack import VocabGeneratorBackendStack
 from stacks.vocab_generator.frontend_stack import VocabGeneratorFrontendStack
 from stacks.vocab_generator.pipeline_stack import VocabGeneratorPipelineStack
@@ -32,11 +31,9 @@ network_stack = NetworkStack(app, "NetworkStack", env=env)
 monitoring_stack = MonitoringStack(app, "MonitoringStack", env=env)
 database_stack = DatabaseStack(app, "DatabaseStack", vpc=network_stack.vpc, env=env)
 auth_stack = AuthStack(app, "AuthStack", env=env)
-storage_stack = StorageStack(app, "StorageStack", env=env)
 
 # Lang Portal stacks
 lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",
-    distribution=storage_stack.lang_portal_distribution,
     env=env
 )
 
@@ -48,7 +45,7 @@ lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
 )
 
 lang_portal_pipeline = LangPortalPipelineStack(app, "LangPortalPipelineStack",
-    bucket=storage_stack.lang_portal_bucket,
+    bucket=lang_portal_frontend.bucket,
     cluster=lang_portal_backend.cluster,
     repository=lang_portal_backend.repository,
     env=env
@@ -56,7 +53,6 @@ lang_portal_pipeline = LangPortalPipelineStack(app, "LangPortalPipelineStack",
 
 # Haiku Generator stacks
 haiku_frontend = HaikuGeneratorFrontendStack(app, "HaikuGeneratorFrontendStack",
-    distribution=storage_stack.haiku_distribution,
     env=env
 )
 
@@ -68,7 +64,7 @@ haiku_backend = HaikuGeneratorBackendStack(app, "HaikuGeneratorBackendStack",
 )
 
 haiku_pipeline = HaikuGeneratorPipelineStack(app, "HaikuGeneratorPipelineStack",
-    bucket=storage_stack.haiku_bucket,
+    bucket=haiku_frontend.bucket,
     cluster=haiku_backend.cluster,
     repository=haiku_backend.repository,
     env=env

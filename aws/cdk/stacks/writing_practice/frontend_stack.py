@@ -43,18 +43,18 @@ class WritingPracticeFrontendStack(Stack):
             container_insights_v2=ecs.ContainerInsights.ENABLED
         )
 
-        # # Import hosted zone
-        # self.hosted_zone = route53.HostedZone.from_lookup(
-        #     self, "HostedZone",
-        #     domain_name="app-dw.net"
-        # )
+        # Import hosted zone
+        self.hosted_zone = route53.HostedZone.from_lookup(
+            self, "HostedZone",
+            domain_name="app-dw.net"
+        )
 
-        # # Create certificate for ALB
-        # self.certificate = acm.Certificate(
-        #     self, "Certificate",
-        #     domain_name="writing.app-dw.net",
-        #     validation=acm.CertificateValidation.from_dns(self.hosted_zone)
-        # )
+        # Create certificate for ALB
+        self.certificate = acm.Certificate(
+            self, "Certificate",
+            domain_name="writing.app-dw.net",
+            validation=acm.CertificateValidation.from_dns(self.hosted_zone)
+        )
 
         # # Create security group for the service
         # self.service_sg = ec2.SecurityGroup(
@@ -120,7 +120,7 @@ class WritingPracticeFrontendStack(Stack):
         #     self, "Service",
         #     cluster=self.cluster,
         #     task_definition=task_definition,
-        #     desired_count=2,
+        #     desired_count=1,
         #     certificate=self.certificate,
         #     domain_name="writing.app-dw.net",
         #     domain_zone=self.hosted_zone,
