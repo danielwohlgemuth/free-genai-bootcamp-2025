@@ -68,28 +68,28 @@ class LangPortalPipelineStack(Stack):
             actions=[
                 codepipeline_actions.CodeBuildAction(
                     action_name="Build",
-                    environment_variables={
-                        "VITE_API_BASE_URL": codebuild.BuildEnvironmentVariable(
-                            value="https://lang-portal.app-dw.net/api"
-                        ),
-                        "VITE_COGNITO_AUTHORITY": codebuild.BuildEnvironmentVariable(
-                            value=f"https://cognito-idp.{self.region}.amazonaws.com/{user_pool_id}"
-                        ),
-                        "VITE_COGNITO_CLIENT_ID": codebuild.BuildEnvironmentVariable(
-                            value=user_pool_client_id
-                        ),
-                        "VITE_COGNITO_DOMAIN": codebuild.BuildEnvironmentVariable(
-                            value="https://auth.app-dw.net"
-                        ),
-                        "VITE_REDIRECT_SIGN_IN": codebuild.BuildEnvironmentVariable(
-                            value="https://lang-portal.app-dw.net/auth/callback"
-                        ),
-                        "VITE_REDIRECT_SIGN_OUT": codebuild.BuildEnvironmentVariable(
-                            value="https://lang-portal.app-dw.net/"
-                        )
-                    },
                     project=codebuild.PipelineProject(
                         self, "LangPortalFrontendBuild",
+                        environment_variables={
+                            "VITE_API_BASE_URL": codebuild.BuildEnvironmentVariable(
+                                value="https://lang-portal.app-dw.net/api"
+                            ),
+                            "VITE_COGNITO_AUTHORITY": codebuild.BuildEnvironmentVariable(
+                                value=f"https://cognito-idp.{self.region}.amazonaws.com/{user_pool_id}"
+                            ),
+                            "VITE_COGNITO_CLIENT_ID": codebuild.BuildEnvironmentVariable(
+                                value=user_pool_client_id
+                            ),
+                            "VITE_COGNITO_DOMAIN": codebuild.BuildEnvironmentVariable(
+                                value="https://auth.app-dw.net"
+                            ),
+                            "VITE_REDIRECT_SIGN_IN": codebuild.BuildEnvironmentVariable(
+                                value="https://lang-portal.app-dw.net/auth/callback"
+                            ),
+                            "VITE_REDIRECT_SIGN_OUT": codebuild.BuildEnvironmentVariable(
+                                value="https://lang-portal.app-dw.net/"
+                            )
+                        },
                         build_spec=codebuild.BuildSpec.from_object({
                             "version": "0.2",
                             "phases": {
