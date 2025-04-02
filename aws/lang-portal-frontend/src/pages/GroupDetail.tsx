@@ -4,6 +4,7 @@ import { api } from '@/services/api'
 import { WordCard } from '@/components/words/WordCard'
 import { SessionHistory } from '@/components/study/SessionHistory'
 import type { Word, StudySession } from '@/types/api'
+import { useAuth } from 'react-oidc-context'
 
 interface GroupDetails {
   id: number
@@ -19,14 +20,16 @@ export function GroupDetail() {
   const [words, setWords] = useState<Word[]>([])
   const [sessions, setSessions] = useState<StudySession[]>([])
   const [loading, setLoading] = useState(true)
+  const auth = useAuth();
 
   useEffect(() => {
     async function fetchGroupData() {
       try {
+        const token = auth.user?.access_token || '';
         const [groupRes, wordsRes, sessionsRes] = await Promise.all([
-          api.get<GroupDetails>(`/groups/${groupId}`),
-          api.get<{ items: Word[] }>(`/groups/${groupId}/words`),
-          api.get<{ items: StudySession[] }>(`/groups/${groupId}/study_sessions`)
+          api.get<GroupDetails>(token, `/groups/${groupId}`),
+          api.get<{ items: Word[] }>(token, `/groups/${groupId}/words`),
+          api.get<{ items: StudySession[] }>(token, `/groups/${groupId}/study_sessions`)
         ])
 
         if (groupRes.data) setGroup(groupRes.data)

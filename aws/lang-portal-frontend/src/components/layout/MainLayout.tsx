@@ -11,7 +11,7 @@ export function MainLayout() {
   }
 
   if (auth.error) {
-    return <div>Encountering error... {auth.error.message}</div>;
+    return <div>Oops... {auth.error.source} caused {auth.error.message}</div>;
   }
 
   if (!auth.isAuthenticated) {

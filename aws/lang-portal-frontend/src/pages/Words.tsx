@@ -2,17 +2,21 @@ import { useEffect, useState } from 'react'
 import { api } from '@/services/api'
 import { WordCard } from '@/components/words/WordCard'
 import type { Word, PaginatedResponse } from '@/types/api'
+import { useAuth } from 'react-oidc-context'
 
 export function Words() {
   const [words, setWords] = useState<Word[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const auth = useAuth();
 
   useEffect(() => {
     async function fetchWords() {
       try {
+        const token = auth.user?.access_token || '';
         const response = await api.get<PaginatedResponse<Word>>(
+          token,
           `/words?page=${currentPage}`
         )
         

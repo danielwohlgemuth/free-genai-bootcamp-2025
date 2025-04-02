@@ -2,14 +2,17 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 import { useToast } from "@/components/ui/use-toast";
 import { api } from "@/lib/api";
+import { useAuth } from "react-oidc-context";
 
 export function Settings() {
   const { setTheme, theme } = useTheme();
   const { toast } = useToast();
+  const auth = useAuth();
 
   const handleResetHistory = async () => {
     try {
-      await api.post("/reset_history");
+      const token = auth.user?.access_token || '';
+      await api.post(token, "/reset_history");
       toast({
         title: "Success",
         description: "Study history has been reset",
@@ -26,7 +29,8 @@ export function Settings() {
 
   const handleFullReset = async () => {
     try {
-      await api.post("/full_reset");
+      const token = auth.user?.access_token || '';
+      await api.post(token, "/full_reset");
       setTheme("system");
       toast({
         title: "Success",

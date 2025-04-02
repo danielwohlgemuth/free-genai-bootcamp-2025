@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '@/services/api'
+import { useAuth } from 'react-oidc-context'
 
 interface ActivityCardProps {
   id: number
@@ -22,6 +23,7 @@ interface GroupsResponse {
 export function ActivityCard({ id, name, thumbnailUrl, description, type, onStart }: ActivityCardProps) {
   const [groups, setGroups] = useState<Group[]>([])
   const [selectedGroupId, setSelectedGroupId] = useState<number>(0)
+  const auth = useAuth();
 
   useEffect(() => {
     let mounted = true
@@ -30,7 +32,8 @@ export function ActivityCard({ id, name, thumbnailUrl, description, type, onStar
     if (type === 'ja_to_en' || type === 'en_to_ja') {
       const fetchGroups = async () => {
         try {
-          const response = await api.get<GroupsResponse>('/groups')
+          const token = auth.user?.access_token || '';
+          const response = await api.get<GroupsResponse>(token, '/groups')
           if (mounted) {  // Only update state if component is still mounted
             setGroups(response.data?.items || [])
             if (response.data?.items && response.data.items.length > 0) {

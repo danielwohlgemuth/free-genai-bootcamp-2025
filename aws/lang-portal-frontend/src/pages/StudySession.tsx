@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '@/services/api'
 import type { Word } from '@/types/api'
+import { useAuth } from 'react-oidc-context'
 
 interface StudySessionDetails {
   id: number
@@ -22,15 +23,17 @@ export function StudySession() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [userAnswer, setUserAnswer] = useState('')
+  const auth = useAuth();
 
   useEffect(() => {
     let mounted = true
 
     async function fetchSessionData() {
       try {
+        const token = auth.user?.access_token || '';
         const [sessionRes, wordsRes] = await Promise.all([
-          api.get<StudySessionDetails>(`/study_sessions/${sessionId}`),
-          api.get<WordsResponse>(`/study_sessions/${sessionId}/next_words`),
+          api.get<StudySessionDetails>(token, `/study_sessions/${sessionId}`),
+          api.get<WordsResponse>(token, `/study_sessions/${sessionId}/next_words`),
         ])
 
         console.log('sessionRes', sessionRes)
@@ -62,7 +65,8 @@ export function StudySession() {
       : userAnswer.toLowerCase().trim() === currentWord.japanese.toLowerCase()
 
     try {
-      await api.post(`/study_sessions/${sessionId}/words/${currentWord.id}/review`, {
+      const token = auth.user?.access_token || '';
+      await api.post(token, `/study_sessions/${sessionId}/words/${currentWord.id}/review`, {
         correct: isCorrect
       })
 

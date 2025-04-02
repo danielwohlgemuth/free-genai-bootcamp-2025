@@ -4,6 +4,7 @@ import { api } from '@/services/api'
 import { ActivityCard } from '@/components/study/ActivityCard'
 import { SessionHistory } from '@/components/study/SessionHistory'
 import type { StudySession } from '@/types/api'
+import { useAuth } from 'react-oidc-context'
 
 interface StudyActivity {
   id: number
@@ -18,13 +19,15 @@ export function StudyActivities() {
   const [activities, setActivities] = useState<StudyActivity[]>([])
   const [recentSessions, setRecentSessions] = useState<StudySession[]>([])
   const [loading, setLoading] = useState(true)
+  const auth = useAuth();
 
   useEffect(() => {
     async function fetchData() {
       try {
+        const token = auth.user?.access_token || '';
         const [activitiesRes, sessionsRes] = await Promise.all([
-          api.get<StudyActivity[]>('/study_activities'),
-          api.get<{ items: StudySession[] }>('/study_sessions?limit=5')
+          api.get<StudyActivity[]>(token, '/study_activities'),
+          api.get<{ items: StudySession[] }>(token, '/study_sessions?limit=5')
         ])
 
         if (activitiesRes.data) setActivities(activitiesRes.data)
@@ -41,7 +44,8 @@ export function StudyActivities() {
 
   const handleStartActivity = async (activityId: number, groupId: number) => {
     try {
-      const response = await api.post<{ id: number }>('/study_activities', {
+      const token = auth.user?.access_token || '';
+      const response = await api.post<{ id: number }>(token, '/study_activities', {
         group_id: groupId,
         study_activity_id: activityId
       })

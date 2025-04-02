@@ -2,17 +2,21 @@ import { useEffect, useState } from 'react'
 import { api } from '@/services/api'
 import { GroupCard } from '@/components/groups/GroupCard'
 import type { Group, PaginatedResponse } from '@/types/api'
+import { useAuth } from 'react-oidc-context'
 
 export function Groups() {
   const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const auth = useAuth();
 
   useEffect(() => {
     async function fetchGroups() {
       try {
+        const token = auth.user?.access_token || '';
         const response = await api.get<PaginatedResponse<Group>>(
+          token,
           `/groups?page=${currentPage}`
         )
         

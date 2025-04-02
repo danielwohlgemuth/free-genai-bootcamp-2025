@@ -4,6 +4,7 @@ import { StatsCard } from '@/components/dashboard/StatsCard'
 import { StudyProgress } from '@/components/dashboard/StudyProgress'
 import { LastStudySession } from '@/components/dashboard/LastStudySession'
 import type { DashboardStats, StudySession } from '@/types/api'
+import { useAuth } from 'react-oidc-context'
 
 interface StudyProgressData {
   total_words_studied: number
@@ -15,16 +16,18 @@ export function Dashboard() {
   const [progress, setProgress] = useState<StudyProgressData | null>(null)
   const [lastSession, setLastSession] = useState<StudySession | null>(null)
   const [loading, setLoading] = useState(true)
+  const auth = useAuth();
 
   useEffect(() => {
     let mounted = true
 
     const fetchDashboardData = async () => {
       try {
+        const token = auth.user?.access_token || '';
         const [statsRes, progressRes, sessionRes] = await Promise.all([
-          api.get<DashboardStats>('/dashboard/quick-stats'),
-          api.get<StudyProgressData>('/dashboard/study_progress'),
-          api.get<StudySession>('/dashboard/last_study_session'),
+          api.get<DashboardStats>(token, '/dashboard/quick-stats'),
+          api.get<StudyProgressData>(token, '/dashboard/study_progress'),
+          api.get<StudySession>(token, '/dashboard/last_study_session'),
         ])
 
         if (mounted) {
