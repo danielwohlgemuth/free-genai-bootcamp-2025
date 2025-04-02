@@ -48,6 +48,8 @@ lang_portal_pipeline = LangPortalPipelineStack(app, "LangPortalPipelineStack",
     bucket=lang_portal_frontend.bucket,
     cluster=lang_portal_backend.cluster,
     repository=lang_portal_backend.repository,
+    user_pool_id=auth_stack.user_pool.user_pool_id,
+    user_pool_client_id=auth_stack.lang_portal_client.user_pool_client_id,
     env=env
 )
 

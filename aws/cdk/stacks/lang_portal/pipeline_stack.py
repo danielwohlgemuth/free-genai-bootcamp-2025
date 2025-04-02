@@ -16,6 +16,8 @@ class LangPortalPipelineStack(Stack):
                  bucket: s3.Bucket,
                  cluster: ecs.Cluster,
                  repository: ecr.Repository,
+                 user_pool_id: str,
+                 user_pool_client_id: str,
                  **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
@@ -66,6 +68,26 @@ class LangPortalPipelineStack(Stack):
             actions=[
                 codepipeline_actions.CodeBuildAction(
                     action_name="Build",
+                    environment_variables={
+                        "VITE_API_BASE_URL": codebuild.BuildEnvironmentVariable(
+                            value="https://lang-portal.app-dw.net/api"
+                        ),
+                        "VITE_COGNITO_AUTHORITY": codebuild.BuildEnvironmentVariable(
+                            value=f"https://cognito-idp.{self.region}.amazonaws.com/{user_pool_id}"
+                        ),
+                        "VITE_COGNITO_CLIENT_ID": codebuild.BuildEnvironmentVariable(
+                            value=user_pool_client_id
+                        ),
+                        "VITE_COGNITO_DOMAIN": codebuild.BuildEnvironmentVariable(
+                            value="https://auth.app-dw.net"
+                        ),
+                        "VITE_REDIRECT_SIGN_IN": codebuild.BuildEnvironmentVariable(
+                            value="https://lang-portal.app-dw.net/auth/callback"
+                        ),
+                        "VITE_REDIRECT_SIGN_OUT": codebuild.BuildEnvironmentVariable(
+                            value="https://lang-portal.app-dw.net/"
+                        )
+                    },
                     project=codebuild.PipelineProject(
                         self, "LangPortalFrontendBuild",
                         build_spec=codebuild.BuildSpec.from_object({
