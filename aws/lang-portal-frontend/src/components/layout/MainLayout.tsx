@@ -1,7 +1,25 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
+import { useAuth } from "react-oidc-context";
+import { useEffect } from 'react';
 
 export function MainLayout() {
   const location = useLocation()
+  const auth = useAuth();
+
+  if (auth.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (auth.error) {
+    return <div>Encountering error... {auth.error.message}</div>;
+  }
+
+  if (!auth.isAuthenticated) {
+    useEffect(() => {
+      auth.signinRedirect();
+    }, []);
+    return null;
+  }
 
   const navItems = [
     { path: '/', label: 'Dashboard' },
@@ -26,7 +44,7 @@ export function MainLayout() {
                   to={path}
                   className={`text-sm font-medium transition-colors hover:text-primary ${
                     location.pathname === path ? 'text-primary' : 'text-muted-foreground'
-                  }`}
+                    }`}
                 >
                   {label}
                 </Link>

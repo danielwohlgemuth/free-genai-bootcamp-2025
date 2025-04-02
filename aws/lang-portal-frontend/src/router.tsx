@@ -6,7 +6,8 @@ import { StudySession } from '@/pages/StudySession'
 import { Words } from '@/pages/Words'
 import { Groups } from '@/pages/Groups'
 import { GroupDetail } from '@/pages/GroupDetail'
-import Settings from '@/pages/Settings'
+import { Settings } from '@/pages/Settings'
+import { AuthCallback } from './pages/AuthCallback'
 
 export const router = createBrowserRouter([
   {
@@ -50,6 +51,10 @@ export const router = createBrowserRouter([
       {
         path: 'settings',
         element: <Settings />,
+      },
+      {
+        path: 'auth/callback',
+        element: <AuthCallback />,
       },
     ],
   },

@@ -3,7 +3,7 @@ import { useTheme } from "@/components/theme-provider";
 import { useToast } from "@/components/ui/use-toast";
 import { api } from "@/lib/api";
 
-export default function Settings() {
+export function Settings() {
   const { setTheme, theme } = useTheme();
   const { toast } = useToast();
 
