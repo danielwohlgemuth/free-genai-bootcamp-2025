@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_study_sessions_group_id ON study_sessions(group_id);
