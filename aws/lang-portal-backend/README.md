@@ -32,6 +32,11 @@ Start the database:
 docker compose up -d
 ```
 
+Connect to the database:
+```bash
+docker exec -it lang-portal-backend-db-1 psql -U user dbname
+```
+
 Before running the server for the first time:
 
 Run the complete setup with:
