@@ -67,44 +67,18 @@ invoke dev-server
 
 The server will start on `http://localhost:8000`.
 
-## API Documentation
-
-Once the server is running, you can access:
-- Swagger UI documentation at `http://localhost:8000/docs`
-- ReDoc documentation at `http://localhost:8000/redoc`
-
-## Development Notes
-
-- The virtual environment needs to be activated each time you open a new terminal:
-```bash
-source venv/bin/activate
-```
-
-- To deactivate the virtual environment:
-```bash
-deactivate
-```
-
-- To see what packages are installed:
-```bash
-pip list
-```
-
 ## Project Structure
 
 ```
 backend_python/
-├── cmd/
-│   └── server/         # Server entry point
-├── internal/
-│   ├── models/         # Data structures and database operations
-│   └── handlers/       # HTTP handlers organized by feature
 ├── db/
-│   ├── migrations/     # Database migrations
-│   └── seeds/          # Seed data files
-├── tasks.py            # Task definitions
+│   ├── migrations/ # Database migrations
+│   └── seeds/      # Seed data files
+├── handlers/       # HTTP handlers organized by feature
+├── main.py         # Server entry point
+├── models.py       # Data structures and database operations
 ├── requirements.txt    # Python dependencies
-└── words.db            # SQLite database
+└── tasks.py        # Task definitions
 ```
 
 ## API Endpoints
@@ -117,4 +91,4 @@ The API provides endpoints for:
 - Study activities
 - System management
 
-For detailed API documentation, please refer to the Swagger UI (`/docs`) when the server is running. 
+For detailed API documentation, please refer to the Swagger UI (`http://localhost:8000/docs`) or ReDoc (`http://localhost:8000/redoc`) when the server is running.
