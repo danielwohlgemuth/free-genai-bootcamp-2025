@@ -45,7 +45,7 @@ class DatabaseStack(Stack):
         self.lang_portal_db = rds.DatabaseCluster(
             self, "LangPortalDB",
             engine=rds.DatabaseClusterEngine.aurora_postgres(
-                version=rds.AuroraPostgresEngineVersion.VER_13_9
+                version=rds.AuroraPostgresEngineVersion.VER_16_6
             ),
             credentials=self.lang_portal_credentials,
             writer=rds.ClusterInstance.provisioned("writer",
@@ -69,7 +69,7 @@ class DatabaseStack(Stack):
             ),
             parameter_group=rds.ParameterGroup.from_parameter_group_name(
                 self, "LangPortalDBParameterGroup",
-                parameter_group_name="default.aurora-postgresql13"
+                parameter_group_name="default.aurora-postgresql16"
             ),
             removal_policy=RemovalPolicy.SNAPSHOT,
             cloudwatch_logs_retention=logs.RetentionDays.ONE_WEEK
@@ -79,7 +79,7 @@ class DatabaseStack(Stack):
         self.haiku_db = rds.DatabaseCluster(
             self, "HaikuDB",
             engine=rds.DatabaseClusterEngine.aurora_postgres(
-                version=rds.AuroraPostgresEngineVersion.VER_13_9
+                version=rds.AuroraPostgresEngineVersion.VER_16_6
             ),
             credentials=self.haiku_credentials,
             writer=rds.ClusterInstance.provisioned("writer",
@@ -103,7 +103,7 @@ class DatabaseStack(Stack):
             ),
             parameter_group=rds.ParameterGroup.from_parameter_group_name(
                 self, "HaikuDBParameterGroup",
-                parameter_group_name="default.aurora-postgresql13"
+                parameter_group_name="default.aurora-postgresql16"
             ),
             removal_policy=RemovalPolicy.SNAPSHOT,
             cloudwatch_logs_retention=logs.RetentionDays.ONE_WEEK
