@@ -105,7 +105,7 @@ class HaikuGeneratorBackendStack(Stack):
         #     certificate=None,  # SSL termination at CloudFront
         #     protocol=elbv2.ApplicationProtocol.HTTP,
         #     public_load_balancer=True,
-        #     assign_public_ip=True,
+        #     assign_public_ip=False,
         #     security_groups=[self.service_sg],
         #     task_subnets=ec2.SubnetSelection(
         #         subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
