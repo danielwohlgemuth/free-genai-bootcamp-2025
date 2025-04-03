@@ -8,11 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from handlers import (
     dashboard,
-    words,
     groups,
-    study_sessions,
+    health,
     study_activities,
-    system
+    study_sessions,
+    system,
+    words,
 )
 
 app = FastAPI(title="Language Learning Portal API")
@@ -28,11 +29,12 @@ app.add_middleware(
 
 # Include routers
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
-app.include_router(words.router, prefix="/api/words", tags=["words"])
 app.include_router(groups.router, prefix="/api/groups", tags=["groups"])
-app.include_router(study_sessions.router, prefix="/api/study_sessions", tags=["study_sessions"])
+app.include_router(health.router, prefix="/api/health", tags=["health"])
 app.include_router(study_activities.router, prefix="/api/study_activities", tags=["study_activities"])
+app.include_router(study_sessions.router, prefix="/api/study_sessions", tags=["study_sessions"])
 app.include_router(system.router, prefix="/api", tags=["system"])
+app.include_router(words.router, prefix="/api/words", tags=["words"])
 
 if __name__ == "__main__":
     import uvicorn
