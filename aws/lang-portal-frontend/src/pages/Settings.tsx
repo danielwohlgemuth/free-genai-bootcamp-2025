@@ -27,25 +27,6 @@ export function Settings() {
     }
   };
 
-  const handleFullReset = async () => {
-    try {
-      const token = auth.user?.access_token || '';
-      await api.post(token, "/full_reset");
-      setTheme("system");
-      toast({
-        title: "Success",
-        description: "System has been fully reset",
-      });
-      window.location.href = "/";
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to perform full reset",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="container py-8 space-y-8">
       <h1 className="text-3xl font-bold">Settings</h1>
@@ -83,12 +64,6 @@ export function Settings() {
               onClick={handleResetHistory}
             >
               Reset History
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleFullReset}
-            >
-              Full Reset
             </Button>
           </div>
         </div>
