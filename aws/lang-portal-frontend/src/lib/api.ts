@@ -7,8 +7,12 @@ class ApiClient {
     this.baseUrl = baseUrl
   }
 
-  async get<T>(path: string): Promise<{ data: T }> {
-    const response = await fetch(`${this.baseUrl}${path}`)
+  async get<T>(token: string, path: string): Promise<{ data: T }> {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -16,11 +20,12 @@ class ApiClient {
     return { data }
   }
 
-  async post<T>(path: string, body?: unknown): Promise<{ data: T }> {
+  async post<T>(token: string, path: string, body?: unknown): Promise<{ data: T }> {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: body ? JSON.stringify(body) : undefined,
     })
