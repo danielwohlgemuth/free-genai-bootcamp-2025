@@ -2,8 +2,8 @@ from datetime import datetime, timedelta, UTC
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..db import get_db
-from ..models import StudyActivity, StudySession, WordReviewItem, Group
+from db import get_db
+from models import StudyActivity, StudySession, WordReviewItem, Group
 from pydantic import BaseModel
 
 router = APIRouter()

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..db import get_db
-from ..models import Word, WordReviewItem, Group
+from db import get_db
+from models import Word, WordReviewItem, Group
 
 router = APIRouter()
 

@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends
 from pathlib import Path
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..db import get_db, Base, engine
-from ..models import StudySession, WordReviewItem, Word, Group, WordGroup, StudyActivity
+from db import get_db, Base, engine
+from models import StudySession, WordReviewItem, Word, Group, WordGroup, StudyActivity
 
 router = APIRouter()
 

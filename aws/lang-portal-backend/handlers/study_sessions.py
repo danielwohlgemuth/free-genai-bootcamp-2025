@@ -4,8 +4,8 @@ from pydantic import BaseModel
 from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
-from ..db import get_db
-from ..models import StudySession, Word, WordReviewItem, StudyActivity, Group
+from db import get_db
+from models import StudySession, Word, WordReviewItem, StudyActivity, Group
 
 router = APIRouter()
 

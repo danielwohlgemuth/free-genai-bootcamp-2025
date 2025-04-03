@@ -27,6 +27,11 @@ pip install -r requirements.txt
 
 ### Database Setup
 
+Start the database:
+```bash
+docker compose up -d
+```
+
 Before running the server for the first time:
 
 Run the complete setup with:
