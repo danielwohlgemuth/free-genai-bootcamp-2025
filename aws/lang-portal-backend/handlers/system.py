@@ -25,7 +25,6 @@ async def reset_history(db: AsyncSession = Depends(get_db)):
         "message": "Study history has been reset"
     }
 
-@router.post("/full_reset")
 async def full_reset(db: AsyncSession = Depends(get_db)):
     """Completely reset the system and reload seed data"""
     

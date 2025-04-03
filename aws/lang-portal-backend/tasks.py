@@ -4,20 +4,29 @@ from db import get_db, engine, Base
 from invoke import task
 from pathlib import Path
 from sqlalchemy.sql import text
+from contextlib import asynccontextmanager
 
+
+@asynccontextmanager
+async def get_db_context():
+    """Context manager for database connection"""
+    async for db in get_db():
+        try:
+            yield db
+        finally:
+            break
 
 async def _run_migrations():
     """Run database migrations"""
     print("Running migrations...")
     migrations_dir = Path('db/migrations')
     
-    async for db in get_db():
+    async with get_db_context() as db:
         for migration_file in sorted(migrations_dir.glob('*.sql')):
             print(f"Running migration: {migration_file}")
             with open(migration_file) as f:
                 sql = f.read()
                 await db.execute(text(sql))
-        break
 
 @task
 def run_migrations(ctx):
@@ -27,9 +36,8 @@ def run_migrations(ctx):
 async def _seed_data():
     """Seed the database with initial data"""
     print("Seeding database...")
-    async for db in get_db():
+    async with get_db_context() as db:
         await full_reset(db)
-        break
 
 @task(run_migrations)
 def seed_data(ctx):

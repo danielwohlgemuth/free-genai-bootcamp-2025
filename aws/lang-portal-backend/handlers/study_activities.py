@@ -122,7 +122,7 @@ async def create_study_session(
     session = StudySession(
         group_id=group_id,
         study_activity_id=study_activity_id,
-        created_at=datetime.now(UTC)
+        created_at=datetime.now(UTC).replace(tzinfo=None)
     )
     
     db.add(session)

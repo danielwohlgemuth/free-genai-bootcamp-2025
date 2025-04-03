@@ -28,32 +28,45 @@ async def get_study_sessions(
     
     # Get study sessions with review items count
     query = (
-        select(StudySession, func.count(WordReviewItem.id).label("review_items_count"))
-        .options(
-            joinedload(StudySession.activity),
-            joinedload(StudySession.group)
+        select(
+            StudySession.id,
+            StudySession.created_at,
+            StudySession.group_id,
+            StudySession.study_activity_id,
+            StudyActivity.name.label("activity_name"),
+            Group.name.label("group_name"),
+            func.count(WordReviewItem.id).label("review_items_count")
         )
+        .join(StudyActivity, StudySession.study_activity_id == StudyActivity.id)
+        .join(Group, StudySession.group_id == Group.id)
         .outerjoin(StudySession.review_items)
-        .group_by(StudySession.id)
+        .group_by(
+            StudySession.id,
+            StudySession.created_at,
+            StudySession.group_id,
+            StudySession.study_activity_id,
+            StudyActivity.name,
+            Group.name
+        )
         .order_by(StudySession.created_at.desc())
         .offset(offset)
         .limit(per_page)
     )
     
     result = await db.execute(query)
-    sessions = result.unique().all()
+    sessions = result.all()
     
     return {
         "items": [
             {
                 "id": session.id,
-                "activity_name": session.activity.name,
-                "group_name": session.group.name,
+                "activity_name": session.activity_name,
+                "group_name": session.group_name,
                 "start_time": session.created_at.isoformat(),
                 "end_time": (session.created_at + timedelta(minutes=10)).isoformat(),
-                "review_items_count": review_count
+                "review_items_count": session.review_items_count
             }
-            for session, review_count in sessions
+            for session in sessions
         ],
         "pagination": {
             "current_page": page,
@@ -171,7 +184,7 @@ async def create_word_review(
         word_id=word_id,
         study_session_id=session_id,
         correct=correct,
-        created_at=datetime.now(UTC)
+        created_at=datetime.now(UTC).replace(tzinfo=None)
     )
     
     db.add(review_item)

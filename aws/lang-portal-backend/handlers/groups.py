@@ -4,7 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from db import get_db
-from models import Group, Word, StudySession, WordReviewItem
+from models import Group, Word, StudySession, StudyActivity, WordReviewItem
 
 router = APIRouter()
 
@@ -147,33 +147,46 @@ async def get_group_study_sessions(
     
     # Get study sessions with review items count
     query = (
-        select(StudySession, func.count(WordReviewItem.id).label("review_items_count"))
-        .options(
-            joinedload(StudySession.activity),
-            joinedload(StudySession.group)
+        select(
+            StudySession.id,
+            StudySession.created_at,
+            StudySession.group_id,
+            StudySession.study_activity_id,
+            StudyActivity.name.label("activity_name"),
+            Group.name.label("group_name"),
+            func.count(WordReviewItem.id).label("review_items_count")
         )
+        .join(StudyActivity, StudySession.study_activity_id == StudyActivity.id)
+        .join(Group, StudySession.group_id == Group.id)
         .outerjoin(StudySession.review_items)
         .where(StudySession.group_id == group_id)
-        .group_by(StudySession.id)
+        .group_by(
+            StudySession.id,
+            StudySession.created_at,
+            StudySession.group_id,
+            StudySession.study_activity_id,
+            StudyActivity.name,
+            Group.name
+        )
         .order_by(StudySession.created_at.desc())
         .offset(offset)
         .limit(per_page)
     )
     
     result = await db.execute(query)
-    sessions = result.unique().all()
+    sessions = result.all()
     
     return {
         "items": [
             {
                 "id": session.id,
-                "activity_name": session.activity.name,
-                "group_name": session.group.name,
+                "activity_name": session.activity_name,
+                "group_name": session.group_name,
                 "start_time": session.created_at.isoformat(),
                 "end_time": (session.created_at + timedelta(minutes=10)).isoformat(),
-                "review_items_count": review_count
+                "review_items_count": session.review_items_count
             }
-            for session, review_count in sessions
+            for session in sessions
         ],
         "pagination": {
             "current_page": page,
