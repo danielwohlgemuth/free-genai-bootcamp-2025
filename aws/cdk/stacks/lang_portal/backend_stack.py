@@ -1,10 +1,12 @@
 from aws_cdk import (
+    aws_certificatemanager as acm,
+    aws_cognito as cognito,
     aws_ec2 as ec2,
     aws_ecr as ecr,
     aws_ecs as ecs,
-    aws_ecs_patterns as ecs_patterns,
     aws_elasticloadbalancingv2 as elbv2,
     aws_logs as logs,
+    aws_rds as rds,
     CfnOutput,
     Duration,
     RemovalPolicy,
@@ -14,7 +16,11 @@ from constructs import Construct
 
 class LangPortalBackendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
-                 vpc: ec2.Vpc, database, user_pool, **kwargs) -> None:
+                 vpc: ec2.Vpc,
+                 database: rds.DatabaseCluster,
+                 user_pool: cognito.UserPool,
+                 certificate: acm.Certificate,
+                 **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # Create ECR Repository
@@ -101,15 +107,15 @@ class LangPortalBackendStack(Stack):
             cluster=self.cluster,
             task_definition=task_definition,
             desired_count=1,
-            certificate=None,  # SSL termination at CloudFront
-            protocol=elbv2.ApplicationProtocol.HTTP,
+            certificate=certificate,
+            protocol=elbv2.ApplicationProtocol.HTTPS,
             public_load_balancer=True,
             assign_public_ip=False,
             security_groups=[self.service_sg],
             task_subnets=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
             ),
-            listener_port=80,
+            listener_port=443,
             target_protocol=elbv2.ApplicationProtocol.HTTP,
             health_check=ecs.HealthCheck(
                 command=["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"],
@@ -162,7 +168,7 @@ class LangPortalBackendStack(Stack):
 
         # Outputs
         CfnOutput(self, "ServiceURL",
-            value=f"http://{self.service.load_balancer.load_balancer_dns_name}",
+            value=f"https://{self.service.load_balancer.load_balancer_dns_name}",
             description="Lang Portal Backend Service URL",
             export_name=f"{construct_id}-service-url"
         )

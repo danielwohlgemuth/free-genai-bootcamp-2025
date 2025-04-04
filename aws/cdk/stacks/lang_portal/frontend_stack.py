@@ -2,6 +2,7 @@ from aws_cdk import (
     aws_certificatemanager as acm,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as origins,
+    aws_elasticloadbalancingv2 as elbv2,
     aws_iam as iam,
     aws_route53 as route53,
     aws_route53_targets as targets,
@@ -14,21 +15,11 @@ from aws_cdk import (
 from constructs import Construct
 
 class LangPortalFrontendStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, backend_alb, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str,
+                certificate: acm.Certificate,
+                backend_alb: elbv2.ApplicationLoadBalancer,
+                **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
-
-        # Import hosted zone
-        self.hosted_zone = route53.HostedZone.from_lookup(
-            self, "HostedZone",
-            domain_name="app-dw.net"
-        )
-
-        # Create certificate for CloudFront
-        self.certificate = acm.Certificate(
-            self, "Certificate",
-            domain_name="lang-portal.app-dw.net",
-            validation=acm.CertificateValidation.from_dns(self.hosted_zone)
-        )
 
         # Create S3 bucket for access logging
         self.logging_bucket = s3.Bucket(
@@ -86,7 +77,7 @@ class LangPortalFrontendStack(Stack):
         # Create CloudFront distribution for Lang Portal
         self.distribution = cloudfront.Distribution(
             self, "Distribution",
-            certificate=self.certificate,
+            certificate=certificate,
             domain_names=["lang-portal.app-dw.net"],
             default_behavior=cloudfront.BehaviorOptions(
                 origin=origins.S3BucketOrigin.with_origin_access_control(
@@ -129,6 +120,12 @@ class LangPortalFrontendStack(Stack):
             log_bucket=self.logging_bucket,
             log_file_prefix="lang-portal-cf-logs/",
             log_includes_cookies=False
+        )
+
+        # Import hosted zone
+        self.hosted_zone = route53.HostedZone.from_lookup(
+            self, "HostedZone",
+            domain_name="app-dw.net"
         )
 
         # Create Route53 record

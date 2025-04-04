@@ -14,7 +14,7 @@ from aws_cdk import (
 class LangPortalPipelineStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
                  bucket: s3.Bucket,
-                 cluster: ecs.Cluster,
+                 service: ecs.FargateService,
                  repository: ecr.Repository,
                  user_pool_id: str,
                  user_pool_client_id: str,
@@ -252,11 +252,7 @@ class LangPortalPipelineStack(Stack):
             actions=[
                 codepipeline_actions.EcsDeployAction(
                     action_name="Deploy",
-                    service=ecs.FargateService.from_fargate_service_attributes(
-                        self, "LangPortalBackendService",
-                        service_name="lang-portal-backend",
-                        cluster=cluster
-                    ),
+                    service=service,
                     input=backend_build_output
                 )
             ]

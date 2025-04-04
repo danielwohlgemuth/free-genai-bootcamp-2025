@@ -9,6 +9,7 @@ from stacks.haiku_generator.frontend_stack import HaikuGeneratorFrontendStack
 from stacks.haiku_generator.pipeline_stack import HaikuGeneratorPipelineStack
 from stacks.lang_portal.backend_stack import LangPortalBackendStack
 from stacks.lang_portal.frontend_stack import LangPortalFrontendStack
+from stacks.lang_portal.certificate_stack import LangPortalCertificateStack
 from stacks.lang_portal.pipeline_stack import LangPortalPipelineStack
 from stacks.monitoring_stack import MonitoringStack
 from stacks.network_stack import NetworkStack
@@ -33,22 +34,28 @@ database_stack = DatabaseStack(app, "DatabaseStack", vpc=network_stack.vpc, env=
 auth_stack = AuthStack(app, "AuthStack", env=env)
 
 # Lang Portal stacks
+lang_portal_certificate = LangPortalCertificateStack(app, "LangPortalCertificateStack",
+    env=env
+)
+
 lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
     vpc=network_stack.vpc,
     database=database_stack.lang_portal_db,
     user_pool=auth_stack.user_pool,
+    certificate=lang_portal_certificate.certificate,
     env=env
 
 )
 
 lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",
     backend_alb=lang_portal_backend.service.load_balancer,
+    certificate=lang_portal_certificate.certificate,
     env=env
 )
 
 lang_portal_pipeline = LangPortalPipelineStack(app, "LangPortalPipelineStack",
     bucket=lang_portal_frontend.bucket,
-    cluster=lang_portal_backend.cluster,
+    service=lang_portal_backend.service.service,
     repository=lang_portal_backend.repository,
     user_pool_id=auth_stack.user_pool.user_pool_id,
     user_pool_client_id=auth_stack.lang_portal_client.user_pool_client_id,
