@@ -109,28 +109,6 @@ class DatabaseStack(Stack):
             cloudwatch_logs_retention=logs.RetentionDays.ONE_WEEK
         )
 
-        # Create RDS Proxy for Lang Portal
-        self.lang_portal_proxy = rds.DatabaseProxy(
-            self, "LangPortalDBProxy",
-            proxy_target=rds.ProxyTarget.from_cluster(self.lang_portal_db),
-            secrets=[self.lang_portal_db.secret],
-            debug_logging=True,
-            vpc=vpc,
-            security_groups=[self.lang_portal_security_group],
-            require_tls=True
-        )
-
-        # Create RDS Proxy for Haiku
-        self.haiku_proxy = rds.DatabaseProxy(
-            self, "HaikuDBProxy",
-            proxy_target=rds.ProxyTarget.from_cluster(self.haiku_db),
-            secrets=[self.haiku_db.secret],
-            debug_logging=True,
-            vpc=vpc,
-            security_groups=[self.haiku_security_group],
-            require_tls=True
-        )
-
         # Outputs
         CfnOutput(self, "LangPortalDBEndpoint",
             value=self.lang_portal_db.cluster_endpoint.hostname,
@@ -138,20 +116,8 @@ class DatabaseStack(Stack):
             export_name=f"{construct_id}-lang-portal-db-endpoint"
         )
 
-        CfnOutput(self, "LangPortalProxyEndpoint",
-            value=self.lang_portal_proxy.endpoint,
-            description="Lang Portal Database Proxy endpoint",
-            export_name=f"{construct_id}-lang-portal-proxy-endpoint"
-        )
-
         CfnOutput(self, "HaikuDBEndpoint",
             value=self.haiku_db.cluster_endpoint.hostname,
             description="Haiku Database endpoint",
             export_name=f"{construct_id}-haiku-db-endpoint"
-        )
-
-        CfnOutput(self, "HaikuProxyEndpoint",
-            value=self.haiku_proxy.endpoint,
-            description="Haiku Database Proxy endpoint",
-            export_name=f"{construct_id}-haiku-proxy-endpoint"
         )
