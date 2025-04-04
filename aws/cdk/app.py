@@ -33,14 +33,16 @@ database_stack = DatabaseStack(app, "DatabaseStack", vpc=network_stack.vpc, env=
 auth_stack = AuthStack(app, "AuthStack", env=env)
 
 # Lang Portal stacks
-lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",
-    env=env
-)
-
 lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
     vpc=network_stack.vpc,
     database=database_stack.lang_portal_db,
     user_pool=auth_stack.user_pool,
+    env=env
+
+)
+
+lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",
+    backend_alb=lang_portal_backend.service.load_balancer,
     env=env
 )
 

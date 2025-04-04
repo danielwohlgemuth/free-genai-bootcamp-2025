@@ -14,7 +14,7 @@ from aws_cdk import (
 from constructs import Construct
 
 class LangPortalFrontendStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str, backend_alb, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # Import hosted zone
@@ -98,6 +98,19 @@ class LangPortalFrontendStack(Stack):
                 cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED,
                 origin_request_policy=cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN
             ),
+            additional_behaviors={
+                "api/*": cloudfront.BehaviorOptions(
+                    origin=origins.LoadBalancerV2Origin(
+                        backend_alb,  
+                        protocol_policy=cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+                        read_timeout=Duration.seconds(30)
+                    ),
+                    viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                    allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
+                    cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
+                    origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER
+                )
+            },
             error_responses=[
                 cloudfront.ErrorResponse(
                     http_status=403,
