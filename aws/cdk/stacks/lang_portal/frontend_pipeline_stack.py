@@ -18,8 +18,8 @@ class LangPortalFrontendPipelineStack(Stack):
 
         # Frontend Pipeline
         frontend_pipeline = codepipeline.Pipeline(
-            self, "LangPortalFrontendPipeline",
-            pipeline_name="lang-portal-frontend-pipeline",
+            self, "Pipeline",
+            pipeline_name="lang-portal-frontend",
             pipeline_type=codepipeline.PipelineType.V2
         )
 
@@ -64,7 +64,7 @@ class LangPortalFrontendPipelineStack(Stack):
                 codepipeline_actions.CodeBuildAction(
                     action_name="Build",
                     project=codebuild.PipelineProject(
-                        self, "LangPortalFrontendBuild",
+                        self, "PipelineProject",
                         environment_variables={
                             "VITE_API_BASE_URL": codebuild.BuildEnvironmentVariable(
                                 value="https://lang-portal.app-dw.net/api"

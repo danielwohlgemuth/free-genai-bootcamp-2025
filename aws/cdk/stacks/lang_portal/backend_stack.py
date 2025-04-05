@@ -28,7 +28,7 @@ class LangPortalBackendStack(Stack):
         # Create ECR Repository
         self.repository = ecr.Repository(
             self, "Repository",
-            repository_name=f"{construct_id}-repo".lower(),
+            repository_name="lang-portal-backend",
             removal_policy=RemovalPolicy.DESTROY,
             lifecycle_rules=[
                 ecr.LifecycleRule(
@@ -43,7 +43,7 @@ class LangPortalBackendStack(Stack):
         self.cluster = ecs.Cluster(
             self, "Cluster",
             vpc=vpc,
-            cluster_name=f"{construct_id}-cluster",
+            cluster_name="lang-portal",
             container_insights_v2=ecs.ContainerInsights.ENABLED
         )
 
@@ -72,7 +72,8 @@ class LangPortalBackendStack(Stack):
 
         # Add container to task definition
         container = task_definition.add_container(
-            "ApiContainer",
+            "Container",
+            container_name="Container",
             image=ecs.ContainerImage.from_ecr_repository(
                 repository=self.repository,
                 tag="latest"
@@ -168,29 +169,4 @@ class LangPortalBackendStack(Stack):
             target_utilization_percent=70,
             scale_in_cooldown=Duration.seconds(60),
             scale_out_cooldown=Duration.seconds(60)
-        )
-
-        # Outputs
-        CfnOutput(self, "ServiceURL",
-            value=f"https://{self.service.load_balancer.load_balancer_dns_name}",
-            description="Lang Portal Backend Service URL",
-            export_name=f"{construct_id}-service-url"
-        )
-
-        CfnOutput(self, "ServiceName",
-            value=self.service.service.service_name,
-            description="Lang Portal Backend Service Name",
-            export_name=f"{construct_id}-service-name"
-        )
-
-        CfnOutput(self, "ClusterName",
-            value=self.cluster.cluster_name,
-            description="ECS Cluster Name",
-            export_name=f"{construct_id}-cluster-name"
-        )
-
-        CfnOutput(self, "RepositoryUri",
-            value=self.repository.repository_uri,
-            description="ECR Repository URI",
-            export_name=f"{construct_id}-repo-uri"
         )

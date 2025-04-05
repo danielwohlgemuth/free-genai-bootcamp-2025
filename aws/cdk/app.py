@@ -51,7 +51,6 @@ lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
     user_pool_client=auth_stack.lang_portal_client,
     certificate=lang_portal_certificate.certificate,
     env=env
-
 )
 
 lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",

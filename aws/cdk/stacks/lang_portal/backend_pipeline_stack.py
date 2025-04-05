@@ -19,8 +19,8 @@ class LangPortalBackendPipelineStack(Stack):
 
         # Backend Pipeline
         backend_pipeline = codepipeline.Pipeline(
-            self, "LangPortalBackendPipeline",
-            pipeline_name="lang-portal-backend-pipeline",
+            self, "Pipeline",
+            pipeline_name="lang-portal-backend",
             pipeline_type=codepipeline.PipelineType.V2
         )
 
@@ -59,7 +59,7 @@ class LangPortalBackendPipelineStack(Stack):
 
         # Create the build role
         build_role = iam.Role(
-            self, "LangPortalBackendBuildRole",
+            self, "Role",
             assumed_by=iam.ServicePrincipal("codebuild.amazonaws.com"),
             description="Role for Lang Portal Backend CodeBuild project"
         )
@@ -91,7 +91,7 @@ class LangPortalBackendPipelineStack(Stack):
                 codepipeline_actions.CodeBuildAction(
                     action_name="Build",
                     project=codebuild.PipelineProject(
-                        self, "LangPortalBackendBuild",
+                        self, "PipelineProject",
                         role=build_role,
                         environment=codebuild.BuildEnvironment(
                             privileged=True
@@ -123,7 +123,7 @@ class LangPortalBackendPipelineStack(Stack):
                                     "commands": [
                                         "docker push $ECR_REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION",
                                         "docker push $ECR_REPOSITORY_URI:latest",
-                                        "echo '[{\"name\":\"ApiContainer\",\"imageUri\":\"%s\"}]'  > imagedefinitions.json" % repository.repository_uri
+                                        "echo '[{\"name\":\"Container\",\"imageUri\":\"%s\"}]'  > imagedefinitions.json" % repository.repository_uri
                                     ]
                                 }
                             },

@@ -16,9 +16,9 @@ from constructs import Construct
 
 class LangPortalFrontendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
-                certificate: acm.Certificate,
-                backend_alb: elbv2.ApplicationLoadBalancer,
-                **kwargs) -> None:
+                 certificate: acm.Certificate,
+                 backend_alb: elbv2.ApplicationLoadBalancer,
+                 **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # Create S3 bucket for access logging
@@ -141,23 +141,6 @@ class LangPortalFrontendStack(Stack):
         # Outputs
         CfnOutput(self, "DomainName",
             value="https://lang-portal.app-dw.net",
-            description="Lang Portal frontend URL",
-            export_name=f"{construct_id}-domain-name"
-        )
-        CfnOutput(self, "BucketName",
-            value=self.bucket.bucket_name,
-            description="Lang Portal S3 bucket name",
-            export_name=f"{construct_id}-bucket-name"
-        )
-
-        CfnOutput(self, "DistributionId",
-            value=self.distribution.distribution_id,
-            description="Lang Portal CloudFront distribution ID",
-            export_name=f"{construct_id}-distribution-id"
-        )
-
-        CfnOutput(self, "DistributionDomain",
-            value=self.distribution.domain_name,
-            description="Lang Portal CloudFront domain name",
-            export_name=f"{construct_id}-distribution-domain"
+            description="Lang Portal Frontend URL",
+            export_name="lang-portal-domain-name"
         )

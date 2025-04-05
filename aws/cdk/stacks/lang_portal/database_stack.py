@@ -61,10 +61,3 @@ class LangPortalDatabaseStack(Stack):
             removal_policy=RemovalPolicy.SNAPSHOT,
             cloudwatch_logs_retention=logs.RetentionDays.ONE_WEEK
         )
-
-        # Outputs
-        CfnOutput(self, "DBEndpoint",
-            value=self.db.cluster_endpoint.hostname,
-            description="Database endpoint",
-            export_name=f"{construct_id}-db-endpoint"
-        )
