@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { App } from './App'
 import { ThemeProvider } from "@/components/theme-provider"
+import { ToastProvider } from "@/components/toast-provider"
 import './index.css'
 import { AuthProvider } from "react-oidc-context";
 
@@ -16,9 +17,11 @@ const cognitoAuthConfig = {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider {...cognitoAuthConfig}>
-      <ThemeProvider>
+      <ToastProvider>
+        <ThemeProvider>
           <App />
-      </ThemeProvider>
+        </ThemeProvider>
+      </ToastProvider>
     </AuthProvider>
   </React.StrictMode>,
 ) 

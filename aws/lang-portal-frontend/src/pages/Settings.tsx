@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/toast-provider";
 import { api } from "@/lib/api";
 import { useAuth } from "react-oidc-context";
 
@@ -14,15 +14,14 @@ export function Settings() {
       const token = auth.user?.access_token || '';
       await api.post(token, "/load_initial_data");
       toast({
-        title: "Success",
+        variant: "success",
         description: "Initial data has been loaded",
       });
       window.location.href = "/";
     } catch (error) {
       toast({
-        title: "Error",
+        variant: "error",
         description: "Failed to load initial data",
-        variant: "destructive",
       });
       console.error("Failed to load initial data", error);
     }
@@ -35,15 +34,14 @@ export function Settings() {
       const token = auth.user?.access_token || '';
       await api.post(token, "/reset_study_progress");
       toast({
-        title: "Success",
+        variant: "success",
         description: "Study progress has been reset",
       });
       window.location.href = "/";
     } catch (error) {
       toast({
-        title: "Error",
+        variant: "error",
         description: "Failed to reset study progress",
-        variant: "destructive",
       });
       console.error("Failed to reset study progress", error);
     }
@@ -56,15 +54,14 @@ export function Settings() {
       const token = auth.user?.access_token || '';
       await api.post(token, "/reset_data");
       toast({
-        title: "Success",
+        variant: "success",
         description: "Data has been reset",
       });
       window.location.href = "/";
     } catch (error) {
       toast({
-        title: "Error",
+        variant: "error",
         description: "Failed to reset data",
-        variant: "destructive",
       });
       console.error("Failed to reset data", error);
     }

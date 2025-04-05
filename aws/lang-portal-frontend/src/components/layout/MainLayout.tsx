@@ -1,13 +1,13 @@
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { Toast } from "../ui/toast";
 import { useAuth } from "react-oidc-context";
-import { useEffect } from 'react';
-import { Toast } from "@/components/ui/toast";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/toast-provider";
+import { useEffect } from 'react'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 
 export function MainLayout() {
   const location = useLocation()
   const auth = useAuth();
-  const { toasts } = useToast();
+  const { toasts, dismissToast } = useToast();
 
   if (auth.isLoading) {
     return <div>Loading...</div>;
@@ -58,16 +58,22 @@ export function MainLayout() {
       </nav>
 
       <main>
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            variant={toast.variant}
-            title={toast.title}
-            description={toast.description}
-          />
-        ))}
+        <div className="relative">
+          <div className="absolute top-4 right-4 z-50">
+            {toasts.map((toast) => (
+              <Toast
+                key={toast.id}
+                variant={toast.variant}
+                description={toast.description}
+                onDismiss={() => dismissToast(toast.id)}
+                className="m-2"
+              />
+            ))}
+          </div>
+        </div>
+
         <Outlet />
       </main>
     </div>
   )
-} 
+}
