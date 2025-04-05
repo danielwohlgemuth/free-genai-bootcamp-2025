@@ -228,22 +228,6 @@ class AuthStack(Stack):
             use_cognito_provided_values=True
         )
 
-        # # Add resource server for protected APIs
-        # self.user_pool.add_resource_server(
-        #     "ResourceServer",
-        #     identifier="api.app-dw.net",
-        #     scopes=[
-        #         cognito.ResourceServerScope(
-        #             scope_name="read",
-        #             scope_description="Read access to API"
-        #         ),
-        #         cognito.ResourceServerScope(
-        #             scope_name="write",
-        #             scope_description="Write access to API"
-        #         )
-        #     ]
-        # )
-
         # Outputs
         CfnOutput(self, "UserPoolId",
             value=self.user_pool.user_pool_id,
@@ -256,17 +240,35 @@ class AuthStack(Stack):
             description="User Pool ARN",
             export_name=f"{construct_id}-user-pool-arn"
         )
-
-        for client in [
-            ("LangPortal", self.lang_portal_client),
-            ("Haiku", self.haiku_client),
-            ("Vocab", self.vocab_client),
-            ("WritingPractice", self.writing_practice_client)
-        ]:
-            CfnOutput(
-                self,
-                f"{client[0]}ClientId",
-                value=client[1].user_pool_client_id,
-                description=f"{client[0]} Client ID",
-                export_name=f"{construct_id}-{client[0].lower()}-client-id"
-            )
+        
+        CfnOutput(
+            self,
+            "LangPortalClientId",
+            value=self.lang_portal_client.user_pool_client_id,
+            description="Lang Portal Client ID",
+            export_name=f"{construct_id}-lang-portal-client-id"
+        )
+        
+        CfnOutput(
+            self,
+            "HaikuClientId",
+            value=self.haiku_client.user_pool_client_id,
+            description="Haiku Client ID",
+            export_name=f"{construct_id}-haiku-client-id"
+        )
+        
+        CfnOutput(
+            self,
+            "VocabClientId",
+            value=self.vocab_client.user_pool_client_id,
+            description="Vocab Client ID",
+            export_name=f"{construct_id}-vocab-client-id"
+        )
+        
+        CfnOutput(
+            self,
+            "WritingPracticeClientId",
+            value=self.writing_practice_client.user_pool_client_id,
+            description="Writing Practice Client ID",
+            export_name=f"{construct_id}-writing-practice-client-id"
+        )

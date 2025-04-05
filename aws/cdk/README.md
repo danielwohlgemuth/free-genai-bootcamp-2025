@@ -65,7 +65,7 @@ cdk bootstrap
 
 5. Deploy stacks:
 ```bash
-cdk deploy --all --no-rollback
+cdk deploy --no-rollback --all
 ```
 
 ### Cleanup

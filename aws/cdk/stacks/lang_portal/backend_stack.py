@@ -20,6 +20,7 @@ class LangPortalBackendStack(Stack):
                  vpc: ec2.Vpc,
                  database: rds.DatabaseCluster,
                  user_pool: cognito.UserPool,
+                 user_pool_client: cognito.UserPoolClient,
                  certificate: acm.Certificate,
                  **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -84,6 +85,8 @@ class LangPortalBackendStack(Stack):
             ),
             environment={
                 "COGNITO_USER_POOL_ID": user_pool.user_pool_id,
+                "COGNITO_CLIENT_ID": user_pool_client.user_pool_client_id,
+                "COGNITO_REGION": Stack.of(self).region,
                 "DB_HOST": database.cluster_endpoint.hostname,
                 "DB_PORT": "5432",
                 "DB_NAME": "langportal",
