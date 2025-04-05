@@ -234,9 +234,13 @@ class LangPortalPipelineStack(Stack):
                                 "post_build": {
                                     "commands": [
                                         "docker push $ECR_REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION",
-                                        "docker push $ECR_REPOSITORY_URI:latest"
+                                        "docker push $ECR_REPOSITORY_URI:latest",
+                                        "echo '[{\"name\":\"ApiContainer\",\"imageUri\":\"%s\"}]'  > imagedefinitions.json" % repository.repository_uri
                                     ]
                                 }
+                            },
+                            "artifacts": {
+                                "files": ["aws/lang-portal-backend/imagedefinitions.json"]
                             }
                         })
                     ),
@@ -253,7 +257,7 @@ class LangPortalPipelineStack(Stack):
                 codepipeline_actions.EcsDeployAction(
                     action_name="Deploy",
                     service=service,
-                    input=backend_build_output
+                    image_file=backend_build_output.at_path("aws/lang-portal-backend/imagedefinitions.json")
                 )
             ]
         )
