@@ -1,22 +1,23 @@
 import json
+from auth import get_current_user
+from db import get_db, Base, engine
 from fastapi import APIRouter, Depends
+from models import StudySession, WordReviewItem, Word, Group, WordGroup, StudyActivity
 from pathlib import Path
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import get_db, Base, engine
-from models import StudySession, WordReviewItem, Word, Group, WordGroup, StudyActivity
 
 router = APIRouter()
 
 @router.post("/reset_history")
-async def reset_history(db: AsyncSession = Depends(get_db)):
+async def reset_history(db: AsyncSession = Depends(get_db), current_user: str = Depends(get_current_user)):
     """Reset all study history while keeping words and groups intact"""
     
     # Delete all word review items
-    await db.execute(delete(WordReviewItem))
+    await db.execute(delete(WordReviewItem).where(WordReviewItem.user_id == current_user))
     
     # Delete all study sessions
-    await db.execute(delete(StudySession))
+    await db.execute(delete(StudySession).where(StudySession.user_id == current_user))
     
     await db.commit()
     
@@ -34,33 +35,33 @@ async def full_reset(db: AsyncSession = Depends(get_db)):
         await conn.run_sync(Base.metadata.create_all)
     
     # Load seed data
-    seeds_dir = Path('db/seeds')
-    for seed_file in seeds_dir.glob('*.json'):
-        with open(seed_file) as f:
-            seed_data = json.load(f)
+    # seeds_dir = Path('db/seeds')
+    # for seed_file in seeds_dir.glob('*.json'):
+    #     with open(seed_file) as f:
+    #         seed_data = json.load(f)
             
-            # Create group
-            group = Group(name=seed_data['group_name'])
-            db.add(group)
-            await db.flush()  # To get the group ID
+    #         # Create group
+    #         group = Group(name=seed_data['group_name'])
+    #         db.add(group)
+    #         await db.flush()  # To get the group ID
             
-            # Create words and link to group
-            for word_data in seed_data['words']:
-                word = Word(
-                    japanese=word_data['japanese'],
-                    romaji=word_data['romaji'],
-                    english=word_data['english'],
-                    parts=word_data.get('parts', {})
-                )
-                db.add(word)
-                await db.flush()  # To get the word ID
+    #         # Create words and link to group
+    #         for word_data in seed_data['words']:
+    #             word = Word(
+    #                 japanese=word_data['japanese'],
+    #                 romaji=word_data['romaji'],
+    #                 english=word_data['english'],
+    #                 parts=word_data.get('parts', {})
+    #             )
+    #             db.add(word)
+    #             await db.flush()  # To get the word ID
                 
-                # Create word-group association
-                word_group = WordGroup(
-                    word_id=word.id,
-                    group_id=group.id
-                )
-                db.add(word_group)
+    #             # Create word-group association
+    #             word_group = WordGroup(
+    #                 word_id=word.id,
+    #                 group_id=group.id
+    #             )
+    #             db.add(word_group)
     
     # Create default study activities
     default_activities = [

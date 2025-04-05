@@ -1,7 +1,7 @@
 import json
+from db import get_db, Base, engine
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import get_db, Base, engine
 
 router = APIRouter()
 

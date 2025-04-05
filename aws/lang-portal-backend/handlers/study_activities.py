@@ -1,10 +1,11 @@
+from auth import get_current_user
 from datetime import datetime, timedelta, UTC
-from fastapi import APIRouter, Depends, HTTPException, Body
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 from db import get_db
+from fastapi import APIRouter, Depends, HTTPException, Body
 from models import StudyActivity, StudySession, WordReviewItem, Group
 from pydantic import BaseModel
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
@@ -13,8 +14,12 @@ class CreateStudySessionRequest(BaseModel):
     study_activity_id: int
 
 @router.get("")
-async def get_study_activities(db: AsyncSession = Depends(get_db)):
-    query = select(StudyActivity)
+async def get_study_activities(
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
+):
+    query = select(StudyActivity) \
+        .where(StudyActivity.user_id == current_user)
     result = await db.execute(query)
     activities = result.scalars().all()
     
@@ -30,8 +35,14 @@ async def get_study_activities(db: AsyncSession = Depends(get_db)):
     ]
 
 @router.get("/{activity_id}")
-async def get_study_activity(activity_id: int, db: AsyncSession = Depends(get_db)):
-    query = select(StudyActivity).where(StudyActivity.id == activity_id)
+async def get_study_activity(
+    activity_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
+):
+    query = select(StudyActivity) \
+        .where(StudyActivity.id == activity_id) \
+        .where(StudyActivity.user_id == current_user)
     result = await db.execute(query)
     activity = result.scalar_one_or_none()
     
@@ -57,8 +68,10 @@ async def get_activity_study_sessions(
     offset = (page - 1) * per_page
     
     # Get total count
-    count_query = select(func.count()).select_from(StudySession) \
-        .where(StudySession.study_activity_id == activity_id)
+    count_query = select(func.count()) \
+        .select_from(StudySession) \
+        .where(StudySession.study_activity_id == activity_id) \
+        .where(StudySession.user_id == current_user)
     total_count = await db.execute(count_query)
     total_count = total_count.scalar()
     
@@ -68,6 +81,7 @@ async def get_activity_study_sessions(
         func.count(WordReviewItem.id).label("review_items_count")
     ).outerjoin(StudySession.review_items) \
      .where(StudySession.study_activity_id == activity_id) \
+     .where(StudySession.user_id == current_user) \
      .group_by(StudySession.id) \
      .order_by(StudySession.created_at.desc()) \
      .offset(offset) \
@@ -105,14 +119,17 @@ async def create_study_session(
     study_activity_id = request.study_activity_id
     # Verify group and activity exist
     group = await db.execute(
-        select(Group).where(Group.id == group_id)
+        select(Group).where(Group.id == group_id) \
+            .where(Group.user_id == current_user)
     )
     group = group.scalar_one_or_none()
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
     
     activity = await db.execute(
-        select(StudyActivity).where(StudyActivity.id == study_activity_id)
+        select(StudyActivity) \
+            .where(StudyActivity.id == study_activity_id) \
+            .where(StudyActivity.user_id == current_user)
     )
     activity = activity.scalar_one_or_none()
     if not activity:
@@ -120,6 +137,7 @@ async def create_study_session(
     
     # Create study session
     session = StudySession(
+        user_id=current_user,
         group_id=group_id,
         study_activity_id=study_activity_id,
         created_at=datetime.now(UTC).replace(tzinfo=None)

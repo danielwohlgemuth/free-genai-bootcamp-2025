@@ -1,8 +1,9 @@
+from auth import get_current_user
+from db import get_db
 from fastapi import APIRouter, Depends
+from models import Word, WordReviewItem, Group
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from db import get_db
-from models import Word, WordReviewItem, Group
 
 router = APIRouter()
 
@@ -10,17 +11,18 @@ router = APIRouter()
 async def get_words(
     page: int = 1,
     per_page: int = 100,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
 ):
     # Calculate offset
     offset = (page - 1) * per_page
     
     # Get total count
-    count_query = select(func.count()).select_from(Word)
+    count_query = select(func.count()).select_from(Word).where(Word.user_id == current_user)
     total_count = await db.execute(count_query)
     total_count = total_count.scalar()
     
-    # Get words with their review stats
+    # Get words with their review stats filtered by user_id
     query = select(
         Word,
         func.count(WordReviewItem.id).filter(WordReviewItem.correct == True).label("correct_count"),
@@ -54,7 +56,11 @@ async def get_words(
     }
 
 @router.get("/{word_id}")
-async def get_word(word_id: int, db: AsyncSession = Depends(get_db)):
+async def get_word(
+    word_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
+):
     # Get word with its review stats and groups
     query = select(
         Word,

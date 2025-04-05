@@ -1,10 +1,11 @@
+from auth import get_current_user
 from datetime import timedelta
+from db import get_db
 from fastapi import APIRouter, Depends
-from sqlalchemy import func, select
+from models import Group, Word, StudySession, StudyActivity, WordReviewItem
+from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
-from db import get_db
-from models import Group, Word, StudySession, StudyActivity, WordReviewItem
 
 router = APIRouter()
 
@@ -12,13 +13,16 @@ router = APIRouter()
 async def get_groups(
     page: int = 1,
     per_page: int = 100,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
 ):
     # Calculate offset
     offset = (page - 1) * per_page
     
     # Get total count
-    count_query = select(func.count()).select_from(Group)
+    count_query = select(func.count()) \
+        .select_from(Group) \
+        .where(Group.user_id == current_user)
     total_count = await db.execute(count_query)
     total_count = total_count.scalar()
     
@@ -27,6 +31,7 @@ async def get_groups(
         Group,
         func.count(Word.id).label("word_count")
     ).outerjoin(Group.words) \
+     .where(Group.user_id == current_user) \
      .group_by(Group.id) \
      .offset(offset) \
      .limit(per_page)
@@ -52,13 +57,18 @@ async def get_groups(
     }
 
 @router.get("/{group_id}")
-async def get_group(group_id: int, db: AsyncSession = Depends(get_db)):
+async def get_group(
+    group_id: int, 
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
+):
     # Get group with word count
     query = select(
         Group,
         func.count(Word.id).label("word_count")
     ).outerjoin(Group.words) \
      .where(Group.id == group_id) \
+     .where(Group.user_id == current_user) \
      .group_by(Group.id)
     
     result = await db.execute(query)
@@ -82,13 +92,18 @@ async def get_group_words(
     group_id: int,
     page: int = 1,
     per_page: int = 100,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
 ):
     # Calculate offset
     offset = (page - 1) * per_page
     
     # Get total count of words in group
-    count_query = select(func.count()).select_from(Word).join(Word.groups).where(Group.id == group_id)
+    count_query = select(func.count()) \
+        .select_from(Word) \
+        .join(Word.groups) \
+        .where(Group.id == group_id) \
+        .where(Group.user_id == current_user)
     total_count = await db.execute(count_query)
     total_count = total_count.scalar()
     
@@ -100,6 +115,7 @@ async def get_group_words(
     ).join(Word.groups) \
      .outerjoin(WordReviewItem) \
      .where(Group.id == group_id) \
+     .where(Group.user_id == current_user) \
      .group_by(Word.id) \
      .offset(offset) \
      .limit(per_page)
@@ -159,7 +175,8 @@ async def get_group_study_sessions(
         .join(StudyActivity, StudySession.study_activity_id == StudyActivity.id)
         .join(Group, StudySession.group_id == Group.id)
         .outerjoin(StudySession.review_items)
-        .where(StudySession.group_id == group_id)
+        .where(StudySession.group_id == group_id) \
+        .where(Group.user_id == current_user) \
         .group_by(
             StudySession.id,
             StudySession.created_at,

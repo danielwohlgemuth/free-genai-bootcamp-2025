@@ -1,11 +1,11 @@
+from auth import get_current_user
 from datetime import datetime, timedelta, UTC
+from db import get_db
 from fastapi import APIRouter, Depends, HTTPException, Body
+from models import StudySession, Word, WordReviewItem, StudyActivity, Group
 from pydantic import BaseModel
 from sqlalchemy import func, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
-from db import get_db
-from models import StudySession, Word, WordReviewItem, StudyActivity, Group
 
 router = APIRouter()
 
@@ -16,13 +16,16 @@ class CreateWordReviewRequest(BaseModel):
 async def get_study_sessions(
     page: int = 1,
     per_page: int = 100,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
 ):
     # Calculate offset
     offset = (page - 1) * per_page
     
     # Get total count
-    count_query = select(func.count()).select_from(StudySession)
+    count_query = select(func.count()) \
+        .select_from(StudySession) \
+        .where(StudySession.user_id == current_user)
     total_count = await db.execute(count_query)
     total_count = total_count.scalar()
     
@@ -79,14 +82,16 @@ async def get_study_sessions(
 @router.get("/{session_id}")
 async def get_study_session(
     session_id: int,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
 ):
     """Get details of a specific study session"""
     query = (
-        select(StudySession, StudyActivity.name, StudyActivity.type, Group.name)
-        .join(StudyActivity, StudySession.study_activity_id == StudyActivity.id)
-        .join(Group, StudySession.group_id == Group.id)
-        .where(StudySession.id == session_id)
+        select(StudySession, StudyActivity.name, StudyActivity.type, Group.name) \
+        .join(StudyActivity, StudySession.study_activity_id == StudyActivity.id) \
+        .join(Group, StudySession.group_id == Group.id) \
+        .where(StudySession.id == session_id) \
+        .where(StudySession.user_id == current_user)
     )
     
     result = await db.execute(query)
@@ -110,7 +115,8 @@ async def get_session_words(
     session_id: int,
     page: int = 1,
     per_page: int = 100,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
 ):
     # Calculate offset
     offset = (page - 1) * per_page
@@ -129,6 +135,7 @@ async def get_session_words(
         func.count(WordReviewItem.id).filter(WordReviewItem.correct == False).label("wrong_count")
     ).join(WordReviewItem) \
      .where(WordReviewItem.study_session_id == session_id) \
+     .where(WordReviewItem.user_id == current_user) \
      .group_by(Word.id) \
      .offset(offset) \
      .limit(per_page)
@@ -161,19 +168,24 @@ async def create_word_review(
     session_id: int,
     word_id: int,
     request: CreateWordReviewRequest = Body(...),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
 ):
     correct = request.correct
     # Verify session and word exist
     session = await db.execute(
-        select(StudySession).where(StudySession.id == session_id)
+        select(StudySession) \
+            .where(StudySession.id == session_id) \
+            .where(StudySession.user_id == current_user)
     )
     session = session.scalar_one_or_none()
     if not session:
         raise HTTPException(status_code=404, detail="Study session not found")
     
     word = await db.execute(
-        select(Word).where(Word.id == word_id)
+        select(Word) \
+            .where(Word.id == word_id) \
+            .where(Word.user_id == current_user)
     )
     word = word.scalar_one_or_none()
     if not word:
@@ -202,10 +214,13 @@ async def create_word_review(
 async def get_next_words(
     session_id: int,
     limit: int = 10,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
 ):
     # Get the study session
-    session_query = select(StudySession).where(StudySession.id == session_id)
+    session_query = select(StudySession) \
+        .where(StudySession.id == session_id) \
+        .where(StudySession.user_id == current_user)
     result = await db.execute(session_query)
     session = result.scalar_one_or_none()
     
@@ -215,16 +230,17 @@ async def get_next_words(
     # Get words from the group that haven't been reviewed in this session
     words_query = (
         select(Word)
-        .join(Word.groups)  # Use the relationship instead of direct join
-        .where(Group.id == session.group_id)
+        .join(Word.groups) \
+        .where(Group.id == session.group_id) \
         .outerjoin(
             WordReviewItem,
             and_(
                 WordReviewItem.word_id == Word.id,
                 WordReviewItem.study_session_id == session_id
             )
-        )
-        .where(WordReviewItem.id == None)
+        ) \
+        .where(WordReviewItem.id == None) \
+        .where(Word.user_id == current_user) \
         .limit(limit)
     )
     

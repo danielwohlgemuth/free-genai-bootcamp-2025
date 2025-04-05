@@ -27,6 +27,7 @@ async def _run_migrations():
             with open(migration_file) as f:
                 sql = f.read()
                 await db.execute(text(sql))
+        await db.commit()
 
 @task
 def run_migrations(ctx):

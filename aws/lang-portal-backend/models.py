@@ -7,6 +7,7 @@ class Word(Base):
     __tablename__ = "words"
     
     id = Column(Integer, primary_key=True)
+    user_id = Column(String)
     japanese = Column(String)
     romaji = Column(String)
     english = Column(String)
@@ -19,6 +20,7 @@ class WordGroup(Base):
     __tablename__ = "words_groups"
     
     id = Column(Integer, primary_key=True)
+    user_id = Column(String)
     word_id = Column(Integer, ForeignKey("words.id"))
     group_id = Column(Integer, ForeignKey("groups.id"))
 
@@ -26,6 +28,7 @@ class Group(Base):
     __tablename__ = "groups"
     
     id = Column(Integer, primary_key=True)
+    user_id = Column(String)
     name = Column(String)
     
     words = relationship("Word", secondary="words_groups", back_populates="groups")
@@ -35,6 +38,7 @@ class StudySession(Base):
     __tablename__ = "study_sessions"
     
     id = Column(Integer, primary_key=True)
+    user_id = Column(String)
     group_id = Column(Integer, ForeignKey("groups.id"))
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
     study_activity_id = Column(Integer, ForeignKey("study_activities.id"))
@@ -47,6 +51,7 @@ class StudyActivity(Base):
     __tablename__ = "study_activities"
     
     id = Column(Integer, primary_key=True)
+    user_id = Column(String)
     name = Column(String)
     thumbnail_url = Column(String)
     description = Column(String)
@@ -58,6 +63,7 @@ class WordReviewItem(Base):
     __tablename__ = "word_review_items"
     
     id = Column(Integer, primary_key=True)
+    user_id = Column(String)
     word_id = Column(Integer, ForeignKey("words.id"))
     study_session_id = Column(Integer, ForeignKey("study_sessions.id"))
     correct = Column(Boolean)
