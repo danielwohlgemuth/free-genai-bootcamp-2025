@@ -3,13 +3,14 @@ import os
 from aws_cdk import App, Environment
 from dotenv import load_dotenv
 from stacks.auth_stack import AuthStack
-from stacks.database_stack import DatabaseStack
 from stacks.haiku_generator.backend_stack import HaikuGeneratorBackendStack
+from stacks.haiku_generator.database_stack import HaikuGeneratorDatabaseStack
 from stacks.haiku_generator.frontend_stack import HaikuGeneratorFrontendStack
 from stacks.haiku_generator.pipeline_stack import HaikuGeneratorPipelineStack
 from stacks.lang_portal.backend_stack import LangPortalBackendStack
-from stacks.lang_portal.frontend_stack import LangPortalFrontendStack
 from stacks.lang_portal.certificate_stack import LangPortalCertificateStack
+from stacks.lang_portal.database_stack import LangPortalDatabaseStack
+from stacks.lang_portal.frontend_stack import LangPortalFrontendStack
 from stacks.lang_portal.pipeline_stack import LangPortalPipelineStack
 from stacks.monitoring_stack import MonitoringStack
 from stacks.network_stack import NetworkStack
@@ -30,7 +31,6 @@ env = Environment(
 # Core infrastructure stacks
 network_stack = NetworkStack(app, "NetworkStack", env=env)
 monitoring_stack = MonitoringStack(app, "MonitoringStack", env=env)
-database_stack = DatabaseStack(app, "DatabaseStack", vpc=network_stack.vpc, env=env)
 auth_stack = AuthStack(app, "AuthStack", env=env)
 
 # Lang Portal stacks
@@ -38,9 +38,14 @@ lang_portal_certificate = LangPortalCertificateStack(app, "LangPortalCertificate
     env=env
 )
 
+lang_portal_database = LangPortalDatabaseStack(app, "LangPortalDatabaseStack",
+    vpc=network_stack.vpc,
+    env=env
+)
+
 lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
     vpc=network_stack.vpc,
-    database=database_stack.lang_portal_db,
+    database=lang_portal_database.db,
     user_pool=auth_stack.user_pool,
     certificate=lang_portal_certificate.certificate,
     env=env
@@ -67,9 +72,14 @@ haiku_frontend = HaikuGeneratorFrontendStack(app, "HaikuGeneratorFrontendStack",
     env=env
 )
 
+haiku_database = HaikuGeneratorDatabaseStack(app, "HaikuGeneratorDatabaseStack",
+    vpc=network_stack.vpc,
+    env=env
+)
+
 haiku_backend = HaikuGeneratorBackendStack(app, "HaikuGeneratorBackendStack",
     vpc=network_stack.vpc,
-    database=database_stack.haiku_db,
+    database=haiku_database.db,
     user_pool=auth_stack.user_pool,
     env=env
 )
@@ -91,7 +101,7 @@ vocab_frontend = VocabGeneratorFrontendStack(app, "VocabGeneratorFrontendStack",
 
 vocab_backend = VocabGeneratorBackendStack(app, "VocabGeneratorBackendStack",
     vpc=network_stack.vpc,
-    database=database_stack.lang_portal_db,
+    database=lang_portal_database.db,
     user_pool=auth_stack.user_pool,
     env=env
 )

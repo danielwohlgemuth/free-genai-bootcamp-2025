@@ -4,6 +4,7 @@ from aws_cdk import (
     aws_ec2 as ec2,
     aws_ecr as ecr,
     aws_ecs as ecs,
+    aws_ecs_patterns as ecs_patterns,
     aws_elasticloadbalancingv2 as elbv2,
     aws_logs as logs,
     aws_rds as rds,
