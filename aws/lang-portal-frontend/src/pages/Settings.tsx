@@ -9,21 +9,64 @@ export function Settings() {
   const { toast } = useToast();
   const auth = useAuth();
 
-  const handleResetHistory = async () => {
+  const handleLoadInitialData = async () => {
     try {
       const token = auth.user?.access_token || '';
-      await api.post(token, "/reset_history");
+      await api.post(token, "/load_initial_data");
       toast({
         title: "Success",
-        description: "Study history has been reset",
+        description: "Initial data has been loaded",
       });
       window.location.href = "/";
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to reset history",
+        description: "Failed to load initial data",
         variant: "destructive",
       });
+      console.error("Failed to load initial data", error);
+    }
+  };
+
+  const handleResetStudyProgress = async () => {
+    try {
+      const confirm = window.confirm("Are you sure you want to reset your study progress?")
+      if (!confirm) return
+      const token = auth.user?.access_token || '';
+      await api.post(token, "/reset_study_progress");
+      toast({
+        title: "Success",
+        description: "Study progress has been reset",
+      });
+      window.location.href = "/";
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to reset study progress",
+        variant: "destructive",
+      });
+      console.error("Failed to reset study progress", error);
+    }
+  };
+
+  const handleResetData = async () => {
+    try {
+      const confirm = window.confirm("Are you sure you want to reset your data?")
+      if (!confirm) return
+      const token = auth.user?.access_token || '';
+      await api.post(token, "/reset_data");
+      toast({
+        title: "Success",
+        description: "Data has been reset",
+      });
+      window.location.href = "/";
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to reset data",
+        variant: "destructive",
+      });
+      console.error("Failed to reset data", error);
     }
   };
 
@@ -57,13 +100,25 @@ export function Settings() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold">Reset Options</h2>
+          <h2 className="text-xl font-semibold">Data</h2>
           <div className="flex gap-2">
             <Button
-              variant="destructive"
-              onClick={handleResetHistory}
+              variant={theme === "dark" ? "default" : "outline"}
+              onClick={handleLoadInitialData}
             >
-              Reset History
+              Load Initial Data
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleResetStudyProgress}
+            >
+              Reset Study Progress
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleResetData}
+            >
+              Reset Data
             </Button>
           </div>
         </div>
