@@ -23,41 +23,34 @@ class LangPortalDatabaseStack(Stack):
         self.security_group = ec2.SecurityGroup(
             self, "DBSecurityGroup",
             vpc=vpc,
-            description="Security group for Aurora cluster",
+            description="Security group for RDS instance",
             security_group_name=f"{construct_id}-db-sg"
         )
 
-        # Create Lang Portal Aurora cluster
-        self.db = rds.DatabaseCluster(
+        # Create standard RDS PostgreSQL instance
+        self.db = rds.DatabaseInstance(
             self, "DB",
-            default_database_name="langportal",
-            engine=rds.DatabaseClusterEngine.aurora_postgres(
-                version=rds.AuroraPostgresEngineVersion.VER_16_6
+            engine=rds.DatabaseInstanceEngine.postgres(
+                version=rds.PostgresEngineVersion.VER_16_6
             ),
             credentials=self.credentials,
-            writer=rds.ClusterInstance.provisioned("writer",
-                publicly_accessible=False,
-                instance_type=ec2.InstanceType.of(
-                    ec2.InstanceClass.T4G,
-                    ec2.InstanceSize.MEDIUM
-                ),
+            instance_type=ec2.InstanceType.of(
+                ec2.InstanceClass.T4G,
+                ec2.InstanceSize.MEDIUM
             ),
-            readers=[
-                rds.ClusterInstance.serverless_v2("reader", scale_with_writer=True)
-            ],
+            vpc=vpc,
             vpc_subnets=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
             ),
-            vpc=vpc,
             security_groups=[self.security_group],
-            backup=rds.BackupProps(
-                retention=Duration.days(7),
-                preferred_window="03:00-04:00"  # UTC
-            ),
+            publicly_accessible=False,
+            backup_retention=Duration.days(7),
+            preferred_backup_window="03:00-04:00",  # UTC
+            deletion_protection=True,
+            removal_policy=RemovalPolicy.SNAPSHOT,
+            cloudwatch_logs_retention=logs.RetentionDays.ONE_WEEK,
             parameter_group=rds.ParameterGroup.from_parameter_group_name(
                 self, "DBParameterGroup",
-                parameter_group_name="default.aurora-postgresql16"
-            ),
-            removal_policy=RemovalPolicy.SNAPSHOT,
-            cloudwatch_logs_retention=logs.RetentionDays.ONE_WEEK
+                parameter_group_name="default.postgres16"
+            )
         )
