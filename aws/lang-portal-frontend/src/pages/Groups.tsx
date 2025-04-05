@@ -43,9 +43,15 @@ export function Groups() {
       <h1 className="text-2xl font-bold mb-6">Word Groups</h1>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {groups.map((group) => (
-          <GroupCard key={group.id} group={group} />
-        ))}
+        {groups.length === 0 ? (
+          <div className="rounded-lg border bg-card p-4">
+            <p className="text-sm text-muted-foreground">No word groups found. Import initial data from <a href="/settings" className="text-primary">Settings</a>.</p>
+          </div>
+        ) : (
+          groups.map((group) => (
+            <GroupCard key={group.id} group={group} />
+          ))
+        )}
       </div>
 
       {totalPages > 1 && (

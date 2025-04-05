@@ -69,7 +69,7 @@ export function ActivityCard({ id, name, thumbnailUrl, description, type, onStar
         <h3 className="text-lg font-semibold mb-2">{name}</h3>
         <p className="text-sm text-muted-foreground mb-4">{description}</p>
         
-        {needsGroupSelection && groups && groups.length > 0 && (
+        {needsGroupSelection && (
           <div className="mb-4">
             <select
               value={selectedGroupId}

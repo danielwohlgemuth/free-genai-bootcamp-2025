@@ -43,9 +43,15 @@ export function Words() {
       <h1 className="text-2xl font-bold mb-6">Vocabulary Words</h1>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {words.map((word) => (
-          <WordCard key={word.id} word={word} />
-        ))}
+        {words.length === 0 ? (
+          <div className="rounded-lg border bg-card p-4">
+            <p className="text-sm text-muted-foreground">No words found. Import initial data from <a href="/settings" className="text-primary">Settings</a>.</p>
+          </div>
+        ) : (
+          words.map((word) => (
+            <WordCard key={word.id} word={word} />
+          ))
+        )}
       </div>
 
       {totalPages > 1 && (
