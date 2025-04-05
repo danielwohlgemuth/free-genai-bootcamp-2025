@@ -23,9 +23,9 @@ async def _setup():
     async with get_db_context() as db:
         try:
             # Drop all tables
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.drop_all)
-                await conn.run_sync(Base.metadata.create_all)
+            await db.execute(text("DROP SCHEMA public CASCADE;"))
+            await db.execute(text("CREATE SCHEMA public;"))
+            await db.commit()
 
             # Run migrations
             for migration_file in sorted(migrations_dir.glob('*.sql')):

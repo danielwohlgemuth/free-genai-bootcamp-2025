@@ -147,7 +147,8 @@ async def get_group_study_sessions(
     group_id: int,
     page: int = 1,
     per_page: int = 100,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
 ):
     # Calculate offset
     offset = (page - 1) * per_page
@@ -156,7 +157,8 @@ async def get_group_study_sessions(
     count_query = (
         select(func.count())
         .select_from(StudySession)
-        .where(StudySession.group_id == group_id)
+        .where(StudySession.group_id == group_id) \
+        .where(StudySession.user_id == current_user)
     )
     total_count = await db.execute(count_query)
     total_count = total_count.scalar()

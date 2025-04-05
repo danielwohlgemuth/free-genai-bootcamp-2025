@@ -9,9 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter()
 
-@router.post("/reset_history")
-async def reset_history(db: AsyncSession = Depends(get_db), current_user: str = Depends(get_current_user)):
-    """Reset all study history while keeping words and groups intact"""
+@router.post("/reset_study_progress")
+async def reset_study_progress(
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
+):
+    """Reset all study progress while keeping words and groups intact"""
     
     # Delete all word review items
     await db.execute(delete(WordReviewItem).where(WordReviewItem.user_id == current_user))
@@ -23,12 +26,15 @@ async def reset_history(db: AsyncSession = Depends(get_db), current_user: str = 
     
     return {
         "success": True,
-        "message": "Study history has been reset"
+        "message": "Study progress has been reset"
     }
 
 @router.post("/reset_data")
-async def reset_data(db: AsyncSession = Depends(get_db), current_user: str = Depends(get_current_user)):
-    """Reset all data while keeping words and groups intact"""
+async def reset_data(
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
+):
+    """Reset all data"""
     
     # Delete all word review items
     await db.execute(delete(WordReviewItem).where(WordReviewItem.user_id == current_user))
@@ -36,17 +42,14 @@ async def reset_data(db: AsyncSession = Depends(get_db), current_user: str = Dep
     # Delete all study sessions
     await db.execute(delete(StudySession).where(StudySession.user_id == current_user))
     
-    # Delete all study sessions
-    await db.execute(delete(StudySession).where(StudySession.user_id == current_user))
+    # Delete all word groups
+    await db.execute(delete(WordGroup).where(WordGroup.user_id == current_user))
 
     # Delete all words
     await db.execute(delete(Word).where(Word.user_id == current_user))
     
     # Delete all groups
     await db.execute(delete(Group).where(Group.user_id == current_user))
-    
-    # Delete all word groups
-    await db.execute(delete(WordGroup).where(WordGroup.user_id == current_user))
     
     await db.commit()
     
@@ -56,8 +59,11 @@ async def reset_data(db: AsyncSession = Depends(get_db), current_user: str = Dep
     }
 
 @router.post("/load_initial_data")
-async def load_initial_data(db: AsyncSession = Depends(get_db), current_user: str = Depends(get_current_user)):
-    """Load initial seed data"""
+async def load_initial_data(
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
+):
+    """Load initial data"""
 
     # Load seed data
     seeds_dir = Path('db/seeds')
@@ -91,6 +97,7 @@ async def load_initial_data(db: AsyncSession = Depends(get_db), current_user: st
             # Create word-group association
             for word in words:
                 word_group = WordGroup(
+                    user_id=current_user,
                     word_id=word.id,
                     group_id=group.id
                 )
@@ -100,5 +107,5 @@ async def load_initial_data(db: AsyncSession = Depends(get_db), current_user: st
     
     return {
         "success": True,
-        "message": "System has been fully reset"
+        "message": "Initial data has been loaded"
     } 
