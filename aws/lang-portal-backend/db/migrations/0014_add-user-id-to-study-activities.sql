@@ -1,1 +1,0 @@
-CREATE INDEX IF NOT EXISTS idx_study_activities_user_id ON study_activities(user_id);

@@ -1,12 +1,11 @@
+import json
+import requests
+from config import settings
 from fastapi import HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import jwt, JWTError
-import requests
-from typing import Optional, Dict, Any
-from config import settings
-import json
-import os
 from pathlib import Path
+from typing import Dict, Any
 
 security = HTTPBearer()
 

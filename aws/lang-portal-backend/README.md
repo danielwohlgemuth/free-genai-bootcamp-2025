@@ -44,25 +44,11 @@ Run the complete setup with:
 invoke setup
 ```
 
-Or run individual tasks:
-```bash
-invoke init-db
-invoke run-migrations
-invoke seed-data
-```
-
 ## Running the Server
 
-You can run the server in two ways:
-
-1. Using invoke:
+Run the server using invoke with auto-reload:
 ```bash
-invoke run-server
-```
-
-2. Using invoke with auto-reload (recommended for development):
-```bash
-invoke dev-server
+invoke dev
 ```
 
 The server will start on `http://localhost:8000`.

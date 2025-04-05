@@ -15,11 +15,9 @@ class CreateStudySessionRequest(BaseModel):
 
 @router.get("")
 async def get_study_activities(
-    db: AsyncSession = Depends(get_db),
-    current_user: str = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db)
 ):
-    query = select(StudyActivity) \
-        .where(StudyActivity.user_id == current_user)
+    query = select(StudyActivity)
     result = await db.execute(query)
     activities = result.scalars().all()
     
@@ -37,12 +35,10 @@ async def get_study_activities(
 @router.get("/{activity_id}")
 async def get_study_activity(
     activity_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: str = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db)
 ):
     query = select(StudyActivity) \
-        .where(StudyActivity.id == activity_id) \
-        .where(StudyActivity.user_id == current_user)
+        .where(StudyActivity.id == activity_id)
     result = await db.execute(query)
     activity = result.scalar_one_or_none()
     
@@ -113,7 +109,8 @@ async def get_activity_study_sessions(
 @router.post("")
 async def create_study_session(
     request: CreateStudySessionRequest = Body(...),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: str = Depends(get_current_user)
 ):
     group_id = request.group_id
     study_activity_id = request.study_activity_id

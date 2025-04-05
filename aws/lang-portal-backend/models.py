@@ -51,7 +51,6 @@ class StudyActivity(Base):
     __tablename__ = "study_activities"
     
     id = Column(Integer, primary_key=True)
-    user_id = Column(String)
     name = Column(String)
     thumbnail_url = Column(String)
     description = Column(String)

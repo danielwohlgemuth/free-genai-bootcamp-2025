@@ -193,6 +193,7 @@ async def create_word_review(
     
     # Create review item
     review_item = WordReviewItem(
+        user_id=current_user,
         word_id=word_id,
         study_session_id=session_id,
         correct=correct,
