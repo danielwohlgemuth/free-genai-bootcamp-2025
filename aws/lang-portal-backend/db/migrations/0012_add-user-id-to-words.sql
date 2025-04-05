@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_words_user_id ON words(user_id);

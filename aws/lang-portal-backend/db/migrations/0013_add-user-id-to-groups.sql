@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_groups_user_id ON groups(user_id);

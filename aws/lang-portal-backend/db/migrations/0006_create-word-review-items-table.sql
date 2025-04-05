@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS word_review_items (
     id SERIAL PRIMARY KEY,
+    user_id TEXT NOT NULL,
     word_id INTEGER NOT NULL,
     study_session_id INTEGER NOT NULL,
     correct BOOLEAN NOT NULL,
