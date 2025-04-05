@@ -31,7 +31,7 @@ env = Environment(
 
 # Core infrastructure stacks
 network_stack = NetworkStack(app, "NetworkStack", env=env)
-monitoring_stack = MonitoringStack(app, "MonitoringStack", env=env)
+# monitoring_stack = MonitoringStack(app, "MonitoringStack", env=env)
 auth_stack = AuthStack(app, "AuthStack", env=env)
 
 # Lang Portal stacks
@@ -53,84 +53,84 @@ lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
     env=env
 )
 
-lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",
-    backend_alb=lang_portal_backend.service.load_balancer,
-    certificate=lang_portal_certificate.certificate,
-    env=env
-)
+# lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",
+#     backend_alb=lang_portal_backend.service.load_balancer,
+#     certificate=lang_portal_certificate.certificate,
+#     env=env
+# )
 
-lang_portal_frontend_pipeline = LangPortalFrontendPipelineStack(app, "LangPortalFrontendPipelineStack",
-    bucket=lang_portal_frontend.bucket,
-    user_pool_id=auth_stack.user_pool.user_pool_id,
-    user_pool_client_id=auth_stack.lang_portal_client.user_pool_client_id,
-    env=env
-)
+# lang_portal_frontend_pipeline = LangPortalFrontendPipelineStack(app, "LangPortalFrontendPipelineStack",
+#     bucket=lang_portal_frontend.bucket,
+#     user_pool_id=auth_stack.user_pool.user_pool_id,
+#     user_pool_client_id=auth_stack.lang_portal_client.user_pool_client_id,
+#     env=env
+# )
 
 lang_portal_backend_pipeline = LangPortalBackendPipelineStack(app, "LangPortalBackendPipelineStack",
-    service=lang_portal_backend.service.service,
+    cluster=lang_portal_backend.cluster,
     repository=lang_portal_backend.repository,
     env=env
 )
 
-# Haiku Generator stacks
-haiku_frontend = HaikuGeneratorFrontendStack(app, "HaikuGeneratorFrontendStack",
-    env=env
-)
+# # Haiku Generator stacks
+# haiku_frontend = HaikuGeneratorFrontendStack(app, "HaikuGeneratorFrontendStack",
+#     env=env
+# )
 
-haiku_database = HaikuGeneratorDatabaseStack(app, "HaikuGeneratorDatabaseStack",
-    vpc=network_stack.vpc,
-    env=env
-)
+# haiku_database = HaikuGeneratorDatabaseStack(app, "HaikuGeneratorDatabaseStack",
+#     vpc=network_stack.vpc,
+#     env=env
+# )
 
-haiku_backend = HaikuGeneratorBackendStack(app, "HaikuGeneratorBackendStack",
-    vpc=network_stack.vpc,
-    database=haiku_database.db,
-    user_pool=auth_stack.user_pool,
-    env=env
-)
+# haiku_backend = HaikuGeneratorBackendStack(app, "HaikuGeneratorBackendStack",
+#     vpc=network_stack.vpc,
+#     database=haiku_database.db,
+#     user_pool=auth_stack.user_pool,
+#     env=env
+# )
 
-haiku_pipeline = HaikuGeneratorPipelineStack(app, "HaikuGeneratorPipelineStack",
-    bucket=haiku_frontend.bucket,
-    cluster=haiku_backend.cluster,
-    repository=haiku_backend.repository,
-    env=env
-)
+# haiku_pipeline = HaikuGeneratorPipelineStack(app, "HaikuGeneratorPipelineStack",
+#     bucket=haiku_frontend.bucket,
+#     cluster=haiku_backend.cluster,
+#     repository=haiku_backend.repository,
+#     env=env
+# )
 
-# Vocab Generator stacks
-vocab_frontend = VocabGeneratorFrontendStack(app, "VocabGeneratorFrontendStack",
-    vpc=network_stack.vpc,
-    user_pool=auth_stack.user_pool,
-    user_pool_client=auth_stack.vocab_client,
-    env=env
-)
+# # Vocab Generator stacks
+# vocab_frontend = VocabGeneratorFrontendStack(app, "VocabGeneratorFrontendStack",
+#     vpc=network_stack.vpc,
+#     user_pool=auth_stack.user_pool,
+#     user_pool_client=auth_stack.vocab_client,
+#     env=env
+# )
 
-vocab_backend = VocabGeneratorBackendStack(app, "VocabGeneratorBackendStack",
-    vpc=network_stack.vpc,
-    database=lang_portal_database.db,
-    user_pool=auth_stack.user_pool,
-    env=env
-)
+# vocab_backend = VocabGeneratorBackendStack(app, "VocabGeneratorBackendStack",
+#     vpc=network_stack.vpc,
+#     database=lang_portal_database.db,
+#     user_pool=auth_stack.user_pool,
+#     env=env
+# )
 
-vocab_pipeline = VocabGeneratorPipelineStack(app, "VocabGeneratorPipelineStack",
-    frontend_cluster=vocab_frontend.cluster,
-    backend_cluster=vocab_backend.cluster,
-    frontend_repository=vocab_frontend.repository,
-    backend_repository=vocab_backend.repository,
-    env=env
-)
+# vocab_pipeline = VocabGeneratorPipelineStack(app, "VocabGeneratorPipelineStack",
+#     frontend_cluster=vocab_frontend.cluster,
+#     backend_cluster=vocab_backend.cluster,
+#     frontend_repository=vocab_frontend.repository,
+#     backend_repository=vocab_backend.repository,
+#     env=env
+# )
 
-# Writing Practice stack
-writing_practice = WritingPracticeFrontendStack(app, "WritingPracticeFrontendStack",
-    vpc=network_stack.vpc,
-    user_pool=auth_stack.user_pool,
-    user_pool_client=auth_stack.vocab_client,
-    env=env
-)
+# # Writing Practice stack
+# writing_practice = WritingPracticeFrontendStack(app, "WritingPracticeFrontendStack",
+#     vpc=network_stack.vpc,
+#     user_pool=auth_stack.user_pool,
+#     user_pool_client=auth_stack.vocab_client,
+#     env=env
+# )
 
-writing_practice_pipeline = WritingPracticePipelineStack(app, "WritingPracticePipelineStack",
-    cluster=writing_practice.cluster,
-    repository=writing_practice.repository,
-    env=env
-)
+# writing_practice_pipeline = WritingPracticePipelineStack(app, "WritingPracticePipelineStack",
+#     cluster=writing_practice.cluster,
+#     repository=writing_practice.repository,
+#     env=env
+# )
 
 app.synth()

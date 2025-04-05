@@ -12,7 +12,7 @@ from aws_cdk import (
 
 class LangPortalBackendPipelineStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
-                 service: ecs.FargateService,
+                 cluster: ecs.Cluster,
                  repository: ecr.Repository,
                  **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -144,7 +144,12 @@ class LangPortalBackendPipelineStack(Stack):
             actions=[
                 codepipeline_actions.EcsDeployAction(
                     action_name="Deploy",
-                    service=service,
+                    service=ecs.FargateService.from_fargate_service_attributes(
+                        self,
+                        "FargateService",
+                        cluster=cluster,
+                        service_name="backend",
+                    ),
                     image_file=backend_build_output.at_path("aws/lang-portal-backend/imagedefinitions.json")
                 )
             ]

@@ -61,34 +61,3 @@ class NetworkStack(Stack):
             "SecretsManagerEndpoint",
             service=ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER
         )
-
-        # Outputs
-        CfnOutput(self, "VPCId",
-            value=self.vpc.vpc_id,
-            description="VPC ID",
-            export_name=f"{construct_id}-vpc-id"
-        )
-
-        CfnOutput(self, "PublicSubnets",
-            value=",".join(self.vpc.select_subnets(
-                subnet_type=ec2.SubnetType.PUBLIC
-            ).subnet_ids),
-            description="Public Subnet IDs",
-            export_name=f"{construct_id}-public-subnets"
-        )
-
-        CfnOutput(self, "PrivateSubnets",
-            value=",".join(self.vpc.select_subnets(
-                subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
-            ).subnet_ids),
-            description="Private Subnet IDs", 
-            export_name=f"{construct_id}-private-subnets"
-        )
-
-        CfnOutput(self, "IsolatedSubnets",
-            value=",".join(self.vpc.select_subnets(
-                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
-            ).subnet_ids),
-            description="Isolated Subnet IDs",
-            export_name=f"{construct_id}-isolated-subnets"
-        )

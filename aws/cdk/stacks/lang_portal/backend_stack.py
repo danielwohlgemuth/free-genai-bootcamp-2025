@@ -18,7 +18,7 @@ from constructs import Construct
 class LangPortalBackendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
                  vpc: ec2.Vpc,
-                 database: rds.DatabaseCluster,
+                 database: rds.DatabaseInstance,
                  user_pool: cognito.UserPool,
                  user_pool_client: cognito.UserPoolClient,
                  certificate: acm.Certificate,
@@ -88,7 +88,7 @@ class LangPortalBackendStack(Stack):
                 "COGNITO_USER_POOL_ID": user_pool.user_pool_id,
                 "COGNITO_CLIENT_ID": user_pool_client.user_pool_client_id,
                 "COGNITO_REGION": Stack.of(self).region,
-                "DB_HOST": database.cluster_endpoint.hostname,
+                "DB_HOST": database.instance_endpoint.hostname,
                 "DB_PORT": "5432",
                 "DB_NAME": "langportal",
                 "AWS_DEFAULT_REGION": Stack.of(self).region
@@ -106,67 +106,68 @@ class LangPortalBackendStack(Stack):
             )
         )
 
-        # Create Fargate Service
-        self.service = ecs_patterns.ApplicationLoadBalancedFargateService(
-            self, "Service",
-            cluster=self.cluster,
-            task_definition=task_definition,
-            desired_count=1,
-            certificate=certificate,
-            protocol=elbv2.ApplicationProtocol.HTTPS,
-            public_load_balancer=True,
-            assign_public_ip=False,
-            security_groups=[self.service_sg],
-            task_subnets=ec2.SubnetSelection(
-                subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
-            ),
-            listener_port=443,
-            target_protocol=elbv2.ApplicationProtocol.HTTP,
-            health_check=ecs.HealthCheck(
-                command=["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"],
-                interval=Duration.seconds(30),
-                timeout=Duration.seconds(5),
-                retries=3,
-                start_period=Duration.seconds(60)
-            ),
-            capacity_provider_strategies=[
-                ecs.CapacityProviderStrategy(
-                    capacity_provider="FARGATE_SPOT",
-                    weight=1
-                )
-            ],
-            circuit_breaker=ecs.DeploymentCircuitBreaker(
-                rollback=True
-            ),
-            min_healthy_percent=100
-        )
+        # # Create Fargate Service
+        # self.service = ecs_patterns.ApplicationLoadBalancedFargateService(
+        #     self, "Service",
+        #     cluster=self.cluster,
+        #     service_name="backend",
+        #     task_definition=task_definition,
+        #     desired_count=1,
+        #     certificate=certificate,
+        #     protocol=elbv2.ApplicationProtocol.HTTPS,
+        #     public_load_balancer=True,
+        #     assign_public_ip=False,
+        #     security_groups=[self.service_sg],
+        #     task_subnets=ec2.SubnetSelection(
+        #         subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
+        #     ),
+        #     listener_port=443,
+        #     target_protocol=elbv2.ApplicationProtocol.HTTP,
+        #     health_check=ecs.HealthCheck(
+        #         command=["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"],
+        #         interval=Duration.seconds(30),
+        #         timeout=Duration.seconds(5),
+        #         retries=3,
+        #         start_period=Duration.seconds(60)
+        #     ),
+        #     capacity_provider_strategies=[
+        #         ecs.CapacityProviderStrategy(
+        #             capacity_provider="FARGATE_SPOT",
+        #             weight=1
+        #         )
+        #     ],
+        #     circuit_breaker=ecs.DeploymentCircuitBreaker(
+        #         rollback=True
+        #     ),
+        #     min_healthy_percent=100
+        # )
 
-        # Auto Scaling configuration
-        scaling = self.service.service.auto_scale_task_count(
-            max_capacity=4,
-            min_capacity=1
-        )
+        # # Auto Scaling configuration
+        # scaling = self.service.service.auto_scale_task_count(
+        #     max_capacity=4,
+        #     min_capacity=1
+        # )
 
-        self.service.target_group.configure_health_check(
-            path="/api/health",
-            port="8000",
-            healthy_http_codes="200",
-            interval=Duration.seconds(30),
-            timeout=Duration.seconds(3),
-            healthy_threshold_count=2,
-            unhealthy_threshold_count=3
-        )
+        # self.service.target_group.configure_health_check(
+        #     path="/api/health",
+        #     port="8000",
+        #     healthy_http_codes="200",
+        #     interval=Duration.seconds(30),
+        #     timeout=Duration.seconds(3),
+        #     healthy_threshold_count=2,
+        #     unhealthy_threshold_count=3
+        # )
 
-        scaling.scale_on_cpu_utilization(
-            "CpuScaling",
-            target_utilization_percent=70,
-            scale_in_cooldown=Duration.seconds(60),
-            scale_out_cooldown=Duration.seconds(60)
-        )
+        # scaling.scale_on_cpu_utilization(
+        #     "CpuScaling",
+        #     target_utilization_percent=70,
+        #     scale_in_cooldown=Duration.seconds(60),
+        #     scale_out_cooldown=Duration.seconds(60)
+        # )
 
-        scaling.scale_on_memory_utilization(
-            "MemoryScaling",
-            target_utilization_percent=70,
-            scale_in_cooldown=Duration.seconds(60),
-            scale_out_cooldown=Duration.seconds(60)
-        )
+        # scaling.scale_on_memory_utilization(
+        #     "MemoryScaling",
+        #     target_utilization_percent=70,
+        #     scale_in_cooldown=Duration.seconds(60),
+        #     scale_out_cooldown=Duration.seconds(60)
+        # )
