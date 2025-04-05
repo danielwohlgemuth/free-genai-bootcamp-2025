@@ -14,7 +14,7 @@ export function MainLayout() {
   }
 
   if (auth.error) {
-    return <div>Authentication error: {auth.error.message}</div>;
+    return <div>Authentication error: {auth.error.message}. <button onClick={() => window.location.reload()} className="text-primary">Reload page</button>.</div>;
   }
 
   if (!auth.isAuthenticated) {
@@ -38,7 +38,7 @@ export function MainLayout() {
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             <div className="font-bold text-xl">
-              Language Portal
+              <Link to="/">Language Portal</Link>
             </div>
             <div className="flex gap-6">
               {navItems.map(({ path, label }) => (

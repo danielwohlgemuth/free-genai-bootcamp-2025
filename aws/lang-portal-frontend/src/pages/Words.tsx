@@ -3,6 +3,7 @@ import { api } from '@/services/api'
 import { WordCard } from '@/components/words/WordCard'
 import type { Word, PaginatedResponse } from '@/types/api'
 import { useAuth } from 'react-oidc-context'
+import { Link } from 'react-router-dom'
 
 export function Words() {
   const [words, setWords] = useState<Word[]>([])
@@ -45,7 +46,7 @@ export function Words() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {words.length === 0 ? (
           <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">No words found. Import initial data from <a href="/settings" className="text-primary">Settings</a>.</p>
+            <p className="text-sm text-muted-foreground">No words found. Import initial data from <Link to="/settings" className="text-primary">Settings</Link>.</p>
           </div>
         ) : (
           words.map((word) => (

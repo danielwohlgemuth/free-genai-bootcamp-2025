@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 import { useToast } from "@/components/toast-provider";
+import { useNavigate } from 'react-router-dom';
 import { api } from "@/lib/api";
 import { useAuth } from "react-oidc-context";
 
 export function Settings() {
   const { setTheme, theme } = useTheme();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const auth = useAuth();
 
   const handleLoadInitialData = async () => {
@@ -17,7 +19,7 @@ export function Settings() {
         variant: "success",
         description: "Initial data has been loaded",
       });
-      window.location.href = "/";
+      navigate("/");
     } catch (error) {
       toast({
         variant: "error",
@@ -37,7 +39,7 @@ export function Settings() {
         variant: "success",
         description: "Study progress has been reset",
       });
-      window.location.href = "/";
+      navigate("/");
     } catch (error) {
       toast({
         variant: "error",
@@ -57,7 +59,7 @@ export function Settings() {
         variant: "success",
         description: "Data has been reset",
       });
-      window.location.href = "/";
+      navigate("/");
     } catch (error) {
       toast({
         variant: "error",

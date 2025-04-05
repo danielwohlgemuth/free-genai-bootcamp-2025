@@ -3,6 +3,7 @@ import { api } from '@/services/api'
 import { GroupCard } from '@/components/groups/GroupCard'
 import type { Group, PaginatedResponse } from '@/types/api'
 import { useAuth } from 'react-oidc-context'
+import { Link } from 'react-router-dom'
 
 export function Groups() {
   const [groups, setGroups] = useState<Group[]>([])
@@ -45,7 +46,7 @@ export function Groups() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {groups.length === 0 ? (
           <div className="rounded-lg border bg-card p-4">
-            <p className="text-sm text-muted-foreground">No word groups found. Import initial data from <a href="/settings" className="text-primary">Settings</a>.</p>
+            <p className="text-sm text-muted-foreground">No word groups found. Import initial data from <Link to="/settings" className="text-primary">Settings</Link>.</p>
           </div>
         ) : (
           groups.map((group) => (
