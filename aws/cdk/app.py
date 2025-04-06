@@ -54,7 +54,7 @@ lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
 )
 
 lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",
-    # backend_alb=lang_portal_backend.service.load_balancer,
+    backend_alb=lang_portal_backend.service.load_balancer,
     certificate=lang_portal_certificate.certificate,
     env=env
 )

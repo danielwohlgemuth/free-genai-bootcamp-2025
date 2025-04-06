@@ -47,6 +47,42 @@ class LangPortalBackendStack(Stack):
             container_insights_v2=ecs.ContainerInsights.ENABLED
         )
 
+        # # Allow inbound only from CloudFront using managed prefix list
+        # self.alb_sg = ec2.SecurityGroup(
+        #     self, "ALBSecurityGroup",
+        #     vpc=vpc,
+        #     description="Security group for ALB",
+        #     security_group_name=f"{construct_id}-alb-sg"
+        # )
+
+        # # Look up CloudFront prefix list
+        # cloudfront_prefix_list = ec2.PrefixList.from_lookup(
+        #     self, "CloudFrontPrefixList",
+        #     prefix_list_name="com.amazonaws.global.cloudfront.origin-facing"
+        # )
+
+        # # Allow ALB to connect to ECS tasks
+        # self.alb_sg.add_ingress_rule(
+        #     peer=ec2.Peer.prefix_list(cloudfront_prefix_list.prefix_list_id),
+        #     connection=ec2.Port.tcp(443),
+        #     description="Allow inbound HTTPS traffic from CloudFront only"
+        # )
+
+        # # Create security group for the service
+        # self.service_sg = ec2.SecurityGroup(
+        #     self, "ServiceSecurityGroup",
+        #     vpc=vpc,
+        #     description="Security group for Lang Portal backend service",
+        #     security_group_name=f"{construct_id}-service-sg"
+        # )
+
+        # # Allow internal traffic from ALB to ECS tasks on port 8000
+        # self.service_sg.add_ingress_rule(
+        #     peer=ec2.Peer.security_group_id(self.service_sg.security_group_id),
+        #     connection=ec2.Port.tcp(8000),
+        #     description="Allow inbound traffic from ALB to ECS tasks"
+        # )
+
         # Create security group for the service
         self.service_sg = ec2.SecurityGroup(
             self, "ServiceSecurityGroup",
