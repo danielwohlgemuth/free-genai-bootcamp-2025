@@ -53,18 +53,18 @@ lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
     env=env
 )
 
-# lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",
-#     backend_alb=lang_portal_backend.service.load_balancer,
-#     certificate=lang_portal_certificate.certificate,
-#     env=env
-# )
+lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",
+    backend_alb=lang_portal_backend.service.load_balancer,
+    certificate=lang_portal_certificate.certificate,
+    env=env
+)
 
-# lang_portal_frontend_pipeline = LangPortalFrontendPipelineStack(app, "LangPortalFrontendPipelineStack",
-#     bucket=lang_portal_frontend.bucket,
-#     user_pool_id=auth_stack.user_pool.user_pool_id,
-#     user_pool_client_id=auth_stack.lang_portal_client.user_pool_client_id,
-#     env=env
-# )
+lang_portal_frontend_pipeline = LangPortalFrontendPipelineStack(app, "LangPortalFrontendPipelineStack",
+    bucket=lang_portal_frontend.bucket,
+    user_pool_id=auth_stack.user_pool.user_pool_id,
+    user_pool_client_id=auth_stack.lang_portal_client.user_pool_client_id,
+    env=env
+)
 
 lang_portal_backend_pipeline = LangPortalBackendPipelineStack(app, "LangPortalBackendPipelineStack",
     cluster=lang_portal_backend.cluster,
