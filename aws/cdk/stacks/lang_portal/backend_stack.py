@@ -89,12 +89,12 @@ class LangPortalBackendStack(Stack):
                 "COGNITO_CLIENT_ID": user_pool_client.user_pool_client_id,
                 "COGNITO_REGION": Stack.of(self).region,
                 "DB_HOST": database.instance_endpoint.hostname,
-                "DB_PORT": "5432",
+                "DB_PORT": str(database.instance_endpoint.port),
                 "DB_NAME": "langportal",
                 "AWS_DEFAULT_REGION": Stack.of(self).region
             },
             secrets={
-                "DB_USERNAME": ecs.Secret.from_secrets_manager(database.secret, "username"),
+                "DB_USER": ecs.Secret.from_secrets_manager(database.secret, "username"),
                 "DB_PASSWORD": ecs.Secret.from_secrets_manager(database.secret, "password")
             }
         )
