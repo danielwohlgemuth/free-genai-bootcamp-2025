@@ -17,7 +17,7 @@ from constructs import Construct
 class LangPortalFrontendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
                  certificate: acm.Certificate,
-                 backend_alb: elbv2.ApplicationLoadBalancer,
+                #  backend_alb: elbv2.ApplicationLoadBalancer,
                  **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
@@ -74,69 +74,69 @@ class LangPortalFrontendStack(Stack):
             ]
         )
 
-        # Create CloudFront distribution for Lang Portal
-        self.distribution = cloudfront.Distribution(
-            self, "Distribution",
-            certificate=certificate,
-            domain_names=["lang-portal.app-dw.net"],
-            default_behavior=cloudfront.BehaviorOptions(
-                origin=origins.S3BucketOrigin.with_origin_access_control(
-                    self.bucket,
-                    origin_access_levels=[cloudfront.AccessLevel.READ]
-                ),
-                viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                allowed_methods=cloudfront.AllowedMethods.ALLOW_GET_HEAD,
-                cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED,
-                origin_request_policy=cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN
-            ),
-            additional_behaviors={
-                "api/*": cloudfront.BehaviorOptions(
-                    origin=origins.LoadBalancerV2Origin(
-                        backend_alb,  
-                        protocol_policy=cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-                        read_timeout=Duration.seconds(30)
-                    ),
-                    viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                    allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
-                    cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
-                    origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER
-                )
-            },
-            error_responses=[
-                cloudfront.ErrorResponse(
-                    http_status=403,
-                    response_http_status=200,
-                    response_page_path="/index.html"
-                ),
-                cloudfront.ErrorResponse(
-                    http_status=404,
-                    response_http_status=200,
-                    response_page_path="/index.html"
-                )
-            ],
-            default_root_object="index.html",
-            price_class=cloudfront.PriceClass.PRICE_CLASS_100,
-            enable_logging=True,
-            log_bucket=self.logging_bucket,
-            log_file_prefix="lang-portal-cf-logs/",
-            log_includes_cookies=False
-        )
+        # # Create CloudFront distribution for Lang Portal
+        # self.distribution = cloudfront.Distribution(
+        #     self, "Distribution",
+        #     certificate=certificate,
+        #     domain_names=["lang-portal.app-dw.net"],
+        #     default_behavior=cloudfront.BehaviorOptions(
+        #         origin=origins.S3BucketOrigin.with_origin_access_control(
+        #             self.bucket,
+        #             origin_access_levels=[cloudfront.AccessLevel.READ]
+        #         ),
+        #         viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        #         allowed_methods=cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+        #         cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        #         origin_request_policy=cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN
+        #     ),
+        #     additional_behaviors={
+        #         "api/*": cloudfront.BehaviorOptions(
+        #             origin=origins.LoadBalancerV2Origin(
+        #                 backend_alb,  
+        #                 protocol_policy=cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+        #                 read_timeout=Duration.seconds(30)
+        #             ),
+        #             viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        #             allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
+        #             cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
+        #             origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER
+        #         )
+        #     },
+        #     error_responses=[
+        #         cloudfront.ErrorResponse(
+        #             http_status=403,
+        #             response_http_status=200,
+        #             response_page_path="/index.html"
+        #         ),
+        #         cloudfront.ErrorResponse(
+        #             http_status=404,
+        #             response_http_status=200,
+        #             response_page_path="/index.html"
+        #         )
+        #     ],
+        #     default_root_object="index.html",
+        #     price_class=cloudfront.PriceClass.PRICE_CLASS_100,
+        #     enable_logging=True,
+        #     log_bucket=self.logging_bucket,
+        #     log_file_prefix="lang-portal-cf-logs/",
+        #     log_includes_cookies=False
+        # )
 
-        # Import hosted zone
-        self.hosted_zone = route53.HostedZone.from_lookup(
-            self, "HostedZone",
-            domain_name="app-dw.net"
-        )
+        # # Import hosted zone
+        # self.hosted_zone = route53.HostedZone.from_lookup(
+        #     self, "HostedZone",
+        #     domain_name="app-dw.net"
+        # )
 
-        # Create Route53 record
-        route53.ARecord(
-            self, "SiteAliasRecord",
-            zone=self.hosted_zone,
-            target=route53.RecordTarget.from_alias(
-                targets.CloudFrontTarget(self.distribution)
-            ),
-            record_name="lang-portal.app-dw.net"
-        )
+        # # Create Route53 record
+        # route53.ARecord(
+        #     self, "SiteAliasRecord",
+        #     zone=self.hosted_zone,
+        #     target=route53.RecordTarget.from_alias(
+        #         targets.CloudFrontTarget(self.distribution)
+        #     ),
+        #     record_name="lang-portal.app-dw.net"
+        # )
 
         # Outputs
         CfnOutput(self, "DomainName",
