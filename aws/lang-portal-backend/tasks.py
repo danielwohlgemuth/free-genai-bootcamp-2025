@@ -70,7 +70,7 @@ def create_db(ctx):
             port=db_port,
             user=db_user,
             password=db_password,
-            database='postgres'
+            dbname='postgres'
         )
         conn.autocommit = True
         cursor = conn.cursor()
