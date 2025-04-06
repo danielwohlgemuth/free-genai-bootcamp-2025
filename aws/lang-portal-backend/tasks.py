@@ -4,7 +4,7 @@ from db import get_db, engine, Base
 from invoke import task
 from pathlib import Path
 from sqlalchemy.sql import text
-import psycopg
+import psycopg2
 import os
 import dotenv
 
@@ -65,7 +65,7 @@ def create_db(ctx):
 
     try:
         # Connect to default postgres database
-        conn = psycopg.connect(
+        conn = psycopg2.connect(
             host=db_host,
             port=db_port,
             user=db_user,
@@ -86,7 +86,7 @@ def create_db(ctx):
         """)
         print(f"Schema 'public' created successfully")
 
-    except psycopg.Error as e:
+    except psycopg2.Error as e:
         print(f"Error creating database: {e}")
         raise
     finally:
