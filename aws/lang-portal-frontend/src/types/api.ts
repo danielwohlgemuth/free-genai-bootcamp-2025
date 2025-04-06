@@ -40,3 +40,8 @@ export interface DashboardStats {
   total_active_groups: number
   study_streak_days: number
 } 
+
+export interface SystemResponse {
+  success: boolean
+  message: string
+} 

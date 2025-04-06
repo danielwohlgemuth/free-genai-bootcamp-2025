@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme-provider";
 import { useToast } from "@/components/toast-provider";
 import { useNavigate } from 'react-router-dom';
-import { api } from "@/lib/api";
+import { api } from '@/services/api'
+import { SystemResponse } from '@/types/api'
 import { useAuth } from "react-oidc-context";
 
 export function Settings() {
@@ -14,10 +15,17 @@ export function Settings() {
   const handleLoadInitialData = async () => {
     try {
       const token = auth.user?.access_token || '';
-      await api.post(token, "/load_initial_data");
+      const response = await api.post<SystemResponse>(token, "/load_initial_data");
+      if (!response.data?.success) {
+        toast({
+          variant: "error",
+          description: response.data?.message,
+        });
+        return;
+      }
       toast({
         variant: "success",
-        description: "Initial data has been loaded",
+        description: response.data?.message,
       });
       navigate("/");
     } catch (error) {
@@ -34,10 +42,17 @@ export function Settings() {
       const confirm = window.confirm("Are you sure you want to reset your study progress?")
       if (!confirm) return
       const token = auth.user?.access_token || '';
-      await api.post(token, "/reset_study_progress");
+      const response = await api.post<SystemResponse>(token, "/reset_study_progress");
+      if (!response.data?.success) {
+        toast({
+          variant: "error",
+          description: response.data?.message,
+        });
+        return;
+      }
       toast({
         variant: "success",
-        description: "Study progress has been reset",
+        description: response.data?.message,
       });
       navigate("/");
     } catch (error) {
@@ -54,10 +69,17 @@ export function Settings() {
       const confirm = window.confirm("Are you sure you want to reset your data?")
       if (!confirm) return
       const token = auth.user?.access_token || '';
-      await api.post(token, "/reset_data");
+      const response = await api.post<SystemResponse>(token, "/reset_data");
+      if (!response.data?.success) {
+        toast({
+          variant: "error",
+          description: response.data?.message,
+        });
+        return;
+      }
       toast({
         variant: "success",
-        description: "Data has been reset",
+        description: response.data?.message,
       });
       navigate("/");
     } catch (error) {
