@@ -36,9 +36,6 @@ export function StudySession() {
           api.get<WordsResponse>(token, `/study_sessions/${sessionId}/next_words`),
         ])
 
-        console.log('sessionRes', sessionRes)
-        console.log('wordsRes', wordsRes)
-
         if (mounted) {
           setSession(sessionRes.data || null)
           setWords(wordsRes.data?.items || [] )
