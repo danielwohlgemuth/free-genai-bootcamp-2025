@@ -9,11 +9,11 @@ class NetworkStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # Create VPC with 3 AZs
+        # Create VPC with 2 AZs
         self.vpc = ec2.Vpc(
             self, "VPC",
-            max_azs=3,
-            nat_gateways=3,
+            max_azs=2,
+            nat_gateways=2,
             enable_dns_hostnames=True,
             enable_dns_support=True,
             subnet_configuration=[

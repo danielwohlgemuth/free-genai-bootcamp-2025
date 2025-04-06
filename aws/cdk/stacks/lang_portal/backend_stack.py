@@ -18,12 +18,55 @@ from constructs import Construct
 class LangPortalBackendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
                  vpc: ec2.Vpc,
-                 database: rds.DatabaseInstance,
                  user_pool: cognito.UserPool,
                  user_pool_client: cognito.UserPoolClient,
                  certificate: acm.Certificate,
                  **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        # Create credentials for database
+        self.credentials = rds.Credentials.from_generated_secret(
+            username="langportal",
+            secret_name=f"{construct_id}/lang-portal-db-credentials"
+        )
+
+        # Create security group for the database
+        self.database_security_group = ec2.SecurityGroup(
+            self, "DatabaseSecurityGroup",
+            vpc=vpc,
+            description="Security group for Lang Portal database",
+            security_group_name=f"{construct_id}-database-sg"
+        )
+
+        # Create standard RDS PostgreSQL instance
+        self.db = rds.DatabaseInstance(
+            self, "DB",
+            engine=rds.DatabaseInstanceEngine.postgres(
+                version=rds.PostgresEngineVersion.VER_16_6
+            ),
+            credentials=self.credentials,
+            instance_type=ec2.InstanceType.of(
+                ec2.InstanceClass.T4G,
+                ec2.InstanceSize.MEDIUM
+            ),
+            vpc=vpc,
+            vpc_subnets=ec2.SubnetSelection(
+                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+            ),
+            allocated_storage=20,
+            security_groups=[self.database_security_group],
+            publicly_accessible=False,
+            backup_retention=Duration.days(7),
+            preferred_backup_window="03:00-04:00",  # UTC
+            deletion_protection=False,
+            delete_automated_backups=True,
+            removal_policy=RemovalPolicy.SNAPSHOT,
+            cloudwatch_logs_retention=logs.RetentionDays.ONE_WEEK,
+            parameter_group=rds.ParameterGroup.from_parameter_group_name(
+                self, "DBParameterGroup",
+                parameter_group_name="default.postgres16"
+            )
+        )
 
         # Create ECR Repository
         self.repository = ecr.Repository(
@@ -47,55 +90,47 @@ class LangPortalBackendStack(Stack):
             container_insights_v2=ecs.ContainerInsights.ENABLED
         )
 
-        # # Allow inbound only from CloudFront using managed prefix list
-        # self.alb_sg = ec2.SecurityGroup(
-        #     self, "ALBSecurityGroup",
-        #     vpc=vpc,
-        #     description="Security group for ALB",
-        #     security_group_name=f"{construct_id}-alb-sg"
-        # )
+        # Allow inbound only from CloudFront using managed prefix list
+        self.alb_security_group = ec2.SecurityGroup(
+            self, "ALBSecurityGroup",
+            vpc=vpc,
+            description="Security group for ALB",
+            security_group_name=f"{construct_id}-alb-sg"
+        )
 
-        # # Look up CloudFront prefix list
-        # cloudfront_prefix_list = ec2.PrefixList.from_lookup(
-        #     self, "CloudFrontPrefixList",
-        #     prefix_list_name="com.amazonaws.global.cloudfront.origin-facing"
-        # )
+        # Look up CloudFront prefix list
+        cloudfront_prefix_list = ec2.PrefixList.from_lookup(
+            self, "CloudFrontPrefixList",
+            prefix_list_name="com.amazonaws.global.cloudfront.origin-facing"
+        )
 
-        # # Allow ALB to connect to ECS tasks
-        # self.alb_sg.add_ingress_rule(
-        #     peer=ec2.Peer.prefix_list(cloudfront_prefix_list.prefix_list_id),
-        #     connection=ec2.Port.tcp(443),
-        #     description="Allow inbound HTTPS traffic from CloudFront only"
-        # )
-
-        # # Create security group for the service
-        # self.service_sg = ec2.SecurityGroup(
-        #     self, "ServiceSecurityGroup",
-        #     vpc=vpc,
-        #     description="Security group for Lang Portal backend service",
-        #     security_group_name=f"{construct_id}-service-sg"
-        # )
-
-        # # Allow internal traffic from ALB to ECS tasks on port 8000
-        # self.service_sg.add_ingress_rule(
-        #     peer=ec2.Peer.security_group_id(self.service_sg.security_group_id),
-        #     connection=ec2.Port.tcp(8000),
-        #     description="Allow inbound traffic from ALB to ECS tasks"
-        # )
+        # Allow ALB to connect to ECS tasks
+        self.alb_security_group.add_ingress_rule(
+            peer=ec2.Peer.prefix_list(cloudfront_prefix_list.prefix_list_id),
+            connection=ec2.Port.tcp(443),
+            description="Allow inbound HTTPS traffic from CloudFront only"
+        )
 
         # Create security group for the service
-        self.service_sg = ec2.SecurityGroup(
+        self.service_security_group = ec2.SecurityGroup(
             self, "ServiceSecurityGroup",
             vpc=vpc,
             description="Security group for Lang Portal backend service",
             security_group_name=f"{construct_id}-service-sg"
         )
 
-        # Allow inbound from ALB on port 8000
-        self.service_sg.add_ingress_rule(
-            peer=ec2.Peer.any_ipv4(),
+        # Allow internal traffic from ALB to ECS tasks on port 8000
+        self.service_security_group.add_ingress_rule(
+            peer=ec2.Peer.security_group_id(self.alb_security_group.security_group_id),
             connection=ec2.Port.tcp(8000),
-            description="Allow inbound HTTP traffic"
+            description="Allow inbound traffic from ALB to ECS tasks"
+        )
+
+        # Allow internal traffic from service to database
+        self.database_security_group.add_ingress_rule(
+            peer=ec2.Peer.security_group_id(self.service_security_group.security_group_id),
+            connection=ec2.Port.tcp(5432),
+            description="Allow inbound traffic from service to database"
         )
 
         # Create Task Definition
@@ -124,14 +159,14 @@ class LangPortalBackendStack(Stack):
                 "COGNITO_USER_POOL_ID": user_pool.user_pool_id,
                 "COGNITO_CLIENT_ID": user_pool_client.user_pool_client_id,
                 "COGNITO_REGION": Stack.of(self).region,
-                "DB_HOST": database.instance_endpoint.hostname,
-                "DB_PORT": str(database.instance_endpoint.port),
+                "DB_HOST": self.db.instance_endpoint.hostname,
+                "DB_PORT": str(self.db.instance_endpoint.port),
                 "DB_NAME": "langportal",
                 "AWS_DEFAULT_REGION": Stack.of(self).region
             },
             secrets={
-                "DB_USER": ecs.Secret.from_secrets_manager(database.secret, "username"),
-                "DB_PASSWORD": ecs.Secret.from_secrets_manager(database.secret, "password")
+                "DB_USER": ecs.Secret.from_secrets_manager(self.db.secret, "username"),
+                "DB_PASSWORD": ecs.Secret.from_secrets_manager(self.db.secret, "password")
             }
         )
 
@@ -153,7 +188,7 @@ class LangPortalBackendStack(Stack):
             protocol=elbv2.ApplicationProtocol.HTTPS,
             public_load_balancer=True,
             assign_public_ip=False,
-            security_groups=[self.service_sg],
+            security_groups=[self.service_security_group],
             task_subnets=ec2.SubnetSelection(
                 subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
             ),
@@ -175,6 +210,7 @@ class LangPortalBackendStack(Stack):
             circuit_breaker=ecs.DeploymentCircuitBreaker(
                 rollback=True
             ),
+            enable_execute_command=True,
             min_healthy_percent=100
         )
 

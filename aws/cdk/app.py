@@ -10,7 +10,6 @@ from stacks.haiku_generator.pipeline_stack import HaikuGeneratorPipelineStack
 from stacks.lang_portal.backend_pipeline_stack import LangPortalBackendPipelineStack
 from stacks.lang_portal.backend_stack import LangPortalBackendStack
 from stacks.lang_portal.certificate_stack import LangPortalCertificateStack
-from stacks.lang_portal.database_stack import LangPortalDatabaseStack
 from stacks.lang_portal.frontend_pipeline_stack import LangPortalFrontendPipelineStack
 from stacks.lang_portal.frontend_stack import LangPortalFrontendStack
 from stacks.monitoring_stack import MonitoringStack
@@ -39,19 +38,14 @@ lang_portal_certificate = LangPortalCertificateStack(app, "LangPortalCertificate
     env=env
 )
 
-lang_portal_database = LangPortalDatabaseStack(app, "LangPortalDatabaseStack",
-    vpc=network_stack.vpc,
-    env=env
-)
-
 lang_portal_backend = LangPortalBackendStack(app, "LangPortalBackendStack",
     vpc=network_stack.vpc,
-    database=lang_portal_database.db,
     user_pool=auth_stack.user_pool,
     user_pool_client=auth_stack.lang_portal_client,
     certificate=lang_portal_certificate.certificate,
     env=env
 )
+
 
 lang_portal_frontend = LangPortalFrontendStack(app, "LangPortalFrontendStack",
     backend_alb=lang_portal_backend.service.load_balancer,
