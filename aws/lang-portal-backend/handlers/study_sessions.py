@@ -51,6 +51,7 @@ async def get_study_sessions(
             StudyActivity.name,
             Group.name
         )
+        .where(StudySession.user_id == current_user)
         .order_by(StudySession.created_at.desc())
         .offset(offset)
         .limit(per_page)

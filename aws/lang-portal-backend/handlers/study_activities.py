@@ -125,8 +125,7 @@ async def create_study_session(
     
     activity = await db.execute(
         select(StudyActivity) \
-            .where(StudyActivity.id == study_activity_id) \
-            .where(StudyActivity.user_id == current_user)
+            .where(StudyActivity.id == study_activity_id)
     )
     activity = activity.scalar_one_or_none()
     if not activity:
