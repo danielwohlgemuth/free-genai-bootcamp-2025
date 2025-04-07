@@ -23,20 +23,21 @@ services:
     volumes:
       - minio_data:/data
 
-  # backend:
-  #   build: .
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     MINIO_URL: http://minio:9000
-  #     MINIO_ACCESS_KEY: "minio_access_key"
-  #     MINIO_SECRET_KEY: "minio_secret_key"
-  #     BUCKET_NAME: haiku
-  #   depends_on:
-  #     - minio
+  db:
+    image: postgres:16.6
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      # - POSTGRES_DB=haiku
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
   ollama_data:
     name: ollama-data
   minio_data:
     name: minio-data
+  postgres_data:
+    name: haiku-generator-postgres-data

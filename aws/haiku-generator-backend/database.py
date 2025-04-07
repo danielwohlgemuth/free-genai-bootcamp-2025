@@ -8,13 +8,57 @@ from typing import List
 
 
 load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@hostname:5432/haiku")
+
+
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_PORT = os.getenv('DB_PORT', '5432')
+DB_USER = os.getenv('DB_USER', 'user')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
+DB_NAME = os.getenv('DB_NAME', 'haiku')
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 
 def get_db_connection():
     conn = psycopg.connect(DATABASE_URL)
-    conn.cursor_factory = dict_row
+    conn.row_factory = dict_row
     return conn
+
+def create_database():
+    # First connect to the default postgres database
+    conn = psycopg.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        dbname='postgres'
+    )
+    conn.autocommit = True
+    cursor = conn.cursor()
+    
+    # Create the database
+    cursor.execute(f"DROP DATABASE IF EXISTS {DB_NAME}")
+    cursor.execute(f"CREATE DATABASE {DB_NAME}")
+    
+    # Connect to the newly created database
+    conn.close()
+    conn = psycopg.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        dbname=DB_NAME
+    )
+    conn.autocommit = True
+    cursor = conn.cursor()
+    
+    # Create the schema and grant permissions
+    cursor.execute(f"""
+        CREATE SCHEMA IF NOT EXISTS public;
+        GRANT ALL ON SCHEMA public TO "{DB_USER}";
+    """)
+    
+    conn.commit()
+    conn.close()
 
 def create_tables():
     conn = get_db_connection()
@@ -22,7 +66,7 @@ def create_tables():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS haiku (
         haiku_id TEXT PRIMARY KEY,
-        status TEXT DEFAULT "new",
+        status TEXT DEFAULT 'new',
         error_message TEXT,
         topic TEXT,
         haiku_line_en_1 TEXT,
@@ -47,13 +91,11 @@ def create_tables():
         haiku_id TEXT,
         role TEXT,
         message TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (haiku_id) REFERENCES haiku (haiku_id)
     )''')
     conn.commit()
     conn.close()
-
-create_tables()
 
 def retrieve_haikus()-> List[Haiku]:
     conn = get_db_connection()
