@@ -53,7 +53,7 @@ def dev(ctx):
     ctx.run("uvicorn main:app --reload")
 
 @task
-def create_db(ctx):
+def createdb(ctx):
     """Create the database specified in DB_NAME environment variable"""
     # Get database connection details from environment
     dotenv.load_dotenv()
