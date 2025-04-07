@@ -68,6 +68,18 @@ cdk bootstrap
 cdk deploy --no-rollback --all
 ```
 
+6. Setup Lang Portal Database:
+```bash
+aws ecs execute-command \
+    --cluster lang-portal \
+    --task LANG_PORTAL_TASK_ID_HERE \
+    --container Container \
+    --command "/bin/sh" \
+    --interactive
+invoke createdb
+invoke setup
+```
+
 ### Cleanup
 
 1. Destroy stacks:
