@@ -1,43 +1,54 @@
+import base64
 import boto3
 import io
 import os
-import torch
 from database import update_translation, update_image_description, update_haiku_link
-from diffusers import AmusedPipeline
 from dotenv import load_dotenv
 from langchain_aws import BedrockLLM
 from storage import upload_file
 
 
 load_dotenv()
-MODEL_BASE_URL = os.getenv("MODEL_BASE_URL", "http://localhost:11434")
-MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:7b")
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 
+bedrock = boto3.client(service_name='bedrock-runtime')
 polly = boto3.client('polly')
 
 model = BedrockLLM(
-    # base_url=MODEL_BASE_URL,
-    # model=MODEL_NAME,
-    credentials_profile_name="bedrock-admin",
     provider="cohere",
     model_id="amazon.titan-text-express-v1"
 )
-# pipe = StableDiffusion3Pipeline.from_pretrained("stabilityai/stable-diffusion-3.5-medium", token=HUGGINGFACEHUB_API_TOKEN)
-pipe = AmusedPipeline.from_pretrained("amused/amused-256", token=HUGGINGFACEHUB_API_TOKEN)
-device = "cuda" if torch.cuda.is_available() else "cpu"
-pipe = pipe.to(device)
 
 
 def generate_image(haiku_id: str, description: str, image_number: int):
-    image = pipe(
-        description,
-        num_inference_steps=5,
-        guidance_scale=5.0,
-    ).images[0]
-    file_path = f"{haiku_id}/image-{image_number}.png"
-    image_bytes = io.BytesIO()
-    image.save(image_bytes, format="PNG")
+    body = json.dumps({
+        "taskType": "TEXT_IMAGE",
+        "textToImageParams": {
+            "text": description,
+            "controlMode": "CANNY_EDGE",
+            "controlStrength": 0.7
+        },
+        "imageGenerationConfig": {
+            "numberOfImages": 1,
+            "height": 512,
+            "width": 512,
+            "cfgScale": 8.0
+        }
+    })
+    
+    response = bedrock.invoke_model(
+        body=body, modelId="us.anthropic.claude-3-haiku-20240307-v1:0", accept="application/json", contentType="application/json"
+    )
+    response_body = json.loads(response.get("body").read())
+
+    base64_image = response_body.get("images")[0]
+    base64_bytes = base64_image.encode('ascii')
+    image_bytes = base64.b64decode(base64_bytes)
+
+    finish_reason = response_body.get("error")
+
+    image = Image.open(io.BytesIO(image_bytes))
+
     image_bytes_length = len(image_bytes.getvalue())
     image_bytes.seek(0)
     upload_file(image_bytes, image_bytes_length, file_path)
