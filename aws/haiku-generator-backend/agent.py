@@ -4,7 +4,7 @@ from database import store_chat_interaction, retrieve_chats, update_haiku_lines,
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
-from langchain_ollama import ChatOllama
+from langchain_aws import ChatBedrock
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from model import UpdateHaiku
 from typing import List
@@ -15,11 +15,9 @@ langchain.debug = True
 
 
 load_dotenv()
-MODEL_BASE_URL = os.getenv("MODEL_BASE_URL", "http://localhost:11434")
-MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:7b")
-model = ChatOllama(
-    base_url=MODEL_BASE_URL,
-    model=MODEL_NAME
+model = ChatBedrock(
+    provider="cohere",
+    model_id="amazon.titan-text-express-v1"
 )
 
 system_template="""You are an assistant that helps generate haikus.
