@@ -1,13 +1,12 @@
+import boto3
 import io
 import os
 import torch
 from database import update_translation, update_image_description, update_haiku_link
 from diffusers import AmusedPipeline
-# from diffusers import StableDiffusion3Pipeline
 from dotenv import load_dotenv
-from langchain_ollama import OllamaLLM
+from langchain_aws import BedrockLLM
 from storage import upload_file
-from TTS.api import TTS
 
 
 load_dotenv()
@@ -15,16 +14,19 @@ MODEL_BASE_URL = os.getenv("MODEL_BASE_URL", "http://localhost:11434")
 MODEL_NAME = os.getenv("MODEL_NAME", "qwen2.5:7b")
 HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 
+polly = boto3.client('polly')
 
-model = OllamaLLM(
-    base_url=MODEL_BASE_URL,
-    model=MODEL_NAME
+model = BedrockLLM(
+    # base_url=MODEL_BASE_URL,
+    # model=MODEL_NAME,
+    credentials_profile_name="bedrock-admin",
+    provider="cohere",
+    model_id="amazon.titan-text-express-v1"
 )
 # pipe = StableDiffusion3Pipeline.from_pretrained("stabilityai/stable-diffusion-3.5-medium", token=HUGGINGFACEHUB_API_TOKEN)
 pipe = AmusedPipeline.from_pretrained("amused/amused-256", token=HUGGINGFACEHUB_API_TOKEN)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 pipe = pipe.to(device)
-tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
 
 
 def generate_image(haiku_id: str, description: str, image_number: int):
@@ -43,21 +45,26 @@ def generate_image(haiku_id: str, description: str, image_number: int):
     return file_path
 
 def generate_audio(haiku_id: str, text: str, audio_number: int):
-    tmp_file_path = f"/tmp/haiku-{haiku_id}-audio-{audio_number}.wav"
     storage_file_path = f"{haiku_id}/audio-{audio_number}.wav"
     try:
-        tts.tts_to_file(
-            text=text,
-            speaker="Chandra MacFarland",
-            language="ja",
-            file_path=tmp_file_path
+        response = polly.synthesize_speech(
+            Text=text,
+            OutputFormat='mp3',
+            VoiceId='Mizuki',
+            LanguageCode='ja-JP'
         )
-        with open(tmp_file_path, 'rb') as f:
-            audio_content = io.BytesIO(f.read())
-            audio_content_length = len(audio_content.getvalue())
-            audio_content.seek(0)
-            upload_file(audio_content, audio_content_length, storage_file_path)
-            update_haiku_link(haiku_id, audio_number, audio_link=storage_file_path)
+        
+        # Create a temporary file to store the audio
+        import tempfile
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+        temp_file.write(response['AudioStream'].read())
+        temp_file.close()
+        
+        audio_content = io.BytesIO(temp_file.read())
+        audio_content_length = len(audio_content.getvalue())
+        audio_content.seek(0)
+        upload_file(audio_content, audio_content_length, storage_file_path)
+        update_haiku_link(haiku_id, audio_number, audio_link=storage_file_path)
         return storage_file_path
     except Exception as e:
         print(f"Error generating audio: {e}")
