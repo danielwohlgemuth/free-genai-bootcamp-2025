@@ -1,15 +1,15 @@
 import base64
 import boto3
 import io
-import os
+import json
 from database import update_translation, update_image_description, update_haiku_link
 from dotenv import load_dotenv
 from langchain_aws import BedrockLLM
+from PIL import Image
 from storage import upload_file
 
 
 load_dotenv()
-HUGGINGFACEHUB_API_TOKEN = os.getenv("HUGGINGFACEHUB_API_TOKEN", None)
 
 bedrock = boto3.client(service_name='bedrock-runtime')
 polly = boto3.client('polly')
