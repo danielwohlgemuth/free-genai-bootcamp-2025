@@ -38,6 +38,6 @@ volumes:
   ollama_data:
     name: ollama-data
   minio_data:
-    name: minio-data
+    name: haiku-generator-minio-data
   postgres_data:
     name: haiku-generator-postgres-data
