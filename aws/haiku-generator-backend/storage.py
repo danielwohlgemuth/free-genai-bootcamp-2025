@@ -9,8 +9,8 @@ from utils import str_to_bool
 load_dotenv()
 BUCKET_URL = os.getenv("BUCKET_URL", "localhost:9000")
 BUCKET_NAME = os.getenv("BUCKET_NAME", "haiku")
-BUCKET_ACCESS_KEY = os.getenv("BUCKET_ACCESS_KEY", None)
-BUCKET_SECRET_KEY = os.getenv("BUCKET_SECRET_KEY", None)
+BUCKET_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID", None)
+BUCKET_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", None)
 BUCKET_SECURE = str_to_bool(os.getenv("BUCKET_SECURE"), default=True)
 
 
