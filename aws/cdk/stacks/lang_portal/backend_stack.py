@@ -46,8 +46,8 @@ class LangPortalBackendStack(Stack):
             ),
             credentials=self.credentials,
             instance_type=ec2.InstanceType.of(
-                ec2.InstanceClass.T4G,
-                ec2.InstanceSize.MEDIUM
+                ec2.InstanceClass.T3,
+                ec2.InstanceSize.MICRO
             ),
             vpc=vpc,
             vpc_subnets=ec2.SubnetSelection(
