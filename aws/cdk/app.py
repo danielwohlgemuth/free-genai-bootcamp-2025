@@ -4,6 +4,7 @@ from aws_cdk import App, Environment
 from dotenv import load_dotenv
 from stacks.auth_stack import AuthStack
 from stacks.haiku_generator.backend_stack import HaikuGeneratorBackendStack
+from stacks.haiku_generator.certificate_stack import HaikuGeneratorCertificateStack
 from stacks.haiku_generator.database_stack import HaikuGeneratorDatabaseStack
 from stacks.haiku_generator.frontend_stack import HaikuGeneratorFrontendStack
 from stacks.haiku_generator.pipeline_stack import HaikuGeneratorPipelineStack
@@ -66,10 +67,10 @@ lang_portal_backend_pipeline = LangPortalBackendPipelineStack(app, "LangPortalBa
     env=env
 )
 
-# # Haiku Generator stacks
-# haiku_frontend = HaikuGeneratorFrontendStack(app, "HaikuGeneratorFrontendStack",
-#     env=env
-# )
+# Haiku Generator stacks
+haiku_certificate = HaikuGeneratorCertificateStack(app, "HaikuGeneratorCertificateStack",
+    env=env
+)
 
 # haiku_database = HaikuGeneratorDatabaseStack(app, "HaikuGeneratorDatabaseStack",
 #     vpc=network_stack.vpc,
