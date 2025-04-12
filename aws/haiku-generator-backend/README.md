@@ -27,3 +27,10 @@ python database.py
 ```bash
 uvicorn main:app --port 8001 --reload
 ```
+
+## Inspect the database
+
+Connect to the database:
+```bash
+docker exec -it haiku-generator-backend-db-1 psql -U user haiku
+```
