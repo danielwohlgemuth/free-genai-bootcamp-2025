@@ -6,7 +6,6 @@ import os
 from database import update_translation, update_image_description, update_haiku_link
 from dotenv import load_dotenv
 from langchain_aws import BedrockLLM
-from PIL import Image
 from storage import upload_file
 
 

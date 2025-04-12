@@ -15,7 +15,7 @@ pip install -r requirements.txt
 3. Start Ollama, MinIO, and PostgreSQL:
 
 ```bash
-docker-compose up -d --build
+docker-compose up -d
 ```
 
 4. Setup the database:
