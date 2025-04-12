@@ -1,8 +1,10 @@
 import io
 import json
 import os
+from datetime import timedelta
 from dotenv import load_dotenv
 from minio import Minio
+from model import Haiku
 from utils import str_to_bool
 
 
@@ -39,6 +41,23 @@ def create_bucket_if_not_exists():
 
 def upload_file(file: io.BytesIO, length: int, object_name: str):
     minio_client.put_object(BUCKET_NAME, object_name, file, length=length)
+
+def get_signed_url(object_name: str, expires: timedelta = timedelta(minutes=15)) -> str:
+    return minio_client.presigned_get_object(BUCKET_NAME, object_name, expires=expires)
+
+def get_signed_haiku_media(haiku: Haiku) -> None:
+    if haiku.image_link_1:
+        haiku.image_link_1 = get_signed_url(haiku.image_link_1)
+    if haiku.image_link_2:
+        haiku.image_link_2 = get_signed_url(haiku.image_link_2)
+    if haiku.image_link_3:
+        haiku.image_link_3 = get_signed_url(haiku.image_link_3)
+    if haiku.audio_link_1:
+        haiku.audio_link_1 = get_signed_url(haiku.audio_link_1)
+    if haiku.audio_link_2:
+        haiku.audio_link_2 = get_signed_url(haiku.audio_link_2)
+    if haiku.audio_link_3:
+        haiku.audio_link_3 = get_signed_url(haiku.audio_link_3)
 
 if __name__ == "__main__":
     create_bucket_if_not_exists()
