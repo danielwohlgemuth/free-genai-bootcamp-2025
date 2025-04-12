@@ -72,17 +72,13 @@ haiku_certificate = HaikuGeneratorCertificateStack(app, "HaikuGeneratorCertifica
     env=env
 )
 
-# haiku_database = HaikuGeneratorDatabaseStack(app, "HaikuGeneratorDatabaseStack",
-#     vpc=network_stack.vpc,
-#     env=env
-# )
-
-# haiku_backend = HaikuGeneratorBackendStack(app, "HaikuGeneratorBackendStack",
-#     vpc=network_stack.vpc,
-#     database=haiku_database.db,
-#     user_pool=auth_stack.user_pool,
-#     env=env
-# )
+haiku_backend = HaikuGeneratorBackendStack(app, "HaikuGeneratorBackendStack",
+    vpc=network_stack.vpc,
+    user_pool=auth_stack.user_pool,
+    user_pool_client=auth_stack.haiku_client,
+    certificate=haiku_certificate.certificate,
+    env=env
+)
 
 # haiku_pipeline = HaikuGeneratorPipelineStack(app, "HaikuGeneratorPipelineStack",
 #     bucket=haiku_frontend.bucket,

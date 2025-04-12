@@ -1,4 +1,6 @@
 from aws_cdk import (
+    aws_certificatemanager as acm,
+    aws_cognito as cognito,
     aws_ec2 as ec2,
     aws_ecr as ecr,
     aws_ecs as ecs,
@@ -6,6 +8,7 @@ from aws_cdk import (
     aws_elasticloadbalancingv2 as elbv2,
     aws_iam as iam,
     aws_logs as logs,
+    aws_rds as rds,
     CfnOutput,
     Duration,
     RemovalPolicy,
@@ -15,13 +18,61 @@ from constructs import Construct
 
 class HaikuGeneratorBackendStack(Stack):
     def __init__(self, scope: Construct, construct_id: str,
-                 vpc: ec2.Vpc, database, user_pool, **kwargs) -> None:
+                 vpc: ec2.Vpc,
+                 user_pool: cognito.UserPool,
+                 user_pool_client: cognito.UserPoolClient,
+                 certificate: acm.Certificate,
+                 **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        # Create credentials for database
+        self.credentials = rds.Credentials.from_generated_secret(
+            username="haikugenerator",
+            secret_name=f"{construct_id}/haiku-generator-db-credentials"
+        )
+
+        # Create security group for the database
+        self.database_security_group = ec2.SecurityGroup(
+            self, "DatabaseSecurityGroup",
+            vpc=vpc,
+            description="Security group for Lang Portal database",
+            security_group_name=f"{construct_id}-database-sg"
+        )
+
+        # Create standard RDS PostgreSQL instance
+        self.db = rds.DatabaseInstance(
+            self, "DB",
+            engine=rds.DatabaseInstanceEngine.postgres(
+                version=rds.PostgresEngineVersion.VER_16_6
+            ),
+            credentials=self.credentials,
+            instance_type=ec2.InstanceType.of(
+                ec2.InstanceClass.T3,
+                ec2.InstanceSize.MICRO
+            ),
+            vpc=vpc,
+            vpc_subnets=ec2.SubnetSelection(
+                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+            ),
+            allocated_storage=20,
+            security_groups=[self.database_security_group],
+            publicly_accessible=False,
+            backup_retention=Duration.days(7),
+            preferred_backup_window="03:00-04:00",  # UTC
+            deletion_protection=False,
+            delete_automated_backups=True,
+            removal_policy=RemovalPolicy.SNAPSHOT,
+            cloudwatch_logs_retention=logs.RetentionDays.ONE_WEEK,
+            parameter_group=rds.ParameterGroup.from_parameter_group_name(
+                self, "DBParameterGroup",
+                parameter_group_name="default.postgres16"
+            )
+        )
 
         # Create ECR Repository
         self.repository = ecr.Repository(
             self, "Repository",
-            repository_name=f"{construct_id}-repo".lower(),
+            repository_name="haiku-generator",
             removal_policy=RemovalPolicy.DESTROY,
             lifecycle_rules=[
                 ecr.LifecycleRule(
@@ -36,7 +87,7 @@ class HaikuGeneratorBackendStack(Stack):
         self.cluster = ecs.Cluster(
             self, "Cluster",
             vpc=vpc,
-            cluster_name=f"{construct_id}-cluster",
+            cluster_name="haiku-generator",
             container_insights_v2=ecs.ContainerInsights.ENABLED
         )
 
