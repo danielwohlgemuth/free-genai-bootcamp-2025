@@ -87,11 +87,11 @@ haiku_backend_pipeline = HaikuGeneratorBackendPipelineStack(app, "HaikuGenerator
     env=env
 )
 
-# haiku_frontend = HaikuGeneratorFrontendStack(app, "HaikuGeneratorFrontendStack",
-#     backend_alb=haiku_backend.service.load_balancer,
-#     certificate=haiku_certificate.certificate,
-#     env=env
-# )
+haiku_frontend = HaikuGeneratorFrontendStack(app, "HaikuGeneratorFrontendStack",
+    backend_alb=haiku_backend.service.load_balancer,
+    certificate=haiku_certificate.certificate,
+    env=env
+)
 
 # haiku_frontend_pipeline = HaikuGeneratorFrontendPipelineStack(app, "HaikuGeneratorFrontendPipelineStack",
 #     bucket=haiku_frontend.bucket,
