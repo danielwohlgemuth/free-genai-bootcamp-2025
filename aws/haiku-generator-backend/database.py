@@ -232,10 +232,10 @@ def delete_haiku_db(user_id: str, haiku_id: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('''
-        DELETE FROM haiku WHERE user_id = %s AND haiku_id = %s
+        DELETE FROM chat WHERE user_id = %s AND haiku_id = %s
     ''', (user_id, haiku_id))
     cursor.execute('''
-        DELETE FROM chat WHERE user_id = %s AND haiku_id = %s
+        DELETE FROM haiku WHERE user_id = %s AND haiku_id = %s
     ''', (user_id, haiku_id))
     conn.commit()
     conn.close()
