@@ -114,6 +114,6 @@ def process_message(user_id: str, haiku_id: str, user_message: str):
     agent_message = agent_model.invoke(inputs)
     print('agent_message', agent_message)
     print('agent_message_content', agent_message["output"])
-    print('agent_message_content_text', agent_message["output"][0]["text"])
-
-    store_chat_interaction(user_id, haiku_id, agent_message["output"][0]["text"], 'ai')
+    if agent_message["output"] and agent_message["output"][0]["text"]:
+        print('agent_message_content_text', agent_message["output"][0]["text"])
+        store_chat_interaction(user_id, haiku_id, agent_message["output"][0]["text"], 'ai')
