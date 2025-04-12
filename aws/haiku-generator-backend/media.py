@@ -73,7 +73,7 @@ def generate_image(user_id: str, haiku_id: str, description: str, image_number: 
         image_content = io.BytesIO(image_bytes)
         
         # Upload the image
-        upload_file(user_id, image_content, image_bytes_length, file_path)
+        upload_file(image_content, image_bytes_length, file_path)
         update_haiku_link(user_id, haiku_id, image_number, image_link=file_path)
         return file_path
     except Exception as e:
@@ -98,7 +98,7 @@ def generate_audio(user_id: str, haiku_id: str, text: str, audio_number: int):
         audio_content.seek(0)
         
         # Upload the audio file
-        upload_file(user_id, audio_content, audio_content_length, storage_file_path)
+        upload_file(audio_content, audio_content_length, storage_file_path)
         update_haiku_link(user_id, haiku_id, audio_number, audio_link=storage_file_path)
         return storage_file_path
     except Exception as e:
@@ -116,12 +116,18 @@ def generate_image_description(user_id: str, haiku_id: str, topic: str, haiku_li
     4. Be suitable for image generation
     5. Not include any text or words in the description
     6. Focus on the key visual elements that capture the haiku's essence
-    7. Format the response as a single paragraph of clear, descriptive text
+    7. Be no longer than 512 characters
+    8. Format the response as a single paragraph of clear, descriptive text
     
     Original haiku line: {haiku_line}
     Topic: {topic}
     """
+
     description = model.invoke(prompt)
+
+    if len(description) > 512:
+        description = description[:512]
+        
     update_image_description(user_id, haiku_id, description, line_number)
     return description
 
