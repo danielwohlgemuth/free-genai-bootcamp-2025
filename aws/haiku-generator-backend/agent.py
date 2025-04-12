@@ -1,4 +1,5 @@
 import langchain
+import os
 from database import store_chat_interaction, retrieve_chats, update_haiku_lines, retrieve_haiku
 from dotenv import load_dotenv
 from langchain_aws import ChatBedrock
@@ -12,12 +13,22 @@ from workflow import start_workflow
 
 
 langchain.debug = True
-
-
 load_dotenv()
+
+
+MODEL_REGION = os.getenv('MODEL_REGION', 'us-east-1')
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+MODEL_PROVIDER = os.getenv('MODEL_PROVIDER', 'anthropic')
+MODEL_ID = os.getenv('MODEL_ID', 'anthropic.claude-3-5-haiku-20241022-v1:0')
+
+
 model = ChatBedrock(
-    provider="cohere",
-    model_id="amazon.titan-text-express-v1"
+    region=MODEL_REGION,
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    provider=MODEL_PROVIDER,
+    model_id=MODEL_ID
 )
 
 system_template="""You are an assistant that helps generate haikus.

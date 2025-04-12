@@ -11,50 +11,64 @@ from storage import upload_file
 
 load_dotenv()
 
+
+MODEL_REGION = os.getenv('MODEL_REGION', 'us-east-1')
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+MODEL_PROVIDER = os.getenv('MODEL_PROVIDER', 'anthropic')
+MODEL_ID = os.getenv('MODEL_ID', 'anthropic.claude-3-5-haiku-20241022-v1:0')
+IMAGE_MODEL_ID = os.getenv('IMAGE_MODEL_ID', 'amazon.titan-image-generator-v1')
+
+
+model = BedrockLLM(
+    region=MODEL_REGION,
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    provider=MODEL_PROVIDER,
+    model_id=MODEL_ID
+)
+
 bedrock = boto3.client(service_name='bedrock-runtime')
 polly = boto3.client('polly')
 
-model = BedrockLLM(
-    provider="cohere",
-    model_id="amazon.titan-text-express-v1"
-)
-
-
 def generate_image(user_id: str, haiku_id: str, description: str, image_number: int):
     file_path = f"{user_id}/{haiku_id}/image-{image_number}.png"
-    body = json.dumps({
-        "taskType": "TEXT_IMAGE",
-        "textToImageParams": {
-            "text": description,
-            "controlMode": "CANNY_EDGE",
-            "controlStrength": 0.7
-        },
-        "imageGenerationConfig": {
-            "numberOfImages": 1,
-            "height": 512,
-            "width": 512,
-            "cfgScale": 8.0
-        }
-    })
-    
-    response = bedrock.invoke_model(
-        body=body, modelId="us.anthropic.claude-3-haiku-20240307-v1:0", accept="application/json", contentType="application/json"
-    )
-    response_body = json.loads(response.get("body").read())
+    try:
+        body = json.dumps({
+            "taskType": "TEXT_IMAGE",
+            "textToImageParams": {
+                "text": description
+            },
+            "imageGenerationConfig": {
+                "numberOfImages": 1,
+                "height": 512,
+                "width": 512,
+                "quality": "standard",
+                "cfgScale": 8.0
+            }
+        })
+        
+        response = bedrock.invoke_model(
+            body=body,
+            modelId=IMAGE_MODEL_ID,
+            accept="application/json",
+            contentType="application/json"
+        )
+        response_body = json.loads(response.get("body").read())
 
-    base64_image = response_body.get("images")[0]
-    base64_bytes = base64_image.encode('ascii')
-    image_bytes = base64.b64decode(base64_bytes)
+        base64_image = response_body.get("images")[0]
+        base64_bytes = base64_image.encode('ascii')
+        image_bytes = base64.b64decode(base64_bytes)
 
-    finish_reason = response_body.get("error")
+        image_bytes_length = len(image_bytes.getvalue())
+        image_bytes.seek(0)
+        upload_file(user_id, image_bytes, image_bytes_length, file_path)
+        update_haiku_link(user_id, haiku_id, image_number, image_link=file_path)
+        return file_path
 
-    image = Image.open(io.BytesIO(image_bytes))
-
-    image_bytes_length = len(image_bytes.getvalue())
-    image_bytes.seek(0)
-    upload_file(user_id, image_bytes, image_bytes_length, file_path)
-    update_haiku_link(user_id, haiku_id, image_number, image_link=file_path)
-    return file_path
+    except Exception as e:
+        print(f"Error generating image: {e}")
+        return None
 
 def generate_audio(user_id: str, haiku_id: str, text: str, audio_number: int):
     storage_file_path = f"{user_id}/{haiku_id}/audio-{audio_number}.wav"
