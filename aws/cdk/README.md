@@ -80,6 +80,17 @@ invoke createdb
 invoke setup
 ```
 
+7. Setup Haiku Generator Database:
+```bash
+aws ecs execute-command \
+    --cluster haiku-generator \
+    --task HAIGU_GENERATOR_TASK_ID_HERE \
+    --container Container \
+    --command "/bin/sh" \
+    --interactive
+python database.py
+```
+
 ### Cleanup
 
 1. Destroy stacks:

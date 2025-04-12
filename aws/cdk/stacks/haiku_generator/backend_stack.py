@@ -91,142 +91,169 @@ class HaikuGeneratorBackendStack(Stack):
             container_insights_v2=ecs.ContainerInsights.ENABLED
         )
 
-        # # Create security group for the service
-        # self.service_sg = ec2.SecurityGroup(
-        #     self, "ServiceSecurityGroup",
-        #     vpc=vpc,
-        #     description="Security group for Haiku Generator backend service",
-        #     security_group_name=f"{construct_id}-service-sg"
-        # )
+        # Allow inbound only from CloudFront using managed prefix list
+        self.alb_security_group = ec2.SecurityGroup(
+            self, "ALBSecurityGroup",
+            vpc=vpc,
+            description="Security group for ALB",
+            security_group_name=f"{construct_id}-alb-sg"
+        )
 
-        # # Allow inbound from ALB on port 8000
-        # self.service_sg.add_ingress_rule(
-        #     peer=ec2.Peer.any_ipv4(),
-        #     connection=ec2.Port.tcp(8000),
-        #     description="Allow inbound HTTP traffic"
-        # )
+        # Look up CloudFront prefix list
+        cloudfront_prefix_list = ec2.PrefixList.from_lookup(
+            self, "CloudFrontPrefixList",
+            prefix_list_name="com.amazonaws.global.cloudfront.origin-facing"
+        )
 
-        # # Create Task Definition
-        # task_definition = ecs.FargateTaskDefinition(
-        #     self, "TaskDef",
-        #     memory_limit_mib=512,
-        #     cpu=256,
-        #     family=f"{construct_id}-task"
-        # )
+        # Allow ALB to connect to ECS tasks
+        self.alb_security_group.add_ingress_rule(
+            peer=ec2.Peer.prefix_list(cloudfront_prefix_list.prefix_list_id),
+            connection=ec2.Port.tcp(443),
+            description="Allow inbound HTTPS traffic from CloudFront only"
+        )
 
-        # # Add container to task definition
-        # container = task_definition.add_container(
-        #     "ApiContainer",
-        #     image=ecs.ContainerImage.from_ecr_repository(
-        #         repository=self.repository,
-        #         tag="latest"
-        #     ),
-        #     memory_limit_mib=512,
-        #     cpu=256,
-        #     logging=ecs.LogDriver.aws_logs(
-        #         stream_prefix="HaikuGeneratorBackend",
-        #         log_retention=logs.RetentionDays.ONE_WEEK
-        #     ),
-        #     environment={
-        #         "COGNITO_USER_POOL_ID": user_pool.user_pool_id,
-        #         "DB_HOST": database.cluster_endpoint.hostname,
-        #         "DB_PORT": "5432",
-        #         "DB_NAME": "haiku",
-        #         "AWS_DEFAULT_REGION": Stack.of(self).region
-        #     },
-        #     secrets={
-        #         "DB_USERNAME": ecs.Secret.from_secrets_manager(database.secret, "username"),
-        #         "DB_PASSWORD": ecs.Secret.from_secrets_manager(database.secret, "password")
-        #     }
-        # )
+        # Create security group for the service
+        self.service_security_group = ec2.SecurityGroup(
+            self, "ServiceSecurityGroup",
+            vpc=vpc,
+            description="Security group for Haiku Generator backend service",
+            security_group_name=f"{construct_id}-service-sg"
+        )
 
-        # container.add_port_mappings(
-        #     ecs.PortMapping(
-        #         container_port=8000,
-        #         protocol=ecs.Protocol.TCP
-        #     )
-        # )
+        # Allow internal traffic from ALB to ECS tasks on port 8001
+        self.service_security_group.add_ingress_rule(
+            peer=ec2.Peer.security_group_id(self.alb_security_group.security_group_id),
+            connection=ec2.Port.tcp(8001),
+            description="Allow inbound traffic from ALB to ECS tasks"
+        )
 
-        # # Create Fargate Service
-        # self.service = ecs_patterns.ApplicationLoadBalancedFargateService(
-        #     self, "Service",
-        #     cluster=self.cluster,
-        #     task_definition=task_definition,
-        #     desired_count=1,
-        #     certificate=None,  # SSL termination at CloudFront
-        #     protocol=elbv2.ApplicationProtocol.HTTP,
-        #     public_load_balancer=True,
-        #     assign_public_ip=False,
-        #     security_groups=[self.service_sg],
-        #     task_subnets=ec2.SubnetSelection(
-        #         subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
-        #     ),
-        #     listener_port=80,
-        #     target_protocol=elbv2.ApplicationProtocol.HTTP,
-        #     health_check=ecs.HealthCheck(
-        #         command=["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"],
-        #         interval=Duration.seconds(30),
-        #         timeout=Duration.seconds(5),
-        #         retries=3,
-        #         start_period=Duration.seconds(60)
-        #     ),
-        #     capacity_provider_strategies=[
-        #         ecs.CapacityProviderStrategy(
-        #             capacity_provider="FARGATE_SPOT",
-        #             weight=1
-        #         )
-        #     ],
-        #     circuit_breaker=ecs.DeploymentCircuitBreaker(
-        #         rollback=True
-        #     ),
-        #     min_healthy_percent=100
-        # )
+        # Allow internal traffic from service to database
+        self.database_security_group.add_ingress_rule(
+            peer=ec2.Peer.security_group_id(self.service_security_group.security_group_id),
+            connection=ec2.Port.tcp(5432),
+            description="Allow inbound traffic from service to database"
+        )
 
-        # # Auto Scaling configuration
-        # scaling = self.service.service.auto_scale_task_count(
-        #     max_capacity=4,
-        #     min_capacity=1
-        # )
+        # Create Task Definition
+        task_definition = ecs.FargateTaskDefinition(
+            self, "TaskDef",
+            memory_limit_mib=512,
+            cpu=256,
+            family=f"{construct_id}-task"
+        )
 
-        # self.service.target_group.configure_health_check(
-        #     path="/api/health",
-        #     healthy_http_codes="200",
-        #     interval=Duration.seconds(30),
-        #     timeout=Duration.seconds(3),
-        #     healthy_threshold_count=2,
-        #     unhealthy_threshold_count=3
-        # )
+        # Add container to task definition
+        container = task_definition.add_container(
+            "Container",
+            container_name="Container",
+            image=ecs.ContainerImage.from_ecr_repository(
+                repository=self.repository,
+                tag="latest"
+            ),
+            memory_limit_mib=512,
+            cpu=256,
+            logging=ecs.LogDriver.aws_logs(
+                stream_prefix="HaikuGeneratorBackend",
+                log_retention=logs.RetentionDays.ONE_WEEK
+            ),
+            environment={
+                "COGNITO_USER_POOL_ID": user_pool.user_pool_id,
+                "COGNITO_CLIENT_ID": user_pool_client.user_pool_client_id,
+                "COGNITO_REGION": Stack.of(self).region,
+                "DB_HOST": self.db.instance_endpoint.hostname,
+                "DB_PORT": str(self.db.instance_endpoint.port),
+                "DB_NAME": "haiku",
+                "AWS_DEFAULT_REGION": Stack.of(self).region,
+                "AWS_ACCESS_KEY_ID": "",
+                "AWS_SECRET_ACCESS_KEY": "",
+                "AWS_REGION": Stack.of(self).region,
+                "BUCKET_URL": "",
+                "BUCKET_NAME": "",
+                "BUCKET_SECURE": "true",
+                "BUCKET_ACCESS_KEY": "",
+                "BUCKET_SECRET_KEY": "",
+                "CHAT_MODEL_PROVIDER": "",
+                "CHAT_MODEL_ID": "",
+                "LLM_MODEL_PROVIDER": "",
+                "LLM_MODEL_ID": "",
+                "IMAGE_MODEL_ID": ""
+            },
+            secrets={
+                "DB_USER": ecs.Secret.from_secrets_manager(self.db.secret, "username"),
+                "DB_PASSWORD": ecs.Secret.from_secrets_manager(self.db.secret, "password")
+            }
+        )
 
-        # scaling.scale_on_cpu_utilization(
-        #     "CpuScaling",
-        #     target_utilization_percent=70,
-        #     scale_in_cooldown=Duration.seconds(60),
-        #     scale_out_cooldown=Duration.seconds(60)
-        # )
+        container.add_port_mappings(
+            ecs.PortMapping(
+                container_port=8001,
+                protocol=ecs.Protocol.TCP
+            )
+        )
 
-        # scaling.scale_on_memory_utilization(
-        #     "MemoryScaling",
-        #     target_utilization_percent=70,
-        #     scale_in_cooldown=Duration.seconds(60),
-        #     scale_out_cooldown=Duration.seconds(60)
-        # )
+        # Create Fargate Service
+        self.service = ecs_patterns.ApplicationLoadBalancedFargateService(
+            self, "Service",
+            cluster=self.cluster,
+            service_name="backend",
+            task_definition=task_definition,
+            desired_count=1,
+            certificate=certificate,
+            protocol=elbv2.ApplicationProtocol.HTTPS,
+            public_load_balancer=True,
+            assign_public_ip=False,
+            security_groups=[self.service_security_group],
+            task_subnets=ec2.SubnetSelection(
+                subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
+            ),
+            listener_port=443,
+            target_protocol=elbv2.ApplicationProtocol.HTTP,
+            health_check=ecs.HealthCheck(
+                command=["CMD-SHELL", "curl -f http://localhost:8001/health || exit 1"],
+                interval=Duration.seconds(30),
+                timeout=Duration.seconds(5),
+                retries=3,
+                start_period=Duration.seconds(60)
+            ),
+            capacity_provider_strategies=[
+                ecs.CapacityProviderStrategy(
+                    capacity_provider="FARGATE_SPOT",
+                    weight=1
+                )
+            ],
+            circuit_breaker=ecs.DeploymentCircuitBreaker(
+                rollback=True
+            ),
+            enable_execute_command=True,
+            min_healthy_percent=100
+        )
 
+        # Auto Scaling configuration
+        scaling = self.service.service.auto_scale_task_count(
+            max_capacity=4,
+            min_capacity=1
+        )
 
-        # # Outputs
-        # CfnOutput(self, "ServiceURL",
-        #     value=f"http://{self.service.load_balancer.load_balancer_dns_name}",
-        #     description="Haiku Generator Backend Service URL",
-        #     export_name=f"{construct_id}-service-url"
-        # )
+        self.service.target_group.configure_health_check(
+            path="/health",
+            port="8001",
+            healthy_http_codes="200",
+            interval=Duration.seconds(30),
+            timeout=Duration.seconds(3),
+            healthy_threshold_count=2,
+            unhealthy_threshold_count=3
+        )
 
-        # CfnOutput(self, "ServiceName",
-        #     value=self.service.service.service_name,
-        #     description="Haiku Generator Backend Service Name",
-        #     export_name=f"{construct_id}-service-name"
-        # )
+        scaling.scale_on_cpu_utilization(
+            "CpuScaling",
+            target_utilization_percent=70,
+            scale_in_cooldown=Duration.seconds(60),
+            scale_out_cooldown=Duration.seconds(60)
+        )
 
-        # CfnOutput(self, "ClusterName",
-        #     value=self.cluster.cluster_name,
-        #     description="ECS Cluster Name",
-        #     export_name=f"{construct_id}-cluster-name"
-        # )
+        scaling.scale_on_memory_utilization(
+            "MemoryScaling",
+            target_utilization_percent=70,
+            scale_in_cooldown=Duration.seconds(60),
+            scale_out_cooldown=Duration.seconds(60)
+        )
