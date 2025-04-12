@@ -52,6 +52,5 @@ class DeleteHaikuResponse(BaseModel):
     message: str
 
 class UpdateHaiku(BaseModel):
-    haiku: List[str] = Field(description="Haiku lines as list of strings")
-    haiku_id: str | int = Field(description="Haiku ID as string")
+    haiku: List[str] = Field(description="Haiku lines as list of 3 strings")
     topic: str = Field(description="Haiku topic as string")

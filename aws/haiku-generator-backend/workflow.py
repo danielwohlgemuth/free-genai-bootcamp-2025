@@ -5,6 +5,7 @@ from typing import TypedDict
 
 
 class State(TypedDict):
+    user_id: str
     haiku_id: str
     haiku_line_en_1: str
     haiku_line_en_2: str
@@ -25,8 +26,8 @@ class State(TypedDict):
 
 
 def initialize_haiku(state: State):
-    haiku = retrieve_haiku(state["haiku_id"])
-    set_status(state["haiku_id"], "in_progress", "")
+    haiku = retrieve_haiku(state["user_id"], state["haiku_id"])
+    set_status(state["user_id"], state["haiku_id"], "in_progress", "")
     new_state = {}
     if haiku.haiku_line_en_1:
         new_state["haiku_line_en_1"] = haiku.haiku_line_en_1
