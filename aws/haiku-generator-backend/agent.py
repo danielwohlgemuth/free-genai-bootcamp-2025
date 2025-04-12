@@ -20,7 +20,7 @@ MODEL_REGION = os.getenv('MODEL_REGION', 'us-east-1')
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 CHAT_MODEL_PROVIDER = os.getenv('CHAT_MODEL_PROVIDER', 'anthropic')
-CHAT_MODEL_ID = os.getenv('CHAT_MODEL_ID', 'anthropic.claude-3-5-haiku-20241022-v1:0')
+CHAT_MODEL_ID = os.getenv('CHAT_MODEL_ID')
 
 
 model = ChatBedrock(
@@ -78,8 +78,8 @@ def update_haiku_base(user_id: str, haiku_id: str, haiku: List[str], topic: str)
     return "Haiku updated in database"
 
 def configure_update_haiku(user_id: str, haiku_id: str) -> tool:
-    def update_haiku():
-        return update_haiku_base(user_id, haiku_id)
+    def update_haiku(haiku: List[str], topic: str):
+        return update_haiku_base(user_id, haiku_id, haiku, topic)
 
     return StructuredTool.from_function(
         func=update_haiku,
@@ -114,5 +114,6 @@ def process_message(user_id: str, haiku_id: str, user_message: str):
     agent_message = agent_model.invoke(inputs)
     print('agent_message', agent_message)
     print('agent_message_content', agent_message["output"])
+    print('agent_message_content_text', agent_message["output"][0]["text"])
 
-    store_chat_interaction(user_id, haiku_id, agent_message["output"], 'ai')
+    store_chat_interaction(user_id, haiku_id, agent_message["output"][0]["text"], 'ai')

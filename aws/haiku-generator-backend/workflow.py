@@ -27,7 +27,7 @@ class State(TypedDict):
 
 def initialize_haiku(state: State):
     haiku = retrieve_haiku(state["user_id"], state["haiku_id"])
-    set_status(state["user_id"], state["haiku_id"], "in_progress", "")
+    set_status(state["user_id"], state["haiku_id"], "in progress", "")
     new_state = {}
     if haiku.haiku_line_en_1:
         new_state["haiku_line_en_1"] = haiku.haiku_line_en_1
@@ -67,7 +67,7 @@ def generate_image_description_1(state: State):
     if state.get("image_description_1"):
         return {}
 
-    description = generate_image_description(state["haiku_id"], state["topic"], state["haiku_line_en_1"], 1)
+    description = generate_image_description(state["user_id"], state["haiku_id"], state["topic"], state["haiku_line_en_1"], 1)
     return {
         "image_description_1": description
     }
@@ -76,7 +76,7 @@ def generate_image_description_2(state: State):
     if state.get("image_description_2"):
         return {}
     
-    description = generate_image_description(state["haiku_id"], state["topic"], state["haiku_line_en_2"], 2)
+    description = generate_image_description(state["user_id"], state["haiku_id"], state["topic"], state["haiku_line_en_2"], 2)
     return {
         "image_description_2": description
     }
@@ -85,7 +85,7 @@ def generate_image_description_3(state: State):
     if state.get("image_description_3"):
         return {}
     
-    description = generate_image_description(state["haiku_id"], state["topic"], state["haiku_line_en_3"], 3)
+    description = generate_image_description(state["user_id"], state["haiku_id"], state["topic"], state["haiku_line_en_3"], 3)
     return {
         "image_description_3": description
     }
@@ -94,7 +94,7 @@ def generate_image_1(state: State):
     if state.get("image_link_1"):
         return {}
     
-    link = generate_image(state["haiku_id"], state["image_description_1"], 1)
+    link = generate_image(state["user_id"], state["haiku_id"], state["image_description_1"], 1)
     return {
         "image_link_1": link
     }
@@ -103,7 +103,7 @@ def generate_image_2(state: State):
     if state.get("image_link_2"):
         return {}
     
-    link = generate_image(state["haiku_id"], state["image_description_2"], 2)
+    link = generate_image(state["user_id"], state["haiku_id"], state["image_description_2"], 2)
     return {
         "image_link_2": link
     }
@@ -112,7 +112,7 @@ def generate_image_3(state: State):
     if state.get("image_link_3"):
         return {}
     
-    link = generate_image(state["haiku_id"], state["image_description_3"], 3)
+    link = generate_image(state["user_id"], state["haiku_id"], state["image_description_3"], 3)
     return {
         "image_link_3": link
     }
@@ -121,7 +121,7 @@ def generate_translation_1(state: State):
     if state.get("haiku_line_ja_1"):
         return {}
     
-    translation = generate_translation(state["haiku_id"], state["topic"], state["haiku_line_en_1"], 1)
+    translation = generate_translation(state["user_id"], state["haiku_id"], state["topic"], state["haiku_line_en_1"], 1)
     return {
         "haiku_line_ja_1": translation
     }
@@ -130,7 +130,7 @@ def generate_translation_2(state: State):
     if state.get("haiku_line_ja_2"):
         return {}
     
-    translation = generate_translation(state["haiku_id"], state["topic"], state["haiku_line_en_2"], 2)
+    translation = generate_translation(state["user_id"], state["haiku_id"], state["topic"], state["haiku_line_en_2"], 2)
     return {
         "haiku_line_ja_2": translation
     }
@@ -139,7 +139,7 @@ def generate_translation_3(state: State):
     if state.get("haiku_line_ja_3"):
         return {}
     
-    translation = generate_translation(state["haiku_id"], state["topic"], state["haiku_line_en_3"], 3)
+    translation = generate_translation(state["user_id"], state["haiku_id"], state["topic"], state["haiku_line_en_3"], 3)
     return {
         "haiku_line_ja_3": translation
     }
@@ -148,7 +148,7 @@ def generate_audio_1(state: State):
     if state.get("audio_link_1"):
         return {}
     
-    link = generate_audio(state["haiku_id"], state["haiku_line_ja_1"], 1)
+    link = generate_audio(state["user_id"], state["haiku_id"], state["haiku_line_ja_1"], 1)
     return {
         "audio_link_1": link
     }
@@ -157,7 +157,7 @@ def generate_audio_2(state: State):
     if state.get("audio_link_2"):
         return {}
     
-    link = generate_audio(state["haiku_id"], state["haiku_line_ja_2"], 2)
+    link = generate_audio(state["user_id"], state["haiku_id"], state["haiku_line_ja_2"], 2)
     return {
         "audio_link_2": link
     }
@@ -166,7 +166,7 @@ def generate_audio_3(state: State):
     if state.get("audio_link_3"):
         return {}
     
-    link = generate_audio(state["haiku_id"], state["haiku_line_ja_3"], 3)
+    link = generate_audio(state["user_id"], state["haiku_id"], state["haiku_line_ja_3"], 3)
     return {
         "audio_link_3": link
     }
@@ -261,8 +261,8 @@ def create_workflow():
 workflow = create_workflow()
 
 
-def start_workflow(haiku_id: str):
-    workflow.invoke({"haiku_id": haiku_id})
+def start_workflow(user_id: str, haiku_id: str):
+    workflow.invoke({"user_id": user_id, "haiku_id": haiku_id})
 
 if __name__ == "__main__":
     with open("media.mermaid", "w") as f:
