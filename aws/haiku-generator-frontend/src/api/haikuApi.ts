@@ -77,7 +77,7 @@ export const sendMessage = async (token: string, haiku_id: string, message: stri
 };
 
 export const generateMedia = async (token: string, haiku_id: string): Promise<GenerateMediaResponse> => {
-  const response = await axios.post(`${API_URL}/haiku/${haiku_id}`, {
+  const response = await axios.post(`${API_URL}/haiku/${haiku_id}`, {}, {
     headers: {
       'Authorization': `Bearer ${token}`
     }
