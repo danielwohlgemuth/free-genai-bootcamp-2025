@@ -49,27 +49,47 @@ export interface DeleteHaikuResponse {
   message: string;
 }
 
-export const fetchHaikus = async (): Promise<FetchHaikusResponse> => {
-  const response = await axios.get(`${API_URL}/haiku`);
+export const fetchHaikus = async (token: string): Promise<FetchHaikusResponse> => {
+  const response = await axios.get(`${API_URL}/haiku`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   return response.data;
 };
 
-export const fetchHaiku = async (haiku_id: string): Promise<FetchHaikuResponse> => {
-  const response = await axios.get(`${API_URL}/haiku/${haiku_id}`);
+export const fetchHaiku = async (token: string, haiku_id: string): Promise<FetchHaikuResponse> => {
+  const response = await axios.get(`${API_URL}/haiku/${haiku_id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   return response.data;
 };
 
-export const sendMessage = async (haiku_id: string, message: string): Promise<SendMessageResponse> => {
-  const response = await axios.post(`${API_URL}/chat/${haiku_id}`, { message });
+export const sendMessage = async (token: string, haiku_id: string, message: string): Promise<SendMessageResponse> => {
+  const response = await axios.post(`${API_URL}/chat/${haiku_id}`, { message }, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   return response.data;
 };
 
-export const generateMedia = async (haiku_id: string): Promise<GenerateMediaResponse> => {
-  const response = await axios.post(`${API_URL}/haiku/${haiku_id}`);
+export const generateMedia = async (token: string, haiku_id: string): Promise<GenerateMediaResponse> => {
+  const response = await axios.post(`${API_URL}/haiku/${haiku_id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   return response.data;
 };
 
-export const deleteHaiku = async (haiku_id: string): Promise<DeleteHaikuResponse> => {
-  const response = await axios.delete(`${API_URL}/haiku/${haiku_id}`);
+export const deleteHaiku = async (token: string, haiku_id: string): Promise<DeleteHaikuResponse> => {
+  const response = await axios.delete(`${API_URL}/haiku/${haiku_id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   return response.data;
 };

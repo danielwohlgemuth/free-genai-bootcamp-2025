@@ -6,6 +6,7 @@ import LoadingIndicator from './LoadingIndicator';
 import ErrorMessage from './ErrorMessage';
 import { generateUUID } from '../utils/uuid';
 import { Container, Paper, Button, Box, Typography, Breadcrumbs, Link, TextField, List, ListItem, ListItemText, ListItemIcon, Divider } from '@mui/material';
+import { useAuth } from 'react-oidc-context';
 
 const HaikuGenerator = () => {
   const { haiku_id } = useParams();
@@ -15,11 +16,13 @@ const HaikuGenerator = () => {
   const [loading, setLoading] = useState(false);
   const [loadingPage, setLoadingPage] = useState(true);
   const [error, setError] = useState(null);
+  const auth = useAuth();
 
   useEffect(() => {
     const getHaiku = async () => {
       try {
-        const fetchedHaiku = await fetchHaiku(haiku_id);
+        const token = auth.user?.access_token || '';
+        const fetchedHaiku = await fetchHaiku(token, haiku_id);
         setHaiku(fetchedHaiku.haiku);
         setChats(fetchedHaiku.chats);
       } catch (error) {
@@ -30,14 +33,42 @@ const HaikuGenerator = () => {
       }
     };
 
-    getHaiku();
-  }, [haiku_id]);
+    if (auth.isAuthenticated) {
+      getHaiku();
+    }
+  }, [haiku_id, auth.isAuthenticated, auth.user?.access_token]);
+
+  useEffect(() => {
+    if (!auth.isAuthenticated && !auth.isLoading) {
+      auth.signinRedirect();
+    }
+  }, [auth.isAuthenticated, auth.isLoading]);
+
+  if (auth.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (auth.error) {
+    return (
+      <div>
+        Authentication error: {auth.error.message}.
+        <button onClick={() => window.location.reload()} className="text-primary">
+          Reload page
+        </button>
+      </div>
+    );
+  }
+
+  if (!auth.isAuthenticated) {
+    return null;
+  }
 
   const handleSendMessage = async () => {
     setLoading(true);
     setError(null);
     try {
-      const updatedHaiku = await sendMessage(haiku_id, message);
+      const token = auth.user?.access_token || '';
+      const updatedHaiku = await sendMessage(token, haiku_id, message);
       setHaiku(updatedHaiku.haiku);
       setMessage('');
       setChats([...chats, { chat_id: generateUUID(), role: 'human', message }, updatedHaiku.chat]);
@@ -53,7 +84,8 @@ const HaikuGenerator = () => {
     setLoading(true);
     setError(null);
     try {
-      const updatedHaiku = await generateMedia(haiku_id);
+      const token = auth.user?.access_token || '';
+      const updatedHaiku = await generateMedia(token, haiku_id);
       setHaiku(updatedHaiku.haiku);
     } catch (error) {
       setError('Error generating media');

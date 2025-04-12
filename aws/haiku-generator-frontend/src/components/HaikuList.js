@@ -4,18 +4,21 @@ import LoadingIndicator from './LoadingIndicator';
 import ErrorMessage from './ErrorMessage';
 import { generateUUID } from '../utils/uuid';
 import { Button, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Link, Container, Chip } from '@mui/material';
+import { useAuth } from 'react-oidc-context';
 
 const HaikuList = () => {
   const [haikus, setHaikus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const auth = useAuth();
 
   useEffect(() => {
     const fetchHaikusData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const fetchedHaikus = await fetchHaikus();
+        const token = auth.user?.access_token || '';
+        const fetchedHaikus = await fetchHaikus(token);
         setHaikus(fetchedHaikus.haikus);
       } catch (error) {
         setError('Error fetching haikus');
@@ -25,12 +28,40 @@ const HaikuList = () => {
       }
     };
 
-    fetchHaikusData();
-  }, []);
+    if (auth.isAuthenticated) {
+      fetchHaikusData();
+    }
+  }, [auth.isAuthenticated, auth.user?.access_token]);
+
+  useEffect(() => {
+    if (!auth.isAuthenticated && !auth.isLoading) {
+      auth.signinRedirect();
+    }
+  }, [auth.isAuthenticated, auth.isLoading]);
+
+  if (auth.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (auth.error) {
+    return (
+      <div>
+        Authentication error: {auth.error.message}.
+        <button onClick={() => window.location.reload()} className="text-primary">
+          Reload page
+        </button>
+      </div>
+    );
+  }
+
+  if (!auth.isAuthenticated) {
+    return null;
+  }
 
   const handleDelete = async (haiku_id) => {
     try {
-      await deleteHaiku(haiku_id);
+      const token = auth.user?.access_token || '';
+      await deleteHaiku(token, haiku_id);
       setHaikus(haikus.filter(haiku => haiku.haiku_id !== haiku_id));
     } catch (error) {
       setError('Error deleting haiku');
@@ -43,8 +74,13 @@ const HaikuList = () => {
     window.location.href = `/haiku/${newHaikuId}`;
   };
 
-  if (loading) return <LoadingIndicator />;
-  if (error) return <ErrorMessage message={error} />;
+  if (loading && !error) {
+    return <LoadingIndicator />;
+  }
+
+  if (error) {
+    return <ErrorMessage message={error} />;
+  }
 
   return (
     <Container maxWidth="sm">
