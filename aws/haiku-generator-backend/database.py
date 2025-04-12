@@ -63,6 +63,7 @@ def create_database():
     
     conn.commit()
     conn.close()
+    print(f"Created database {DB_NAME}")
 
 def create_tables():
     conn = get_db_connection()
@@ -105,6 +106,7 @@ def create_tables():
     ''')
     conn.commit()
     conn.close()
+    print("Created tables")
 
 def retrieve_haikus(user_id: str)-> List[Haiku]:
     conn = get_db_connection()
@@ -237,3 +239,7 @@ def delete_haiku_db(user_id: str, haiku_id: str):
     ''', (user_id, haiku_id))
     conn.commit()
     conn.close()
+
+if __name__ == '__main__':
+    create_database()
+    create_tables()
