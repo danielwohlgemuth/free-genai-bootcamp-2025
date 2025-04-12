@@ -138,14 +138,31 @@ def generate_translation(user_id: str, haiku_id: str, topic: str, haiku_line: st
     Original line: {haiku_line}
     
     Instructions:
-    1. Provide only the Japanese translation
-    2. Maintain the haiku's poetic quality and meaning
-    3. Keep the translation concise and focused on the imagery
-    4. Use natural Japanese phrasing that captures the essence of the original
-    5. Format the response as a single line of Japanese text only
+    1. Provide ONLY the Japanese translation
+    2. Format the response as a single line of Japanese text ONLY
+    3. Do NOT include:
+       - Any English text
+       - Explanations
+       - Headers like "Japanese translation:"
+       - Newlines or extra whitespace
+    4. Maintain the haiku's poetic quality and meaning
+    5. Keep the translation concise and focused on the imagery
+    6. Use natural Japanese phrasing that captures the essence of the original
     
     Topic: {topic}
+    Japanese translation:
     """
+    
     translation = model.invoke(prompt)
+    # Clean up the translation
+    translation = translation.strip()
+    
+    # Extract only the Japanese text after "Japanese translation: "
+    if "Japanese translation:" in translation:
+        translation = translation.split("Japanese translation:", 1)[1].strip()
+    
+    # Remove any newlines
+    translation = translation.replace("\n", "").strip()
+    
     update_translation(user_id, haiku_id, translation, line_number)
     return translation
