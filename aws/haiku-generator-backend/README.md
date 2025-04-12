@@ -12,18 +12,18 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3. Setup the database:
-```bash
-python database.py
-```
-
-4. Start Ollama and MinIO:
+3. Start Ollama, MinIO, and PostgreSQL:
 
 ```bash
 docker-compose up -d --build
 ```
 
+4. Setup the database:
+```bash
+python database.py
+```
+
 5. Start the FastAPI server:
 ```bash
-uvicorn main:app --reload
+uvicorn main:app --port 8001 --reload
 ```

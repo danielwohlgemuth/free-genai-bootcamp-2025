@@ -2,6 +2,7 @@ import base64
 import boto3
 import io
 import json
+import os
 from database import update_translation, update_image_description, update_haiku_link
 from dotenv import load_dotenv
 from langchain_aws import BedrockLLM
@@ -15,8 +16,8 @@ load_dotenv()
 MODEL_REGION = os.getenv('MODEL_REGION', 'us-east-1')
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-MODEL_PROVIDER = os.getenv('MODEL_PROVIDER', 'anthropic')
-MODEL_ID = os.getenv('MODEL_ID', 'anthropic.claude-3-5-haiku-20241022-v1:0')
+LLM_MODEL_PROVIDER = os.getenv('LLM_MODEL_PROVIDER', 'amazon')
+LLM_MODEL_ID = os.getenv('LLM_MODEL_ID', 'amazon.titan-text-express-v1')
 IMAGE_MODEL_ID = os.getenv('IMAGE_MODEL_ID', 'amazon.titan-image-generator-v1')
 
 
@@ -24,8 +25,8 @@ model = BedrockLLM(
     region=MODEL_REGION,
     aws_access_key_id=AWS_ACCESS_KEY_ID,
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    provider=MODEL_PROVIDER,
-    model_id=MODEL_ID
+    provider=LLM_MODEL_PROVIDER,
+    model_id=LLM_MODEL_ID
 )
 
 bedrock = boto3.client(service_name='bedrock-runtime')

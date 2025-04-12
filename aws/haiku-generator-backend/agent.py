@@ -19,16 +19,16 @@ load_dotenv()
 MODEL_REGION = os.getenv('MODEL_REGION', 'us-east-1')
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-MODEL_PROVIDER = os.getenv('MODEL_PROVIDER', 'anthropic')
-MODEL_ID = os.getenv('MODEL_ID', 'anthropic.claude-3-5-haiku-20241022-v1:0')
+CHAT_MODEL_PROVIDER = os.getenv('CHAT_MODEL_PROVIDER', 'anthropic')
+CHAT_MODEL_ID = os.getenv('CHAT_MODEL_ID', 'anthropic.claude-3-5-haiku-20241022-v1:0')
 
 
 model = ChatBedrock(
     region=MODEL_REGION,
     aws_access_key_id=AWS_ACCESS_KEY_ID,
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    provider=MODEL_PROVIDER,
-    model_id=MODEL_ID
+    provider=CHAT_MODEL_PROVIDER,
+    model_id=CHAT_MODEL_ID
 )
 
 system_template="""You are an assistant that helps generate haikus.
@@ -68,8 +68,6 @@ def configure_generate_media(user_id: str, haiku_id: str) -> tool:
         description="Generate haiku media.",
         args_schema=None
     )
-
-generate_media = configure_generate_media(user_id, haiku_id)
 
 def update_haiku_base(user_id: str, haiku_id: str, haiku: List[str], topic: str) -> str:
     if len(haiku) != 3:
