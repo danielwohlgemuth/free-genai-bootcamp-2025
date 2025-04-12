@@ -19,7 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post('/chat/{haiku_id}')
+@app.post('/api/chat/{haiku_id}')
 async def send_chat(haiku_id: str, chat_message: SendChatRequest, user_id: str = Depends(get_user_id)) -> SendChatResponse:
     if retrieve_haiku(user_id, haiku_id).error_message == "Haiku not found":
         insert_haiku(user_id, haiku_id)
@@ -29,14 +29,14 @@ async def send_chat(haiku_id: str, chat_message: SendChatRequest, user_id: str =
     get_signed_haiku_media(haiku)
     return SendChatResponse(chat=chat, haiku=haiku)
 
-@app.get('/haiku')
+@app.get('/api/haiku')
 async def list_haikus(user_id: str = Depends(get_user_id)) -> ListHaikusResponse:
     haikus = retrieve_haikus(user_id)
     for haiku in haikus:
         get_signed_haiku_media(haiku)
     return ListHaikusResponse(haikus=haikus)
 
-@app.get('/haiku/{haiku_id}')
+@app.get('/api/haiku/{haiku_id}')
 async def get_haiku(haiku_id: str, user_id: str = Depends(get_user_id)) -> GetHaikuResponse:
     haiku = retrieve_haiku(user_id, haiku_id)
     get_signed_haiku_media(haiku)
@@ -45,7 +45,7 @@ async def get_haiku(haiku_id: str, user_id: str = Depends(get_user_id)) -> GetHa
     chats = retrieve_chats(user_id, haiku_id)
     return GetHaikuResponse(haiku=haiku, chats=chats)
 
-@app.post('/haiku/{haiku_id}')
+@app.post('/api/haiku/{haiku_id}')
 async def generate_media(haiku_id: str, user_id: str = Depends(get_user_id)) -> GenerateMediaResponse:
     haiku = retrieve_haiku(user_id, haiku_id)
     if haiku.error_message == "Haiku not found" or haiku.status != "failed":
@@ -56,12 +56,12 @@ async def generate_media(haiku_id: str, user_id: str = Depends(get_user_id)) -> 
     get_signed_haiku_media(haiku)
     return GenerateMediaResponse(haiku=haiku)
 
-@app.delete('/haiku/{haiku_id}')
+@app.delete('/api/haiku/{haiku_id}')
 async def delete_haiku(haiku_id: str, user_id: str = Depends(get_user_id)) -> DeleteHaikuResponse:
     delete_haiku_db(user_id, haiku_id)
     return DeleteHaikuResponse(message='Haiku and associated data deleted successfully')
 
-@app.get("/health")
+@app.get("/api/health")
 async def health_check():
     return {"status": "healthy"}
 
