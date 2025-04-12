@@ -35,6 +35,7 @@ polly = boto3.client('polly')
 def generate_image(user_id: str, haiku_id: str, description: str, image_number: int):
     file_path = f"{user_id}/{haiku_id}/image-{image_number}.png"
     try:
+        # Prepare the request body
         body = json.dumps({
             "taskType": "TEXT_IMAGE",
             "textToImageParams": {
@@ -49,24 +50,32 @@ def generate_image(user_id: str, haiku_id: str, description: str, image_number: 
             }
         })
         
+        # Invoke the Bedrock model
         response = bedrock.invoke_model(
             body=body,
             modelId=IMAGE_MODEL_ID,
             accept="application/json",
             contentType="application/json"
         )
+        
+        # Process the response
         response_body = json.loads(response.get("body").read())
-
-        base64_image = response_body.get("images")[0]
-        base64_bytes = base64_image.encode('ascii')
-        image_bytes = base64.b64decode(base64_bytes)
-
-        image_bytes_length = len(image_bytes.getvalue())
-        image_bytes.seek(0)
-        upload_file(user_id, image_bytes, image_bytes_length, file_path)
+        if not response_body.get("images"):
+            raise ValueError("No images returned in response")
+            
+        base64_image = response_body["images"][0]
+        
+        # Convert base64 to bytes
+        image_bytes = base64.b64decode(base64_image)
+        image_bytes_length = len(image_bytes)
+        
+        # Create a BytesIO object for the image
+        image_content = io.BytesIO(image_bytes)
+        
+        # Upload the image
+        upload_file(user_id, image_content, image_bytes_length, file_path)
         update_haiku_link(user_id, haiku_id, image_number, image_link=file_path)
         return file_path
-
     except Exception as e:
         print(f"Error generating image: {e}")
         return None
