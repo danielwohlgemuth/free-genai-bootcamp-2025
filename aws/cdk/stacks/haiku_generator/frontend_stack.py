@@ -94,7 +94,7 @@ class HaikuGeneratorFrontendStack(Stack):
                     origin=origins.LoadBalancerV2Origin(
                         backend_alb,  
                         protocol_policy=cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
-                        read_timeout=Duration.seconds(30)
+                        read_timeout=Duration.seconds(60)
                     ),
                     viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
                     allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
