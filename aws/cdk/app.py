@@ -93,12 +93,12 @@ haiku_frontend = HaikuGeneratorFrontendStack(app, "HaikuGeneratorFrontendStack",
     env=env
 )
 
-# haiku_frontend_pipeline = HaikuGeneratorFrontendPipelineStack(app, "HaikuGeneratorFrontendPipelineStack",
-#     bucket=haiku_frontend.bucket,
-#     user_pool_id=auth_stack.user_pool.user_pool_id,
-#     user_pool_client_id=auth_stack.haiku_client.user_pool_client_id,
-#     env=env
-# )
+haiku_frontend_pipeline = HaikuGeneratorFrontendPipelineStack(app, "HaikuGeneratorFrontendPipelineStack",
+    bucket=haiku_frontend.bucket,
+    user_pool_id=auth_stack.user_pool.user_pool_id,
+    user_pool_client_id=auth_stack.haiku_client.user_pool_client_id,
+    env=env
+)
 
 # # Vocab Generator stacks
 # vocab_frontend = VocabGeneratorFrontendStack(app, "VocabGeneratorFrontendStack",
