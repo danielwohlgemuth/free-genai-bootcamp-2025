@@ -24,7 +24,7 @@ A frontend application for generating and managing haikus using React.
 
 3. Create a .env file in the root of the project and set the backend API URL:
    ```bash
-   REACT_APP_BACKEND_URL=http://localhost:8000
+   REACT_APP_BACKEND_URL=http://localhost:8001
    ```
 
 ## Running the Application
@@ -34,7 +34,7 @@ To start the application, run:
 npm start
 ```
 
-The application will be available at `http://localhost:3000`.
+The application will be available at `http://localhost:3001`.
 
 ## Built With
 - [React](https://react.dev/) - The web framework used
