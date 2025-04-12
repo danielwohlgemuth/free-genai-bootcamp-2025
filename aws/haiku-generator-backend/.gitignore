@@ -3,3 +3,6 @@ haiku_generator.db
 __pycache__
 output.wav
 .env
+
+# JWT keys
+.jwks_cache.json
