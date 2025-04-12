@@ -23,7 +23,12 @@ docker-compose up -d --build
 python database.py
 ```
 
-5. Grant access to bedrock models:
+5. Setup the storage:
+```bash
+python storage.py
+```
+
+6. Grant access to bedrock models:
 
 Create inference profiles and copy the resulting ARN into the .env file.
 
@@ -37,7 +42,7 @@ aws bedrock create-inference-profile \
 --model-source copyFrom="arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-image-generator-v1"
 ```
 
-6. Start the FastAPI server:
+7. Start the FastAPI server:
 ```bash
 uvicorn main:app --port 8001 --reload
 ```
