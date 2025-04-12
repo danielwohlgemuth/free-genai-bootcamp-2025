@@ -23,7 +23,21 @@ docker-compose up -d --build
 python database.py
 ```
 
-5. Start the FastAPI server:
+5. Grant access to bedrock models:
+
+Create inference profiles and copy the resulting ARN into the .env file.
+
+```bash
+aws bedrock create-inference-profile \
+--inference-profile-name "amazon-titan-text-express-v1" \
+--model-source copyFrom="arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-text-express-v1"
+
+aws bedrock create-inference-profile \
+--inference-profile-name "amazon-titan-image-generator-v1" \
+--model-source copyFrom="arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-image-generator-v1"
+```
+
+6. Start the FastAPI server:
 ```bash
 uvicorn main:app --port 8001 --reload
 ```

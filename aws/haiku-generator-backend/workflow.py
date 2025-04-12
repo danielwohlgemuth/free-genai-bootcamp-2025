@@ -209,7 +209,7 @@ def check_status(state: State):
     if missing_fields:
         status = 'failed'
         error_message = f'Missing fields: {', '.join(missing_fields)}'
-    set_status(state['haiku_id'], status, error_message)
+    set_status(state['user_id'], state['haiku_id'], status, error_message)
     return state
 
 

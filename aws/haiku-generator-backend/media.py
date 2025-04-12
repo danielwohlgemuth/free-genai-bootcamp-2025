@@ -17,8 +17,8 @@ MODEL_REGION = os.getenv('MODEL_REGION', 'us-east-1')
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 LLM_MODEL_PROVIDER = os.getenv('LLM_MODEL_PROVIDER', 'amazon')
-LLM_MODEL_ID = os.getenv('LLM_MODEL_ID', 'amazon.titan-text-express-v1')
-IMAGE_MODEL_ID = os.getenv('IMAGE_MODEL_ID', 'amazon.titan-image-generator-v1')
+LLM_MODEL_ID = os.getenv('LLM_MODEL_ID')
+IMAGE_MODEL_ID = os.getenv('IMAGE_MODEL_ID')
 
 
 model = BedrockLLM(
@@ -98,23 +98,40 @@ def generate_audio(user_id: str, haiku_id: str, text: str, audio_number: int):
         return None
 
 def generate_image_description(user_id: str, haiku_id: str, topic: str, haiku_line: str, line_number: int):
-    prompt = f"""Generate a high-contrast image with a plain background.
-    The subject should be clear and well-defined, avoiding visual noise or excessive details.
-    Colors should be bold and distinct to ensure strong visibility.
-    Do not include any text in the image.
-    Only provide the description needed to generate the image. No additional text.
+    prompt = f"""
+    Generate a clear, concise image description for a haiku line that will be used to create an image.
+    
+    The description should:
+    1. Be specific and concrete
+    2. Describe the main elements and their relationships
+    3. Include colors and lighting conditions
+    4. Be suitable for image generation
+    5. Not include any text or words in the description
+    6. Focus on the key visual elements that capture the haiku's essence
+    7. Format the response as a single paragraph of clear, descriptive text
+    
+    Original haiku line: {haiku_line}
     Topic: {topic}
-    Sentence: {haiku_line}"""
+    """
     description = model.invoke(prompt)
     update_image_description(user_id, haiku_id, description, line_number)
     return description
 
 def generate_translation(user_id: str, haiku_id: str, topic: str, haiku_line: str, line_number: int):
-    prompt = f"""Translate the sentence into Japanese
-    If the sentence cannot be translated directly, provide the closest equivalent translation.
-    Only return the Japanese translation. Do not add any additional text.
+    prompt = f"""
+    Translate the following English haiku line into Japanese, maintaining the haiku structure and poetic essence:
+    
+    Original line: {haiku_line}
+    
+    Instructions:
+    1. Provide only the Japanese translation
+    2. Maintain the haiku's poetic quality and meaning
+    3. Keep the translation concise and focused on the imagery
+    4. Use natural Japanese phrasing that captures the essence of the original
+    5. Format the response as a single line of Japanese text only
+    
     Topic: {topic}
-    Sentence: {haiku_line}"""
+    """
     translation = model.invoke(prompt)
     update_translation(user_id, haiku_id, translation, line_number)
     return translation
