@@ -72,8 +72,9 @@ def generate_image(user_id: str, haiku_id: str, description: str, image_number: 
         return None
 
 def generate_audio(user_id: str, haiku_id: str, text: str, audio_number: int):
-    storage_file_path = f"{user_id}/{haiku_id}/audio-{audio_number}.wav"
+    storage_file_path = f"{user_id}/{haiku_id}/audio-{audio_number}.mp3"
     try:
+        # Get the audio stream from Polly
         response = polly.synthesize_speech(
             Text=text,
             OutputFormat='mp3',
@@ -81,15 +82,13 @@ def generate_audio(user_id: str, haiku_id: str, text: str, audio_number: int):
             LanguageCode='ja-JP'
         )
         
-        # Create a temporary file to store the audio
-        import tempfile
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-        temp_file.write(response['AudioStream'].read())
-        temp_file.close()
-        
-        audio_content = io.BytesIO(temp_file.read())
+        # Read the audio stream directly
+        audio_content = io.BytesIO()
+        audio_content.write(response['AudioStream'].read())
         audio_content_length = len(audio_content.getvalue())
         audio_content.seek(0)
+        
+        # Upload the audio file
         upload_file(user_id, audio_content, audio_content_length, storage_file_path)
         update_haiku_link(user_id, haiku_id, audio_number, audio_link=storage_file_path)
         return storage_file_path
