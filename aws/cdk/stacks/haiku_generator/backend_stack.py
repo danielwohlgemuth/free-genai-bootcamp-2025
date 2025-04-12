@@ -9,6 +9,7 @@ from aws_cdk import (
     aws_iam as iam,
     aws_logs as logs,
     aws_rds as rds,
+    aws_s3 as s3,
     CfnOutput,
     Duration,
     RemovalPolicy,
@@ -24,6 +25,15 @@ class HaikuGeneratorBackendStack(Stack):
                  certificate: acm.Certificate,
                  **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+
+        self.media_bucket = s3.Bucket(
+            self, "MediaBucket",
+            encryption=s3.BucketEncryption.S3_MANAGED,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            removal_policy=RemovalPolicy.DESTROY,
+            object_ownership=s3.ObjectOwnership.BUCKET_OWNER_PREFERRED
+        )
 
         # Create credentials for database
         self.credentials = rds.Credentials.from_generated_secret(
@@ -164,23 +174,23 @@ class HaikuGeneratorBackendStack(Stack):
                 "DB_PORT": str(self.db.instance_endpoint.port),
                 "DB_NAME": "haiku",
                 "AWS_DEFAULT_REGION": Stack.of(self).region,
-                "AWS_ACCESS_KEY_ID": "",
-                "AWS_SECRET_ACCESS_KEY": "",
                 "AWS_REGION": Stack.of(self).region,
-                "BUCKET_URL": "",
-                "BUCKET_NAME": "",
                 "BUCKET_SECURE": "true",
-                "BUCKET_ACCESS_KEY": "",
-                "BUCKET_SECRET_KEY": "",
-                "CHAT_MODEL_PROVIDER": "",
-                "CHAT_MODEL_ID": "",
-                "LLM_MODEL_PROVIDER": "",
-                "LLM_MODEL_ID": "",
-                "IMAGE_MODEL_ID": ""
+                "BUCKET_URL": "s3." + Stack.of(self).region + ".amazonaws.com",
+                "BUCKET_NAME": self.media_bucket.bucket_name,
             },
             secrets={
                 "DB_USER": ecs.Secret.from_secrets_manager(self.db.secret, "username"),
-                "DB_PASSWORD": ecs.Secret.from_secrets_manager(self.db.secret, "password")
+                "DB_PASSWORD": ecs.Secret.from_secrets_manager(self.db.secret, "password"),
+                "AWS_ACCESS_KEY_ID": ecs.Secret.from_secrets_manager(self.db.secret, "awsAccessKey"),
+                "AWS_SECRET_ACCESS_KEY": ecs.Secret.from_secrets_manager(self.db.secret, "awsSecretKey"),
+                "BUCKET_ACCESS_KEY": ecs.Secret.from_secrets_manager(self.db.secret, "awsAccessKey"),
+                "BUCKET_SECRET_KEY": ecs.Secret.from_secrets_manager(self.db.secret, "awsSecretKey"),
+                "CHAT_MODEL_PROVIDER": ecs.Secret.from_secrets_manager(self.db.secret, "chatModelProvider"),
+                "CHAT_MODEL_ID": ecs.Secret.from_secrets_manager(self.db.secret, "chatModelId"),
+                "LLM_MODEL_PROVIDER": ecs.Secret.from_secrets_manager(self.db.secret, "llmModelProvider"),
+                "LLM_MODEL_ID": ecs.Secret.from_secrets_manager(self.db.secret, "llmModelId"),
+                "IMAGE_MODEL_ID": ecs.Secret.from_secrets_manager(self.db.secret, "imageModelId")
             }
         )
 

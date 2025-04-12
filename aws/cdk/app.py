@@ -8,7 +8,7 @@ from stacks.haiku_generator.backend_pipeline_stack import HaikuGeneratorBackendP
 from stacks.haiku_generator.certificate_stack import HaikuGeneratorCertificateStack
 from stacks.haiku_generator.database_stack import HaikuGeneratorDatabaseStack
 from stacks.haiku_generator.frontend_stack import HaikuGeneratorFrontendStack
-from stacks.haiku_generator.pipeline_stack import HaikuGeneratorPipelineStack
+from stacks.haiku_generator.frontend_pipeline_stack import HaikuGeneratorFrontendPipelineStack
 from stacks.lang_portal.backend_pipeline_stack import LangPortalBackendPipelineStack
 from stacks.lang_portal.backend_stack import LangPortalBackendStack
 from stacks.lang_portal.certificate_stack import LangPortalCertificateStack
@@ -86,6 +86,19 @@ haiku_backend_pipeline = HaikuGeneratorBackendPipelineStack(app, "HaikuGenerator
     repository=haiku_backend.repository,
     env=env
 )
+
+# haiku_frontend = HaikuGeneratorFrontendStack(app, "HaikuGeneratorFrontendStack",
+#     backend_alb=haiku_backend.service.load_balancer,
+#     certificate=haiku_certificate.certificate,
+#     env=env
+# )
+
+# haiku_frontend_pipeline = HaikuGeneratorFrontendPipelineStack(app, "HaikuGeneratorFrontendPipelineStack",
+#     bucket=haiku_frontend.bucket,
+#     user_pool_id=auth_stack.user_pool.user_pool_id,
+#     user_pool_client_id=auth_stack.haiku_client.user_pool_client_id,
+#     env=env
+# )
 
 # # Vocab Generator stacks
 # vocab_frontend = VocabGeneratorFrontendStack(app, "VocabGeneratorFrontendStack",

@@ -2,6 +2,7 @@ from aws_cdk import (
     aws_certificatemanager as acm,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as origins,
+    aws_elasticloadbalancingv2 as elbv2,
     aws_iam as iam,
     aws_route53 as route53,
     aws_route53_targets as targets,
@@ -14,21 +15,11 @@ from aws_cdk import (
 from constructs import Construct
 
 class HaikuGeneratorFrontendStack(Stack):
-    def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    def __init__(self, scope: Construct, construct_id: str,
+                 certificate: acm.Certificate,
+                 backend_alb: elbv2.ApplicationLoadBalancer,
+                 **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
-
-        # Import hosted zone
-        self.hosted_zone = route53.HostedZone.from_lookup(
-            self, "HostedZone",
-            domain_name="app-dw.net"
-        )
-
-        # Create certificate for CloudFront
-        self.certificate = acm.Certificate(
-            self, "Certificate",
-            domain_name="haiku.app-dw.net",
-            validation=acm.CertificateValidation.from_dns(self.hosted_zone)
-        )
 
         # Create S3 bucket for access logging
         self.logging_bucket = s3.Bucket(
@@ -86,7 +77,7 @@ class HaikuGeneratorFrontendStack(Stack):
         # Create CloudFront distribution for Haiku Generator
         self.distribution = cloudfront.Distribution(
             self, "Distribution",
-            certificate=self.certificate,
+            certificate=certificate,
             domain_names=["haiku.app-dw.net"],
             default_behavior=cloudfront.BehaviorOptions(
                 origin=origins.S3BucketOrigin.with_origin_access_control(
@@ -98,6 +89,19 @@ class HaikuGeneratorFrontendStack(Stack):
                 cache_policy=cloudfront.CachePolicy.CACHING_OPTIMIZED,
                 origin_request_policy=cloudfront.OriginRequestPolicy.CORS_S3_ORIGIN
             ),
+            additional_behaviors={
+                "api/*": cloudfront.BehaviorOptions(
+                    origin=origins.LoadBalancerV2Origin(
+                        backend_alb,  
+                        protocol_policy=cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
+                        read_timeout=Duration.seconds(30)
+                    ),
+                    viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                    allowed_methods=cloudfront.AllowedMethods.ALLOW_ALL,
+                    cache_policy=cloudfront.CachePolicy.CACHING_DISABLED,
+                    origin_request_policy=cloudfront.OriginRequestPolicy.ALL_VIEWER
+                )
+            },
             error_responses=[
                 cloudfront.ErrorResponse(
                     http_status=403,
@@ -118,6 +122,12 @@ class HaikuGeneratorFrontendStack(Stack):
             log_includes_cookies=False
         )
 
+        # Import hosted zone
+        self.hosted_zone = route53.HostedZone.from_lookup(
+            self, "HostedZone",
+            domain_name="app-dw.net"
+        )
+
         # Create Route53 record
         route53.ARecord(
             self, "SiteAliasRecord",
@@ -132,23 +142,5 @@ class HaikuGeneratorFrontendStack(Stack):
         CfnOutput(self, "DomainName",
             value="https://haiku.app-dw.net",
             description="Haiku Generator frontend URL",
-            export_name=f"{construct_id}-domain-name"
-        )
-
-        CfnOutput(self, "BucketName",
-            value=self.bucket.bucket_name,
-            description="Haiku Generator S3 bucket name",
-            export_name=f"{construct_id}-bucket-name"
-        )
-
-        CfnOutput(self, "DistributionId",
-            value=self.distribution.distribution_id,
-            description="Haiku Generator CloudFront distribution ID",
-            export_name=f"{construct_id}-distribution-id"
-        )
-
-        CfnOutput(self, "DistributionDomain",
-            value=self.distribution.domain_name,
-            description="Haiku Generator CloudFront domain name",
-            export_name=f"{construct_id}-distribution-domain"
+            export_name=f"haiku-domain-name"
         )
