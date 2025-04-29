@@ -32,6 +32,10 @@ An application to extract a vocabulary from a song.
 
 A chatbot for user interaction to generate haikus and a corresponding image and audio for each line of the haiku.
 
+## [AWS Infrastructure](/aws/README.md)
+
+Infrastructure as Code (IaC) for the project.
+
 ## Useful Links
 
 - [Free GenAI Bootcamp Landing Page](https://genai.cloudprojectbootcamp.com/)
